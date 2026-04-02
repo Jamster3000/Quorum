@@ -140,8 +140,7 @@ DEFINE FIELD IF NOT EXISTS username ON TABLE users TYPE string
 DEFINE FIELD IF NOT EXISTS email ON TABLE users TYPE string 
     ASSERT fn::bytes_within($value, $MIN_DEFAULT_BYTES, $MAX_EMAIL_BYTES);
 DEFINE FIELD IF NOT EXISTS password_hash ON TABLE users TYPE option<string>;
-DEFINE FIELD IF NOT EXISTS avatar_url ON TABLE users TYPE option<record<media>> 
-    ASSERT $value == NONE OR fn::bytes_within($value, $MIN_DEFAULT_BYTES, $MAX_URL_BYTES);
+DEFINE FIELD IF NOT EXISTS avatar_url ON TABLE users TYPE option<record<media>>;
 DEFINE FIELD IF NOT EXISTS last_ip ON TABLE users TYPE option<string> 
     ASSERT $value == NONE OR fn::bytes_within($value, $MIN_DEFAULT_BYTES, $MAX_IP_BYTES);
 DEFINE FIELD IF NOT EXISTS created_at ON TABLE users TYPE datetime DEFAULT time::now();
@@ -174,8 +173,8 @@ DEFINE INDEX IF NOT EXISTS idx_user_id ON TABLE user_settings COLUMNS user_id UN
 DEFINE TABLE IF NOT EXISTS user_custom_emojis SCHEMAFULL;
 
 DEFINE FIELD IF NOT EXISTS user_id on TABLE user_custom_emojis TYPE record<users>;
-DEFINE FIELD IF NOT EXISTS name on TABLE user_custom_emojis TYPE string ASSERT fn::bytes_within($valur, $MIN_DEFAULT_BYTES, $MAX_USERNAME_BYTES);
-DEFINE FIELD IF NOT EXISTS url on TABLE user_custom_emojis TYPE record<media> ASSERT fn::bytes_within($value, $MIN_DEFAULT_BYTES, $MAX_URL_BYTES);
+DEFINE FIELD IF NOT EXISTS name on TABLE user_custom_emojis TYPE string ASSERT fn::bytes_within($value, $MIN_DEFAULT_BYTES, $MAX_USERNAME_BYTES);
+DEFINE FIELD IF NOT EXISTS url on TABLE user_custom_emojis TYPE record<media>;
 DEFINE FIELD IF NOT EXISTS uploaded_at on TABLE user_custom_emojis TYPE datetime DEFAULT time::now();
 
 DEFINE INDEX IF NOT EXISTS idx_url ON TABLE user_custom_emojis COLUMNS url UNIQUE;
@@ -195,12 +194,10 @@ DEFINE TABLE IF NOT EXISTS notifications SCHEMAFULL;
 
 DEFINE FIELD IF NOT EXISTS user_id ON TABLE notifications TYPE record<users>;
 DEFINE FIELD IF NOT EXISTS type ON TABLE notifications TYPE record<notification_types>;
-DEFINE FIELD IF NOT EXISTS content ON TABLE notifications TYPE string 
-    ASSERT fn::bytes_within($value, $MIN_DEFAULT_BYTES, $MAX_TEXT_BYTES+64); --Give a buffer incase anything extra is added on at application layer
+DEFINE FIELD IF NOT EXISTS content ON TABLE notifications TYPE object; --{"type": "", "reaction": "", "message_id": "", "space_id": "", "group_id": ""} As an example
 DEFINE FIELD IF NOT EXISTS is_read ON TABLE notifications TYPE bool DEFAULT false;
 DEFINE FIELD IF NOT EXISTS created_at ON TABLE notifications TYPE datetime DEFAULT time::now();
-DEFINE FIELD IF NOT EXISTS reference_type ON TABLE notifications TYPE option<string>
-    ASSERT $value == NONE OR fn::bytes_within($value, $MIN_DEFAULT_BYTES, $MAX_NOTIFICATION_REFERENCE_BYTES);
+DEFINE FIELD IF NOT EXISTS reference_type ON TABLE notifications TYPE option<string> ASSERT $value == NONE OR fn::bytes_within($value, $MIN_DEFAULT_BYTES, $MAX_NOTIFICATION_REFERENCE_BYTES);
 DEFINE FIELD IF NOT EXISTS reference_id ON TABLE notifications TYPE option<number>;
 
 DEFINE INDEX IF NOT EXISTS idx_notifications_user ON TABLE notifications COLUMNS user_id;
@@ -290,7 +287,7 @@ DEFINE TABLE IF NOT EXISTS groups SCHEMAFULL;
 DEFINE FIELD IF NOT EXISTS name ON TABLE groups TYPE string ASSERT fn::bytes_within($value, $MIN_SPACE_NAME_BYTES, $MAX_SPACES_NAME_BYTES);
 DEFINE FIELD IF NOT EXISTS description ON TABLE groups TYPE string ASSERT fn::bytes_within($value, $MIN_NOTHING_BYTES, $MAX_SPACE_DESCRIPTION_BYTES);
 DEFINE FIELD IF NOT EXISTS user_id ON TABLE groups TYPE record<users>;
-DEFINE FIELD IF NOT EXISTS group_icon_url ON TABLE groups TYPE record<media> ASSERT fn::bytes_within($value, $MIN_DEFAULT_BYTES, $MAX_URL_BYTES);
+DEFINE FIELD IF NOT EXISTS group_icon_url ON TABLE groups TYPE record<media>;
 DEFINE FIELD IF NOT EXISTS privacy ON TABLE groups TYPE bool DEFAULT 0;
 DEFINE FIELD IF NOT EXISTS group_tags_id ON TABLE groups TYPE option<record<group_tags>>;
 
@@ -322,6 +319,7 @@ DEFINE TABLE IF NOT EXISTS group_members SCHEMAFULL;
 DEFINE FIELD IF NOT EXISTS group_id ON TABLE group_members TYPE record<groups>;
 DEFINE FIELD IF NOT EXISTS user_id ON TABLE group_members TYPE record<users>;
 DEFINE FIELD IF NOT EXISTS role_id ON TABLE group_members TYPE record<group_roles>;
+DEFINE FIELD IF NOT EXISTS permissions_cache ON TABLE group_members TYPE number;
 DEFINE FIELD IF NOT EXISTS joined_at ON TABLE group_members TYPE datetime;
 DEFINE FIELD IF NOT EXISTS banned_id ON TABLE group_members TYPE option<record<group_members_banned>>;
 DEFINE FIELD IF NOT EXISTS is_timeout ON TABLE group_members TYPE bool DEFAULT false;
@@ -412,8 +410,8 @@ DEFINE FIELD IF NOT EXISTS user_id ON TABLE media TYPE record<users>;
 DEFINE FIELD IF NOT EXISTS url ON TABLE media TYPE string ASSERT fn::bytes_within($value, $MIN_DEFAULT_BYTES, $MAX_URL_BYTES);
 DEFINE FIELD IF NOT EXISTS file_mime_type_id ON TABLE media TYPE record<file_type>;
 DEFINE FIELD IF NOT EXISTS uploaded_at ON TABLE media TYPE datetime;
-DEFINE FIELD IF NOT EXISTS width ON TABLE media TYPE option<number> ASSERT $value = None OR $value > 0;
-DEFINE FIELD IF NOT EXISTS height ON TABLE media TYPE option<number> ASSERT $value = NONE OR $value > 0;
+DEFINE FIELD IF NOT EXISTS width ON TABLE media TYPE option<number> ASSERT $value == NONE OR $value > 0;
+DEFINE FIELD IF NOT EXISTS height ON TABLE media TYPE option<number> ASSERT $value == NONE OR $value > 0;
 DEFINE FIELD IF NOT EXISTS thumbnail_url ON TABLE media TYPE string ASSERT fn::bytes_within($value, $MIN_DEFAULT_BYTES, $MAX_URL_BYTES);
 
 DEFINE INDEX IF NOT EXISTS idx_media_space_uploaded ON TABLE media COLUMNS space_id, uploaded_at;
