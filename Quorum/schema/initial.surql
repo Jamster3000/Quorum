@@ -205,7 +205,6 @@ DEFINE FIELD IF NOT EXISTS reference_id ON TABLE notifications TYPE option<numbe
 
 DEFINE INDEX IF NOT EXISTS idx_notifications_user ON TABLE notifications COLUMNS user_id;
 DEFINE INDEX IF NOT EXISTS idx_notifications_type ON TABLE notifications COLUMNS type;
-DEFINE INDEX IF NOT EXISTS idx_notifications_created ON TABLE notifications COLUMNS created_at;
 
 
 -- log type
@@ -417,12 +416,8 @@ DEFINE FIELD IF NOT EXISTS width ON TABLE media TYPE option<number> ASSERT $valu
 DEFINE FIELD IF NOT EXISTS height ON TABLE media TYPE option<number> ASSERT $value = NONE OR $value > 0;
 DEFINE FIELD IF NOT EXISTS thumbnail_url ON TABLE media TYPE string ASSERT fn::bytes_within($value, $MIN_DEFAULT_BYTES, $MAX_URL_BYTES);
 
-DEFINE INDEX IF NOT EXISTS idx_media_space_uploaded
-ON TABLE media COLUMNS space_id, uploaded_at;
-DEFINE INDEX IF NOT EXISTS idx_media_user_uploaded
-ON TABLE media COLUMNS user_id, uploaded_at;
-DEFINE INDEX IF NOT EXISTS idx_media_file_type
-ON TABLE media COLUMNS file_mime_type_id;
+DEFINE INDEX IF NOT EXISTS idx_media_space_uploaded ON TABLE media COLUMNS space_id, uploaded_at;
+DEFINE INDEX IF NOT EXISTS idx_media_user_uploaded ON TABLE media COLUMNS user_id, uploaded_at;
 
 
 -- project type
@@ -495,216 +490,132 @@ DEFINE INDEX IF NOT EXISTS idx_file_permissions_role ON TABLE file_permissions C
 -- project board rows
 DEFINE TABLE IF NOT EXISTS table_board_rows SCHEMAFULL;
 
-DEFINE FIELD IF NOT EXISTS board_id
-ON TABLE table_board_rows TYPE record<project_board>;
-DEFINE FIELD IF NOT EXISTS position
-ON TABLE table_board_rows TYPE int
-ASSERT $value >= 0;
+DEFINE FIELD IF NOT EXISTS board_id ON TABLE table_board_rows TYPE record<project_board>;
+DEFINE FIELD IF NOT EXISTS position ON TABLE table_board_rows TYPE int ASSERT $value >= 0;
 
-DEFINE INDEX IF NOT EXISTS idx_table_board_rows_board
-ON TABLE table_board_rows COLUMNS board_id;
-DEFINE INDEX IF NOT EXISTS idx_table_board_rows_position
-ON TABLE table_board_rows COLUMNS board_id, position;
+DEFINE INDEX IF NOT EXISTS idx_table_board_rows_board ON TABLE table_board_rows COLUMNS board_id;
+DEFINE INDEX IF NOT EXISTS idx_table_board_rows_position ON TABLE table_board_rows COLUMNS board_id, position;
 
 
 -- Project board columns
 DEFINE TABLE IF NOT EXISTS table_board_columns SCHEMAFULL;
 
-DEFINE FIELD IF NOT EXISTS board_id
-ON TABLE table_board_columns TYPE record<project_board>;
-DEFINE FIELD IF NOT EXISTS name
-ON TABLE table_board_columns TYPE string
-ASSERT fn::bytes_within($value, $MIN_DEFAULT_BYTES, $MAX_TABLE_COLUMN_NAME_BYTES);
+DEFINE FIELD IF NOT EXISTS board_id ON TABLE table_board_columns TYPE record<project_board>;
+DEFINE FIELD IF NOT EXISTS name ON TABLE table_board_columns TYPE string ASSERT fn::bytes_within($value, $MIN_DEFAULT_BYTES, $MAX_TABLE_COLUMN_NAME_BYTES);
 
-DEFINE INDEX IF NOT EXISTS idx_table_board_columns_board
-ON TABLE table_board_columns COLUMNS board_id;
+DEFINE INDEX IF NOT EXISTS idx_table_board_columns_board ON TABLE table_board_columns COLUMNS board_id;
 
 
 -- project board cells
 DEFINE TABLE IF NOT EXISTS table_board_cells SCHEMAFULL;
 
-DEFINE FIELD IF NOT EXISTS row_id
-ON TABLE table_board_cells TYPE record<table_board_rows>;
-DEFINE FIELD IF NOT EXISTS column_id
-ON TABLE table_board_cells TYPE record<table_board_columns>;
-DEFINE FIELD IF NOT EXISTS value
-ON TABLE table_board_cells TYPE string
-ASSERT fn::bytes_within($value, $MIN_DEFAULT_BYTES, $MAX_TABLE_CELL_BYTES);
+DEFINE FIELD IF NOT EXISTS row_id ON TABLE table_board_cells TYPE record<table_board_rows>;
+DEFINE FIELD IF NOT EXISTS column_id ON TABLE table_board_cells TYPE record<table_board_columns>;
+DEFINE FIELD IF NOT EXISTS value ON TABLE table_board_cells TYPE string ASSERT fn::bytes_within($value, $MIN_DEFAULT_BYTES, $MAX_TABLE_CELL_BYTES);
 
-DEFINE INDEX IF NOT EXISTS idx_table_board_cells_row
-ON TABLE table_board_cells COLUMNS row_id;
-DEFINE INDEX IF NOT EXISTS idx_table_board_cells_column
-ON TABLE table_board_cells COLUMNS column_id;
-DEFINE INDEX IF NOT EXISTS idx_table_board_cells_row_column
-ON TABLE table_board_cells COLUMNS row_id, column_id UNIQUE;
+DEFINE INDEX IF NOT EXISTS idx_table_board_cells_row ON TABLE table_board_cells COLUMNS row_id;
+DEFINE INDEX IF NOT EXISTS idx_table_board_cells_column ON TABLE table_board_cells COLUMNS column_id;
+DEFINE INDEX IF NOT EXISTS idx_table_board_cells_row_column ON TABLE table_board_cells COLUMNS row_id, column_id UNIQUE;
 
 
 -- Gantt chart
 DEFINE TABLE IF NOT EXISTS gantt_task SCHEMAFULL;
 
-DEFINE FIELD IF NOT EXISTS board_id
-ON TABLE gantt_task TYPE record<project_board>;
-DEFINE FIELD IF NOT EXISTS title
-ON TABLE gantt_task TYPE string
-ASSERT fn::bytes_within($value, $MIN_DEFAULT_BYTES, $MAX_GANTT_TITLE_BYTES);
-DEFINE FIELD IF NOT EXISTS description
-ON TABLE gantt_task TYPE option<string>
-ASSERT $value = NONE OR fn::bytes_within($value, $MIN_NOTHING_BYTES, $MAX_GANTT_DESCRIPTION_BYTES);
-DEFINE FIELD IF NOT EXISTS start_date
-ON TABLE gantt_task TYPE datetime;
-DEFINE FIELD IF NOT EXISTS end_date
-ON TABLE gantt_task TYPE datetime
-ASSERT $value > start_date;
-DEFINE FIELD IF NOT EXISTS dependencies
-ON TABLE gantt_task TYPE array<string>
-ASSERT array::len($value) <= 20;
+DEFINE FIELD IF NOT EXISTS board_id ON TABLE gantt_task TYPE record<project_board>;
+DEFINE FIELD IF NOT EXISTS title ON TABLE gantt_task TYPE string ASSERT fn::bytes_within($value, $MIN_DEFAULT_BYTES, $MAX_GANTT_TITLE_BYTES);
+DEFINE FIELD IF NOT EXISTS description ON TABLE gantt_task TYPE option<string> ASSERT $value = NONE OR fn::bytes_within($value, $MIN_NOTHING_BYTES, $MAX_GANTT_DESCRIPTION_BYTES);
+DEFINE FIELD IF NOT EXISTS start_date ON TABLE gantt_task TYPE datetime;
+DEFINE FIELD IF NOT EXISTS end_date ON TABLE gantt_task TYPE datetime ASSERT $value > start_date;
+DEFINE FIELD IF NOT EXISTS dependencies ON TABLE gantt_task TYPE array<string> ASSERT array::len($value) <= 20;
 
-DEFINE INDEX IF NOT EXISTS idx_gantt_task_board
-ON TABLE gantt_task COLUMNS board_id;
-DEFINE INDEX IF NOT EXISTS idx_gantt_task_date_range
-ON TABLE gantt_task COLUMNS board_id, start_date, end_date;
+DEFINE INDEX IF NOT EXISTS idx_gantt_task_board ON TABLE gantt_task COLUMNS board_id;
+DEFINE INDEX IF NOT EXISTS idx_gantt_task_date_range ON TABLE gantt_task COLUMNS board_id, start_date, end_date;
 
 
 -- ToDo Tasks table
 DEFINE TABLE IF NOT EXISTS todo_tasks SCHEMAFULL;
 
-DEFINE FIELD IF NOT EXISTS board_id
-ON TABLE todo_tasks TYPE record<project_board>;
-DEFINE FIELD IF NOT EXISTS title
-ON TABLE todo_tasks TYPE string
-ASSERT fn::bytes_within($value, $MIN_DEFAULT_BYTES, $MAX_TODO_TITLE_BYTES);
-DEFINE FIELD IF NOT EXISTS is_complete
-ON TABLE todo_tasks TYPE bool DEFAULT false;
-DEFINE FIELD IF NOT EXISTS due_date
-ON TABLE todo_tasks TYPE option<datetime>;
-DEFINE FIELD IF NOT EXISTS created_at
-ON TABLE todo_tasks TYPE datetime;
-DEFINE FIELD IF NOT EXISTS updated_at
-ON TABLE todo_tasks TYPE datetime;
-DEFINE FIELD IF NOT EXISTS created_by
-ON TABLE todo_tasks TYPE record<users>;
+DEFINE FIELD IF NOT EXISTS board_id ON TABLE todo_tasks TYPE record<project_board>;
+DEFINE FIELD IF NOT EXISTS title ON TABLE todo_tasks TYPE string ASSERT fn::bytes_within($value, $MIN_DEFAULT_BYTES, $MAX_TODO_TITLE_BYTES);
+DEFINE FIELD IF NOT EXISTS is_complete ON TABLE todo_tasks TYPE bool DEFAULT false;
+DEFINE FIELD IF NOT EXISTS due_date ON TABLE todo_tasks TYPE option<datetime>;
+DEFINE FIELD IF NOT EXISTS created_at ON TABLE todo_tasks TYPE datetime;
+DEFINE FIELD IF NOT EXISTS updated_at ON TABLE todo_tasks TYPE datetime;
+DEFINE FIELD IF NOT EXISTS created_by ON TABLE todo_tasks TYPE record<users>;
 
-DEFINE INDEX IF NOT EXISTS idx_todo_tasks_board
-ON TABLE todo_tasks COLUMNS board_id;
-DEFINE INDEX IF NOT EXISTS idx_todo_tasks_complete
-ON TABLE todo_tasks COLUMNS board_id, is_complete;
-DEFINE INDEX IF NOT EXISTS idx_todo_tasks_due
-ON TABLE todo_tasks COLUMNS board_id, due_date;
+DEFINE INDEX IF NOT EXISTS idx_todo_tasks_board ON TABLE todo_tasks COLUMNS board_id;
+DEFINE INDEX IF NOT EXISTS idx_todo_tasks_complete ON TABLE todo_tasks COLUMNS board_id, is_complete;
+DEFINE INDEX IF NOT EXISTS idx_todo_tasks_due ON TABLE todo_tasks COLUMNS board_id, due_date;
 
 
 -- Priority table
 DEFINE TABLE IF NOT EXISTS priority SCHEMAFULL;
 
-DEFINE FIELD IF NOT EXISTS name
-ON TABLE priority TYPE string
-ASSERT fn::bytes_within($value, $MIN_DEFAULT_BYTES, $MAX_TODO_NAME_BYTES);
-DEFINE INDEX IF NOT EXISTS idx_priority_name_unique
-ON TABLE priority COLUMNS name UNIQUE;
+DEFINE FIELD IF NOT EXISTS name ON TABLE priority TYPE string ASSERT fn::bytes_within($value, $MIN_DEFAULT_BYTES, $MAX_TODO_NAME_BYTES);
+DEFINE INDEX IF NOT EXISTS idx_priority_name_unique ON TABLE priority COLUMNS name UNIQUE;
 
 
 -- ToDo Tasks to Priority relation
 DEFINE TABLE IF NOT EXISTS todo_task_priority SCHEMAFULL;
 
-DEFINE FIELD IF NOT EXISTS task_id
-ON TABLE todo_task_priority TYPE record<todo_tasks>;
-DEFINE FIELD IF NOT EXISTS priority_id
-ON TABLE todo_task_priority TYPE record<priority>;
+DEFINE FIELD IF NOT EXISTS task_id ON TABLE todo_task_priority TYPE record<todo_tasks>;
+DEFINE FIELD IF NOT EXISTS priority_id ON TABLE todo_task_priority TYPE record<priority>;
 
-DEFINE INDEX IF NOT EXISTS idx_todo_task_priority_task
-ON TABLE todo_task_priority COLUMNS task_id;
-DEFINE INDEX IF NOT EXISTS idx_todo_task_priority_priority
-ON TABLE todo_task_priority COLUMNS priority_id;
+DEFINE INDEX IF NOT EXISTS idx_todo_task_priority_task ON TABLE todo_task_priority COLUMNS task_id;
+DEFINE INDEX IF NOT EXISTS idx_todo_task_priority_priority ON TABLE todo_task_priority COLUMNS priority_id;
 
 
 -- Calendar table
 DEFINE TABLE IF NOT EXISTS calendar_events SCHEMAFULL;
 
-DEFINE FIELD IF NOT EXISTS board_id
-ON TABLE calendar_events TYPE record<project_board>;
-DEFINE FIELD IF NOT EXISTS title
-ON TABLE calendar_events TYPE string
-ASSERT fn::bytes_within($value, $MIN_DEFAULT_BYTES, $MAX_CALENDAR_TITLE_BYTES);
-DEFINE FIELD IF NOT EXISTS description
-ON TABLE calendar_events TYPE option<string>
-ASSERT $value = NONE OR fn::bytes_within($value, $MIN_NOTHING_BYTES, $MAX_CALENDAR_DESCRIPTION_BYTES);
-DEFINE FIELD IF NOT EXISTS start_datetime
-ON TABLE calendar_events TYPE datetime;
-DEFINE FIELD IF NOT EXISTS end_datetime
-ON TABLE calendar_events TYPE datetime
-ASSERT $value > start_datetime;
-DEFINE FIELD IF NOT EXISTS task_id
-ON TABLE calendar_events TYPE option<record<todo_tasks>>;
-DEFINE FIELD IF NOT EXISTS created_at
-ON TABLE calendar_events TYPE datetime;
-DEFINE FIELD IF NOT EXISTS updated_at
-ON TABLE calendar_events TYPE option<datetime>;
-DEFINE FIELD IF NOT EXISTS created_by
-ON TABLE calendar_events TYPE record<users>;
+DEFINE FIELD IF NOT EXISTS board_id ON TABLE calendar_events TYPE record<project_board>;
+DEFINE FIELD IF NOT EXISTS title ON TABLE calendar_events TYPE string ASSERT fn::bytes_within($value, $MIN_DEFAULT_BYTES, $MAX_CALENDAR_TITLE_BYTES);
+DEFINE FIELD IF NOT EXISTS description ON TABLE calendar_events TYPE option<string> ASSERT $value = NONE OR fn::bytes_within($value, $MIN_NOTHING_BYTES, $MAX_CALENDAR_DESCRIPTION_BYTES);
+DEFINE FIELD IF NOT EXISTS start_datetime ON TABLE calendar_events TYPE datetime;
+DEFINE FIELD IF NOT EXISTS end_datetime ON TABLE calendar_events TYPE datetime ASSERT $value > start_datetime;
+DEFINE FIELD IF NOT EXISTS task_id ON TABLE calendar_events TYPE option<record<todo_tasks>>;
+DEFINE FIELD IF NOT EXISTS created_at ON TABLE calendar_events TYPE datetime;
+DEFINE FIELD IF NOT EXISTS updated_at ON TABLE calendar_events TYPE option<datetime>;
+DEFINE FIELD IF NOT EXISTS created_by ON TABLE calendar_events TYPE record<users>;
 
-DEFINE INDEX IF NOT EXISTS idx_calendar_events_board
-ON TABLE calendar_events COLUMNS board_id;
-DEFINE INDEX IF NOT EXISTS idx_calendar_events_date_range
-ON TABLE calendar_events COLUMNS board_id, start_datetime, end_datetime;
-DEFINE INDEX IF NOT EXISTS idx_calendar_events_task
-ON TABLE calendar_events COLUMNS task_id;
+DEFINE INDEX IF NOT EXISTS idx_calendar_events_board ON TABLE calendar_events COLUMNS board_id;
+DEFINE INDEX IF NOT EXISTS idx_calendar_events_date_range ON TABLE calendar_events COLUMNS board_id, start_datetime, end_datetime;
+DEFINE INDEX IF NOT EXISTS idx_calendar_events_task ON TABLE calendar_events COLUMNS task_id;
 
 
 -- Kanban columns
 DEFINE TABLE IF NOT EXISTS kanban_columns SCHEMAFULL;
 
-DEFINE FIELD IF NOT EXISTS board_id
-ON TABLE kanban_columns TYPE record<project_board>;
-DEFINE FIELD IF NOT EXISTS name
-ON TABLE kanban_columns TYPE string
-ASSERT fn::bytes_within($value, $MIN_DEFAULT_BYTES, $MAX_KANBAN_COLUMN_NAME_BYTES);
-DEFINE FIELD IF NOT EXISTS position
-ON TABLE kanban_columns TYPE int
-ASSERT $value >= 0;
+DEFINE FIELD IF NOT EXISTS board_id ON TABLE kanban_columns TYPE record<project_board>;
+DEFINE FIELD IF NOT EXISTS name ON TABLE kanban_columns TYPE string ASSERT fn::bytes_within($value, $MIN_DEFAULT_BYTES, $MAX_KANBAN_COLUMN_NAME_BYTES);
+DEFINE FIELD IF NOT EXISTS position ON TABLE kanban_columns TYPE int ASSERT $value >= 0;
 
-DEFINE INDEX IF NOT EXISTS idx_kanban_columns_board
-ON TABLE kanban_columns COLUMNS board_id;
-DEFINE INDEX IF NOT EXISTS idx_kanban_columns_board_position
-ON TABLE kanban_columns COLUMNS board_id, position;
+DEFINE INDEX IF NOT EXISTS idx_kanban_columns_board ON TABLE kanban_columns COLUMNS board_id;
+DEFINE INDEX IF NOT EXISTS idx_kanban_columns_board_position ON TABLE kanban_columns COLUMNS board_id, position;
 
 
 -- Kanban tasks
 DEFINE TABLE IF NOT EXISTS kanban_tasks SCHEMAFULL;
 
-DEFINE FIELD IF NOT EXISTS kanban_column_id
-ON TABLE kanban_tasks TYPE record<kanban_columns>;
-DEFINE FIELD IF NOT EXISTS title
-ON TABLE kanban_tasks TYPE string
-ASSERT fn::bytes_within($value, $MIN_DEFAULT_BYTES, $MAX_KANBAN_TASK_TITLE_BYTES);
-DEFINE FIELD IF NOT EXISTS description
-ON TABLE kanban_tasks TYPE option<string>
-ASSERT $value = NONE OR fn::bytes_within($value, $MIN_NOTHING_BYTES, $MAX_KANBAN_TASK_DESCRIPTION_BYTES);
+DEFINE FIELD IF NOT EXISTS kanban_column_id ON TABLE kanban_tasks TYPE record<kanban_columns>;
+DEFINE FIELD IF NOT EXISTS title ON TABLE kanban_tasks TYPE string ASSERT fn::bytes_within($value, $MIN_DEFAULT_BYTES, $MAX_KANBAN_TASK_TITLE_BYTES);
+DEFINE FIELD IF NOT EXISTS description ON TABLE kanban_tasks TYPE option<string> ASSERT $value = NONE OR fn::bytes_within($value, $MIN_NOTHING_BYTES, $MAX_KANBAN_TASK_DESCRIPTION_BYTES);
+DEFINE FIELD IF NOT EXISTS priority_id ON TABLE kanban_tasks TYPE option<record<priority>>;
+DEFINE FIELD IF NOT EXISTS created_at ON TABLE kanban_tasks TYPE datetime;
+DEFINE FIELD IF NOT EXISTS updated_at ON TABLE kanban_tasks TYPE option<datetime>;
 
-DEFINE FIELD IF NOT EXISTS priority_id
-ON TABLE kanban_tasks TYPE option<record<priority>>;
-DEFINE FIELD IF NOT EXISTS created_at
-ON TABLE kanban_tasks TYPE datetime;
-DEFINE FIELD IF NOT EXISTS updated_at
-ON TABLE kanban_tasks TYPE option<datetime>;
-DEFINE INDEX IF NOT EXISTS idx_kanban_tasks_column
-ON TABLE kanban_tasks COLUMNS kanban_column_id;
-DEFINE INDEX IF NOT EXISTS idx_kanban_tasks_priority
-ON TABLE kanban_tasks COLUMNS priority_id;
+DEFINE INDEX IF NOT EXISTS idx_kanban_tasks_column ON TABLE kanban_tasks COLUMNS kanban_column_id;
 
 
 -- Kanban task assignees
 DEFINE TABLE IF NOT EXISTS kanban_task_assignees SCHEMAFULL;
 
-DEFINE FIELD IF NOT EXISTS task_id
-ON TABLE kanban_task_assignees TYPE record<kanban_tasks>;
-DEFINE FIELD IF NOT EXISTS user_id
-ON TABLE kanban_task_assignees TYPE record<users>;
+DEFINE FIELD IF NOT EXISTS task_id ON TABLE kanban_task_assignees TYPE record<kanban_tasks>;
+DEFINE FIELD IF NOT EXISTS user_id ON TABLE kanban_task_assignees TYPE record<users>;
 
-DEFINE INDEX IF NOT EXISTS idx_kanban_task_assignees_task
-ON TABLE kanban_task_assignees COLUMNS task_id;
-DEFINE INDEX IF NOT EXISTS idx_kanban_task_assignees_user
-ON TABLE kanban_task_assignees COLUMNS user_id;
-DEFINE INDEX IF NOT EXISTS idx_kanban_task_assignees_task_user_unique
-ON TABLE kanban_task_assignees COLUMNS task_id, user_id UNIQUE;
+DEFINE INDEX IF NOT EXISTS idx_kanban_task_assignees_task ON TABLE kanban_task_assignees COLUMNS task_id;
+DEFINE INDEX IF NOT EXISTS idx_kanban_task_assignees_user ON TABLE kanban_task_assignees COLUMNS user_id;
+DEFINE INDEX IF NOT EXISTS idx_kanban_task_assignees_task_user_unique ON TABLE kanban_task_assignees COLUMNS task_id, user_id UNIQUE;
 
 
 -- access
