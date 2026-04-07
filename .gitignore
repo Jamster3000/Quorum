@@ -3,6 +3,8 @@ bin/
 obj/
 out/
 dist/
+build/
+target/
 
 # IDE and editor files
 .vs/
@@ -27,13 +29,29 @@ packages/
 *.suo
 .localhistory/
 
-# Visual Studio cache/options
-.vs/
-.vscode/
-
 # Test results
 TestResults/
 *.trx
 
 # ReSharper
 .resharper*
+
+# Node and frontend
+node_modules/
+.svelte-kit/
+.env
+.env.local
+.env.*.local
+
+# Rust/Cargo
+Cargo.lock
+target/
+
+# Tauri
+src-tauri/target/
+src-tauri/.env
+
+# Environment files
+.env
+.env.local
+*.env.local

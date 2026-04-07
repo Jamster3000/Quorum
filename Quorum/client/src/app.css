@@ -1,16 +1,5 @@
-@import "tw-animate-css";
-@import "shadcn-svelte/tailwind.css";
-@import "@fontsource-variable/raleway";
-@import "@fontsource-variable/dm-sans";
-
-@layer base {
-	* {
-		@apply border-border outline-ring/50;
-	}
-	body {
-		@apply bg-background text-foreground;
-	}
-	html {
-		@apply font-sans;
-	}
+html,
+body {
+    margin: 0;
+    padding: 0;
 }
