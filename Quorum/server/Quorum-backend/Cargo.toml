@@ -11,3 +11,11 @@ tokio = { version = "1.50.0", features = ["full"] }
 tower-http = { version = "0.6.8", features = ["cors", "trace"] }
 tracing = "0.1.44"
 tracing-subscriber = "0.3.23"
+dotenvy = "0.15"
+surrealdb = { version = "3", features = ["protocol-ws"] }
+colored = "2.1"
+
+[profile.dev]
+opt-level = 2
+lto = false
+codegen-units = 256
