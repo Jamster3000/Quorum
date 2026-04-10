@@ -228,6 +228,19 @@ DEFINE INDEX IF NOT EXISTS idx_audit_created ON TABLE audit_logs COLUMNS created
 DEFINE INDEX IF NOT EXISTS idx_audit_type ON TABLE audit_logs COLUMNS log_type_id;
 
 
+-- Server logs
+DEFINE TABLE IF NOT EXISTS server_logs SCHEMAFULL;
+
+DEFINE FIELD IF NOT EXISTS event_type ON TABLE server_logs TYPE STRING;
+DEFINE FIELD IF NOT EXISTS timestamp ON TABLE server_logs type datetime DEFAULT time::now();
+DEFINE FIELD IF NOT EXISTS message ON TABLE server_logs TYPE option<string>;
+DEFINE FIELD IF NOT EXISTS error_code ON TABLE server_logs TYPE option<number>;
+DEFINE FIELD IF NOT EXISTS duration_ms ON TABLE server_logs TYPE option<number>;
+
+DEFINE INDEX IF NOT EXISTS idx_server_logs_timestamp ON TABLE server_logs COLUMNS timestamp;
+DEFINE INDEX IF NOT EXISTS idx_server_logs_event ON TABLE server_logs COLUMNS event_type;
+
+
 -- Direct messages
 DEFINE TABLE IF NOT EXISTS direct_messages SCHEMAFULL;
 
