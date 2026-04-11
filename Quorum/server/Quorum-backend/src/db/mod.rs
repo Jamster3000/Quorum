@@ -4,6 +4,7 @@ use surrealdb::Surreal;
 use std::error::Error;
 
 pub mod schema;
+pub mod queries;
 
 pub type DB = Surreal<surrealdb::engine::remote::ws::Client>;
 

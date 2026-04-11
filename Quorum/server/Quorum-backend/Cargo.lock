@@ -12,6 +12,7 @@ dependencies = [
  "serde",
  "serde_json",
  "surrealdb",
+ "surrealdb-types",
  "tokio",
  "tower-http",
  "tracing",

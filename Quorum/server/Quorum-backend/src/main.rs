@@ -42,24 +42,24 @@ async fn main() {
     startup::print_step("Loading environment", true, startup::elapsed_ms(timer));
 
     let timer = startup::create_timer();
-    match db::init().await {
-        Ok(_db) => {
-            startup::print_step("Connecting to database", true, startup::elapsed_ms(timer));
-            
-            let timer = startup::create_timer();
-            match db::schema::init(&_db).await {
-                Ok(_) => {
-                    startup::print_final_step("Initializing schema", true, startup::elapsed_ms(timer));
-                }
-                Err(e) => {
-                    startup::print_final_step("Initializing schema", false, startup::elapsed_ms(timer));
-                    eprintln!("{}", format!("  Error: {}", e).red());
-                    std::process::exit(1);
-                }
-            }
-        }
+    let _db = match db::init().await {
+        Ok(db) => db,
         Err(e) => {
             startup::print_step("Connecting to database", false, startup::elapsed_ms(timer));
+            eprintln!("{}", format!("  Error: {}", e).red());
+            std::process::exit(1);
+        }
+    };
+    startup::print_step("Connecting to database", true, startup::elapsed_ms(timer));
+    
+    let timer = startup::create_timer();
+    match db::schema::init(&_db).await {
+        Ok(_) => {
+            startup::print_final_step("Initializing schema", true, startup::elapsed_ms(timer));
+            let _ = db::queries::server_logs::log_startup(&_db, startup::elapsed_ms(timer) as i64).await;
+        }
+        Err(e) => {
+            startup::print_final_step("Initializing schema", false, startup::elapsed_ms(timer));
             eprintln!("{}", format!("  Error: {}", e).red());
             std::process::exit(1);
         }
@@ -75,7 +75,19 @@ async fn main() {
     let addr = SocketAddr::from(([127, 0, 0, 1], port));
     let listener = tokio::net::TcpListener::bind(addr).await.unwrap();
 
-    axum::serve(listener, app).await.unwrap();
+    let server = axum::serve(listener, app);
+    
+    let shutdown = async {
+        let _ = tokio::signal::ctrl_c().await;
+    };
+
+    tokio::select! {
+        _ = server => {},
+        _ = shutdown => {
+            println!("\nShutting down...");
+            let _ = db::queries::server_logs::log_shutdown(&_db, startup::elapsed_ms(timer) as i64).await;
+        }
+    }
 }
 
 async fn root() -> &'static str {
