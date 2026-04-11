@@ -99,9 +99,39 @@ cargo clippy -- -D warnings
 
 ### SurrealQL (`schema/`)
 
-There is no automated formatter for SurrealQL. Keep definitions consistently indented (2 spaces) and add a blank line between each `DEFINE` statement.
+The following conventions apply to all `.surql` files, these files are created when there are large amount of queries to run.
 
-### Docker / infra (`docker/`)
+**Naming**
+- Params: `SCREAMING_SNAKE_CASE` (e.g. `$MAX_USERNAME_BYTES`)
+- Tables and fields: `snake_case` (e.g. `user_settings`, `password_hash`)
+
+**File structure**
+- Open with a reference block of `--` comments if the file defines params or constants that benefit from explanation (e.g. byte size tables).
+- Group related definitions under a section banner:
+  ```surql
+  -- =========================================================
+  -- SECTION NAME
+  -- =========================================================
+  ```
+- Within a section, order each table block as: `DEFINE TABLE` → fields → indexes.
+- Leave a blank line between each `DEFINE TABLE`, `DEFINE INDEX` and **two** blank lines between each table definition or block.
+- Use `IF NOT EXISTS` on all definitions unless `OVERWRITE` is explicitly needed.
+
+**Example**
+```surql
+-- Users
+DEFINE TABLE IF NOT EXISTS users SCHEMAFULL;
+
+DEFINE FIELD IF NOT EXISTS username ON TABLE users TYPE string
+    ASSERT fn::bytes_within($value, $MIN_DEFAULT_BYTES, $MAX_USERNAME_BYTES);
+DEFINE FIELD IF NOT EXISTS email ON TABLE users TYPE string
+    ASSERT fn::bytes_within($value, $MIN_DEFAULT_BYTES, $MAX_EMAIL_BYTES);
+
+DEFINE INDEX IF NOT EXISTS idx_username ON TABLE users COLUMNS username UNIQUE;
+DEFINE INDEX IF NOT EXISTS idx_email ON TABLE users COLUMNS email UNIQUE;
+```
+
+### Docker (`docker/`)
 
 Keep `docker-compose.yml` clean and commented where non-obvious configuration is used.
 
@@ -109,7 +139,7 @@ Keep `docker-compose.yml` clean and commented where non-obvious configuration is
 
 ## Documentation Comments
 
-Documentation comments are required in the Rust backend. They are not enforced in Svelte/JS files — comment where it helps, but there is no mandatory format there.
+Documentation comments are required for all Rust code. They are not enforced in Svelte/JS files — comment where it helps, but there is no mandatory format there.
 
 ### Rust — File Headers
 
