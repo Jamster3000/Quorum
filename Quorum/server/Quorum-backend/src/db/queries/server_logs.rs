@@ -8,6 +8,7 @@ struct EventTypeRecord {
 }
 
 async fn get_or_create_event_type(db: &DB, event_name: String) -> Result<RecordId, Box<dyn Error>> {
+    //Check if the event type already exists by trying to get it.
     let mut response = db
         .query("SELECT id FROM server_log_event_types WHERE name = $name")
         .bind(("name", event_name.clone()))
@@ -15,9 +16,11 @@ async fn get_or_create_event_type(db: &DB, event_name: String) -> Result<RecordI
 
     let result: Option<EventTypeRecord> = response.take(0)?;
 
+    //If event type exists already in `server_log_event_types` return its ID
     if let Some(record) = result {
         Ok(record.id)
     } else {
+        //event type doesn't exist, create it then return it's ID
         let mut create_response = db
             .query("CREATE server_log_event_types SET name = $name RETURN id")
             .bind(("name", event_name))
