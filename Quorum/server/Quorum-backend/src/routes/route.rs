@@ -1,11 +1,14 @@
-use axum::{routing::{get, post}, Router};
+use axum::{
+    Router,
+    routing::{get, post},
+};
 
-use super::health::health;
 use super::echo::echo;
+use super::health::health;
 
 pub fn create_router() -> Router {
-	Router::new()
+    Router::new()
         .route("/", get(|| async { "Axum server is running" }))
-		.route("/health", get(health))
-		.route("/echo", post(echo))
+        .route("/health", get(health))
+        .route("/echo", post(echo))
 }

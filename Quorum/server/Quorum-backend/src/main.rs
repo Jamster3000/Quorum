@@ -1,6 +1,6 @@
-﻿mod db;
-mod startup;
+mod db;
 mod routes;
+mod startup;
 
 use routes::route::create_router;
 
@@ -37,13 +37,14 @@ async fn main() {
         }
     };
     startup::print_step("Connecting to database", true, startup::elapsed_ms(timer));
-    
+
     //Write the tables to the database if they don't exist (initial.squrl)
     let timer = startup::create_timer();
     match db::schema::init(&_db).await {
         Ok(_) => {
             startup::print_final_step("Initializing schema", true, startup::elapsed_ms(timer));
-            let _ = db::queries::server_logs::log_startup(&_db, startup::elapsed_ms(timer) as i64).await;
+            let _ = db::queries::server_logs::log_startup(&_db, startup::elapsed_ms(timer) as i64)
+                .await;
         }
         Err(e) => {
             startup::print_final_step("Initializing schema", false, startup::elapsed_ms(timer));
@@ -62,7 +63,7 @@ async fn main() {
     let listener = tokio::net::TcpListener::bind(addr).await.unwrap();
 
     let server = axum::serve(listener, app);
-    
+
     //Prettify the Ctrl+C shutdown and log the shutdown
     let shutdown = async {
         let _ = tokio::signal::ctrl_c().await;

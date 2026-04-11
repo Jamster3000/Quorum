@@ -1,11 +1,12 @@
-﻿use colored::*;
+use colored::*;
 use std::thread;
 use std::time::{Duration, Instant};
 
 pub fn print_banner() {
     println!("{}", "═".repeat(75).cyan());
     //ASCII art generated with https://patorjk.com/software/taag/#p=display
-    println!(r#"
+    println!(
+        r#"
      ██████                                                            
    ███░░░░███                                                          
   ███    ░░███ █████ ████  ██████  ████████  █████ ████ █████████████
@@ -14,7 +15,8 @@ pub fn print_banner() {
  ░░███ ░░████  ░███ ░███ ░███ ░███ ░███      ░███ ░███  ░███ ░███ ░███
   ░░░██████░██ ░░████████░░██████  █████     ░░████████ █████░███ █████
     ░░░░░░ ░░   ░░░░░░░░  ░░░░░░  ░░░░░       ░░░░░░░░ ░░░░░ ░░░ ░░░░░
-    "#);
+    "#
+    );
     println!("{}", "═".repeat(75).cyan());
 }
 

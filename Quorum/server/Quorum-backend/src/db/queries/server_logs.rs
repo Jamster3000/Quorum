@@ -34,12 +34,10 @@ async fn get_or_create_event_type(db: &DB, event_name: String) -> Result<RecordI
 pub async fn log_startup(db: &DB, duration_ms: i64) -> Result<(), Box<dyn Error>> {
     let event_type_id = get_or_create_event_type(db, "startup".to_string()).await?;
 
-    db.query(
-        "CREATE server_logs SET event_type_id = $event_type_id, duration_ms = $duration_ms",
-    )
-    .bind(("event_type_id", event_type_id))
-    .bind(("duration_ms", duration_ms))
-    .await?;
+    db.query("CREATE server_logs SET event_type_id = $event_type_id, duration_ms = $duration_ms")
+        .bind(("event_type_id", event_type_id))
+        .bind(("duration_ms", duration_ms))
+        .await?;
 
     Ok(())
 }
@@ -47,12 +45,10 @@ pub async fn log_startup(db: &DB, duration_ms: i64) -> Result<(), Box<dyn Error>
 pub async fn log_shutdown(db: &DB, duration_ms: i64) -> Result<(), Box<dyn Error>> {
     let event_type_id = get_or_create_event_type(db, "shutdown".to_string()).await?;
 
-    db.query(
-        "CREATE server_logs SET event_type_id = $event_type_id, duration_ms = $duration_ms",
-    )
-    .bind(("event_type_id", event_type_id))
-    .bind(("duration_ms", duration_ms))
-    .await?;
+    db.query("CREATE server_logs SET event_type_id = $event_type_id, duration_ms = $duration_ms")
+        .bind(("event_type_id", event_type_id))
+        .bind(("duration_ms", duration_ms))
+        .await?;
 
     Ok(())
 }
