@@ -14,7 +14,7 @@ use std::net::SocketAddr;
 async fn main() {
     dotenvy::dotenv().ok();
 
-    //Clear the terminal and move the cursor to top left corner
+    // Clear the terminal and move the cursor to top left corner
     print!("\x1B[2J\x1B[1;1H");
 
     startup::print_banner(); //outputs the name using ASCII
