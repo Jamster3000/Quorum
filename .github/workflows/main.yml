@@ -11,7 +11,7 @@ on:
       - '.github/workflows/rust-backend-ci.yml'
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   ci:
@@ -25,6 +25,8 @@ jobs:
     steps:
       - name: Check out code
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref || github.ref_name }}
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
@@ -35,10 +37,16 @@ jobs:
         uses: Swatinem/rust-cache@v2
         with:
           workspaces: |
-           server -> target
+            server -> target
 
-      - name: Check formatting
-        run: cargo fmt --all -- --check
+      - name: Format code
+        run: cargo fmt --all
+
+      - name: Commit formatting changes
+        uses: stefanzweifel/git-auto-commit-action@v7
+        with:
+          commit_message: "style(server): format Rust code"
+          repository: server
 
       - name: Run Clippy
         run: cargo clippy --all-targets --all-features -- -D warnings
