@@ -2,7 +2,7 @@
 Quorum is a privacy-focused, open source application - originally built with the intention of being an alternative to discord.
 
 Quorum is a work in progress and has limited use/functionality. Because Quorum is open source, this means others can host the backend on their own computer or server privately, meaning your conversations and data stay on infrastructure you own and trust (More details about this and more as it's developed)
-
+ 
 ---
 
 ## Why Quorum?
@@ -20,7 +20,7 @@ Discord harvests and shares user data with third parties, trains AI on your conv
 
 | Layer | Technology |
 |---|---|
-| Desktop app | Tauri 2 + SvelteKit + shadcn-svelte |
+| Desktop app | Tauri 2 + SvelteKit + hand-written CSS |
 | Backend | Rust + Axum |
 | Database | SurrealDB |
 | File storage | MinIO |
@@ -81,6 +81,7 @@ This starts:
 - MinIO on `localhost:9000` (dashboard at `localhost:9001`)
 
 ### 4. Apply the database schema
+> This happens automatically and all tables in initialize.sqrl are created when the server starts up. SKIP this step if you are going to be running the server. This step is more informational on how to view the database.
 
 1. Go to [app.surrealdb.com](https://app.surrealdb.com)
 2. Create a new connection with these details:
@@ -100,8 +101,7 @@ This starts:
 cd server
 cargo run
 ```
-
-Backend runs on `localhost:3000`.
+> Or use cargo run dev if you're developing
 
 ### 6. Start the desktop app
 
@@ -130,9 +130,7 @@ docker compose down -v
 
 ## Contributing
 
-Contributions are welcome. Please read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request.
-
-When contributing you will need your own SurrealDB instance for development — the free tier at [surrealdb.com](https://surrealdb.com) is sufficient.
+Contributions are welcome. Please read [CONTRIBUTE.md](CONTRIBUTE.md) before opening a pull request.
 
 ---
 
