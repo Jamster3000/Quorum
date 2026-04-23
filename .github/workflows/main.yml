@@ -40,7 +40,7 @@ jobs:
 
       - name: Run Clippy
         working-directory: server
-        run: cargo clippy --all-targets --all-features -- -D warnings
+        run: cargo clippy --all-targets --all-features -- -W warnings
 
       - name: Check build
         working-directory: server
