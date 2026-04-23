@@ -1,8 +1,6 @@
 use argon2::{
-    password_hash::{
-        rand_core::OsRng, PasswordHash, PasswordHasher, PasswordVerifier, SaltString,
-    },
     Algorithm, Argon2, Params, Version,
+    password_hash::{PasswordHash, PasswordHasher, PasswordVerifier, SaltString, rand_core::OsRng},
 };
 use std::sync::Arc;
 use tokio::sync::Semaphore;
@@ -15,13 +13,7 @@ fn get_argon2() -> Argon2<'static> {
     Argon2::new(
         Algorithm::Argon2id,
         Version::V0x13,
-        Params::new(
-            19456,
-            2,
-            1,
-            None,
-        )
-        .unwrap(),
+        Params::new(19456, 2, 1, None).unwrap(),
     )
 }
 
@@ -32,10 +24,7 @@ fn hash_password_sync(password: &str) -> Result<String, argon2::password_hash::E
         .to_string())
 }
 
-fn verify_password_sync(
-    password: &str,
-    hash: &str,
-) -> Result<bool, argon2::password_hash::Error> {
+fn verify_password_sync(password: &str, hash: &str) -> Result<bool, argon2::password_hash::Error> {
     let parsed_hash = PasswordHash::new(hash)?;
     Ok(get_argon2()
         .verify_password(password.as_bytes(), &parsed_hash)

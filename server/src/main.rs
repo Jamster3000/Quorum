@@ -1,9 +1,9 @@
-﻿mod db;
+mod db;
+mod models;
 mod routes;
 mod startup;
-mod utility;
-mod models;
 mod tests;
+mod utility;
 
 use routes::route::create_router;
 
@@ -81,9 +81,7 @@ async fn main() {
         //spawn server in background
         //to ensure the server runs smoothly at the same time as running the tests
         //the sever is spawned in its own thread whilst the tests run on main thread
-        let server_task = tokio::spawn(async move {
-            server.await
-        });
+        let server_task = tokio::spawn(async move { server.await });
 
         tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
 
