@@ -135,14 +135,11 @@ DEFINE INDEX IF NOT EXISTS idx_status_text ON TABLE custom_status COLUMNS status
 -- Users
 DEFINE TABLE IF NOT EXISTS users SCHEMAFULL;
 
-DEFINE FIELD IF NOT EXISTS username ON TABLE users TYPE string 
-    ASSERT fn::bytes_within($value, $MIN_DEFAULT_BYTES, $MAX_USERNAME_BYTES);
-DEFINE FIELD IF NOT EXISTS email ON TABLE users TYPE string 
-    ASSERT fn::bytes_within($value, $MIN_DEFAULT_BYTES, $MAX_EMAIL_BYTES);
+DEFINE FIELD IF NOT EXISTS username ON TABLE users TYPE string ASSERT fn::bytes_within($value, $MIN_DEFAULT_BYTES, $MAX_USERNAME_BYTES);
+DEFINE FIELD IF NOT EXISTS email ON TABLE users TYPE option<string> ASSERT fn::bytes_within($value, $MIN_NOTHING_BYTES, $MAX_EMAIL_BYTES);
 DEFINE FIELD IF NOT EXISTS password_hash ON TABLE users TYPE option<string>;
 DEFINE FIELD IF NOT EXISTS avatar_url ON TABLE users TYPE option<record<media>>;
-DEFINE FIELD IF NOT EXISTS last_ip ON TABLE users TYPE option<string> 
-    ASSERT $value == NONE OR fn::bytes_within($value, $MIN_DEFAULT_BYTES, $MAX_IP_BYTES);
+DEFINE FIELD IF NOT EXISTS last_ip ON TABLE users TYPE option<string> ASSERT $value == NONE OR fn::bytes_within($value, $MIN_DEFAULT_BYTES, $MAX_IP_BYTES);
 DEFINE FIELD IF NOT EXISTS created_at ON TABLE users TYPE datetime DEFAULT time::now();
 DEFINE FIELD IF NOT EXISTS last_login ON TABLE users TYPE option<datetime>;
 DEFINE FIELD IF NOT EXISTS failed_login_attempts ON TABLE users TYPE number DEFAULT 0;
@@ -158,6 +155,19 @@ DEFINE FIELD IF NOT EXISTS custom_status_id ON TABLE users TYPE option<record<cu
 
 DEFINE INDEX IF NOT EXISTS idx_username ON TABLE users COLUMNS username UNIQUE;
 DEFINE INDEX IF NOT EXISTS idx_email ON TABLE users COLUMNS email UNIQUE;
+
+
+-- refresh tokens
+DEFINE TABLE IF NOT EXISTS refresh_tokens SCHEMAFULL;
+
+DEFINE FIELD IF NOT EXISTS user_id ON TABLE refresh_tokens TYPE record<users>;
+DEFINE FIELD IF NOT EXISTS token_hash ON TABLE refresh_tokens TYPE string;
+DEFINE FIELD IF NOT EXISTS expires_at ON TABLE refresh_tokens TYPE datetime;
+DEFINE FIELD IF NOT EXISTS created_at ON TABLE refresh_tokens TYPE datetime DEFAULT time::now();
+DEFINE FIELD IF NOT EXISTS is_revoked ON TABLE refresh_tokens TYPE bool DEFAULT false;
+
+DEFINE INDEX IF NOT EXISTS idx_refresh_token_user ON TABLE refresh_tokens COLUMNS user_id;
+DEFINE INDEX IF NOT EXISTS idx_refresh_token_hash ON TABLE refresh_tokens COLUMNS token_hash UNIQUE;
 
 
 -- User settings
