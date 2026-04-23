@@ -17,11 +17,6 @@ jobs:
   ci:
     runs-on: ubuntu-latest
 
-    defaults:
-      run:
-        shell: bash
-        working-directory: server
-
     steps:
       - name: Check out code
         uses: actions/checkout@v4
@@ -39,17 +34,19 @@ jobs:
           workspaces: |
             server -> target
 
-      - name: Format code
+      - name: Check formatting
+        working-directory: server
         run: cargo fmt --all
 
-      - name: Commit formatting changes
-        uses: stefanzweifel/git-auto-commit-action@v7
-        with:
-          commit_message: "style(server): format Rust code"
-          repository: server
-
       - name: Run Clippy
+        working-directory: server
         run: cargo clippy --all-targets --all-features -- -D warnings
 
       - name: Check build
+        working-directory: server
         run: cargo build --all-features
+
+      - name: Commit changes
+        uses: stefanzweifel/git-auto-commit-action@v7
+        with:
+          commit_message: "style(server): format Rust code"
