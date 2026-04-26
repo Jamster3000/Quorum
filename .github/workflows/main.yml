@@ -9,7 +9,8 @@ on:
       - 'server/**'
       - '.github/workflows/rust-backend-ci.yml'
 permissions:
-  contents: read
+  contents: write
+  pages: write
 jobs:
   ci:
     runs-on: ubuntu-latest
@@ -39,3 +40,17 @@ jobs:
       - name: Check build
         working-directory: server
         run: cargo build --all-features
+
+      - name: Generate docs
+        working-directory: server
+        run: cargo doc --no-deps --document-private-items
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+      - name: Deploy docs to gh-pages
+        uses: peaceiris/actions-gh-pages@v4
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: server/target/doc
+          publish_branch: gh-pages
+          force_orphan: false
