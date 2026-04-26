@@ -8,11 +8,11 @@ use std::error::Error;
 ///
 /// # Arguments
 /// * `db` - A reference to the database connection.
-/// 
+///
 /// # Returns
 /// * `Ok(())` if the schema was initialized successfully.
 /// * `Err(Box<dyn Error>)` if there was an error during initialization.
-/// 
+///
 /// # Example
 /// ```
 /// use crate::db::schema;

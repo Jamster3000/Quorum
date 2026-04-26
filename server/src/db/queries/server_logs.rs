@@ -97,7 +97,7 @@ async fn get_cached_event_type(
 /// # Returns
 /// * `Ok(())` - If the log entry was successfully created.
 /// * `Err(Box<dyn Error>)` - An error if the database query fails or if retrieving the event type ID fails.
-/// 
+///
 /// # Errors
 /// * "Failed to create event type" - If the database query to create a new event type does not return a valid record, indicating that the creation failed.
 ///
