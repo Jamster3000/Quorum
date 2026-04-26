@@ -1,4 +1,4 @@
-//! A simple echo route that returns the message sent in the request. 
+//! A simple echo route that returns the message sent in the request.
 //! THis is useful for testing that the server responds to a given request and that the request is properly formatted.
 
 use axum::Json;
@@ -21,12 +21,12 @@ pub struct EchoResponse {
 ///
 /// # Returns
 /// A JSON response containing the echoed message.
-/// 
+///
 /// # Example
 /// ```
 /// use axum::Json;
 /// use serde_json::json;
-/// 
+///
 /// let payload = Json(json!({ "message": "Hello, world!" }));
 /// let response = echo(payload).await;
 /// assert_eq!(response.echoed, "Hello, world!");

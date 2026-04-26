@@ -19,7 +19,7 @@ use super::health::health;
 ///
 /// # Returns
 /// A configured `Router` instance with all routes and their handlers.
-/// 
+///
 /// # Example
 /// ```rust
 /// let db = DB::new("mongodb://localhost:27017").await.unwrap();

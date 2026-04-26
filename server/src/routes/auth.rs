@@ -1,4 +1,3 @@
-
 //! Authentication-related route handlers
 //! Handles user signup, login, account deletion, data retrieval, token refresh, and logout.
 
@@ -23,7 +22,7 @@ pub struct RefreshTokenRequest {
 }
 
 /// Verifies user credentials and returns the user if valid
-/// 
+///
 /// # Arguments
 /// * `db` - Database connection
 /// * `username_or_email` - Username or email provided by the user
@@ -87,7 +86,7 @@ fn extract_user_id(user: &User) -> Result<String, String> {
 }
 
 /// Handles user signup requests
-/// 
+///
 /// # Arguments
 /// * `State((db, jwt_config))` - Shared state containing the database connection and JWT configuration
 /// * `Json(payload)` - The signup request payload containing username, email, and password
@@ -431,7 +430,7 @@ pub async fn delete_account(
 }
 
 /// Handles user data retrieval requests
-/// This request can be used to get any information about a user. It benefits better than having a separate endpoint for each field, 
+/// This request can be used to get any information about a user. It benefits better than having a separate endpoint for each field,
 /// and it also allows the client to specify which fields they want to retrieve, reducing unnecessary data transfer.
 ///
 /// # Arguments
@@ -534,7 +533,7 @@ pub async fn get_user_data(
 ///
 /// # Returns
 /// * `(StatusCode, Json<AuthTokenResponse>)` - The HTTP status code and JSON response containing the new access token or an error message
-/// 
+///
 /// # Error
 /// * `StatusCode::UNAUTHORIZED` - If the refresh token is invalid, expired, of the wrong type, or not found in the database
 /// * `StatusCode::INTERNAL_SERVER_ERROR` - If there is an error generating the new access token
@@ -627,13 +626,13 @@ pub async fn refresh_token(
 }
 
 /// Handles user logout requests
-/// This endpoint allows clients to log out by revoking the provided refresh token. It removes the refresh token from the database, 
+/// This endpoint allows clients to log out by revoking the provided refresh token. It removes the refresh token from the database,
 /// effectively invalidating it and preventing any further use for obtaining new access tokens.
 ///
 /// # Arguments
 /// * `State((db, _jwt_config))` - Shared state containing the database connection and JWT configuration (JWT config is not used in this handler)
 /// * `Json(payload)` - The logout request payload containing the refresh token to be revoked
-/// 
+///
 /// # Returns
 /// * `(StatusCode, Json<AuthResponse>)` - The HTTP status code and JSON response indicating success or failure of the logout operation
 ///

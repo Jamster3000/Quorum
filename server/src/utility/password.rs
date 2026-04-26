@@ -109,7 +109,7 @@ pub async fn verify_password(
 }
 
 /// Performs a password hashing warmup.
-/// This function spawns multiple blocking tasks to hash a dummy password, allowing the Argon2 algorithm to warm up 
+/// This function spawns multiple blocking tasks to hash a dummy password, allowing the Argon2 algorithm to warm up
 /// and have minor improvments on performance for subsequent hashing operations.
 ///
 /// # Example

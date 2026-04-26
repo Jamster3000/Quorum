@@ -18,7 +18,7 @@ pub struct HealthResponse {
 /// # Example
 /// ```
 /// use axum::Json;
-/// 
+///
 /// let response = health().await;
 /// assert_eq!(response.status, "ok");
 /// ```
