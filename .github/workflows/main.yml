@@ -1,5 +1,4 @@
 name: Rust backend CI
-
 on:
   push:
     paths:
@@ -9,19 +8,14 @@ on:
     paths:
       - 'server/**'
       - '.github/workflows/rust-backend-ci.yml'
-
 permissions:
-  contents: write
-
+  contents: read
 jobs:
   ci:
     runs-on: ubuntu-latest
-
     steps:
       - name: Check out code
         uses: actions/checkout@v4
-        with:
-          ref: ${{ github.head_ref || github.ref_name }}
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
@@ -36,7 +30,7 @@ jobs:
 
       - name: Check formatting
         working-directory: server
-        run: cargo fmt --all
+        run: cargo fmt --all -- --check
 
       - name: Run Clippy
         working-directory: server
@@ -45,8 +39,3 @@ jobs:
       - name: Check build
         working-directory: server
         run: cargo build --all-features
-
-      - name: Commit changes
-        uses: stefanzweifel/git-auto-commit-action@v7
-        with:
-          commit_message: "style(server): format Rust code"
