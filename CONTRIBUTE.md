@@ -88,13 +88,13 @@ Branch naming is flexible, but something descriptive is appreciated — e.g. `fi
 Formatting is enforced with `rustfmt`. Before committing, run:
 
 ```bash
-cargo fmt
+cargo fmt --all
 ```
 
 Linting with Clippy is also expected:
 
 ```bash
-cargo clippy -- -D warnings
+cargo clippy -- -W warnings
 ```
 
 ### SurrealQL (`schema/`)
