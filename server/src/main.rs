@@ -70,7 +70,11 @@ async fn main() {
 
     let timer = startup::create_timer();
     utility::password::warmup().await;
-    startup::print_final_step("Warming up password hasher", true, startup::elapsed_ms(timer));
+    startup::print_final_step(
+        "Warming up password hasher",
+        true,
+        startup::elapsed_ms(timer),
+    );
 
     startup::print_ready(port);
 

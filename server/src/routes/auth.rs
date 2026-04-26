@@ -459,21 +459,24 @@ pub async fn refresh_token(
     }
 
     // Generate new access token (reuse config)
-    let access_token =
-        match crate::utility::jwt::generate_access_token(&claims.sub, &claims.username, &jwt_config) {
-            Ok(token) => token,
-            Err(_) => {
-                return (
-                    StatusCode::INTERNAL_SERVER_ERROR,
-                    Json(AuthTokenResponse {
-                        success: false,
-                        user: None,
-                        tokens: None,
-                        message: "Failed to generate access token".to_string(),
-                    }),
-                );
-            }
-        };
+    let access_token = match crate::utility::jwt::generate_access_token(
+        &claims.sub,
+        &claims.username,
+        &jwt_config,
+    ) {
+        Ok(token) => token,
+        Err(_) => {
+            return (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(AuthTokenResponse {
+                    success: false,
+                    user: None,
+                    tokens: None,
+                    message: "Failed to generate access token".to_string(),
+                }),
+            );
+        }
+    };
 
     (
         StatusCode::OK,

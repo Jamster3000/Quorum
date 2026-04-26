@@ -53,9 +53,13 @@ pub async fn verify_password(
 
 pub async fn warmup() {
     let handles: Vec<_> = (0..8)
-        .map(|_| tokio::task::spawn_blocking(|| {
-            let _ = hash_password_sync("warmup");
-        }))
+        .map(|_| {
+            tokio::task::spawn_blocking(|| {
+                let _ = hash_password_sync("warmup");
+            })
+        })
         .collect();
-    for h in handles { let _ = h.await; }
+    for h in handles {
+        let _ = h.await;
+    }
 }
