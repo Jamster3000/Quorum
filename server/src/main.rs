@@ -1,3 +1,17 @@
+//! Entry point for the Quorum backend server.
+//!
+//! This module initializes the entire backend application, including:
+//! - Loading environment variables from `.env`
+//! - Establishing database connections to SurrealDB
+//! - Loading and validating JWT configuration
+//! - Initializing the database schema
+//! - Warming up the password hasher
+//! - Starting the Axum HTTP server
+//! - Running functional tests (if enabled)
+//!
+//! The server listens on the configured `SERVER_PORT` (default: 3000) and coordinates
+//! all application startup procedures with detailed console logging via the `startup` module.
+
 mod db;
 mod models;
 mod routes;
@@ -10,6 +24,18 @@ use routes::route::create_router;
 use colored::Colorize;
 use std::net::SocketAddr;
 
+/// Starts the backend server and initializes all required components.
+///
+/// Performs the following initialization steps in order:
+/// 1. Loads environment variables from `.env` file
+/// 2. Clears the terminal and displays banner
+/// 3. Resolves the server port from `SERVER_PORT` environment variable (default: 3000)
+/// 4. Establishes connection to SurrealDB
+/// 5. Loads JWT configuration from environment variables
+/// 6. Initializes database schema (creates tables if they don't exist)
+/// 7. Warms up the Argon2 password hasher for optimal performance
+/// 8. Starts the Axum HTTP server
+/// 9. Optionally runs functional tests (controlled by `ENABLE_TESTS` env var)
 #[tokio::main]
 async fn main() {
     dotenvy::dotenv().ok();
