@@ -1,6 +1,12 @@
 use crate::db::DB;
 use std::error::Error;
+use std::sync::OnceLock;
 use surrealdb_types::{RecordId, SurrealValue};
+
+// Cache the three fixed event type IDs so we never hit the DB more than once per type
+static STARTUP_ID: OnceLock<RecordId> = OnceLock::new();
+static SHUTDOWN_ID: OnceLock<RecordId> = OnceLock::new();
+static ERROR_ID: OnceLock<RecordId> = OnceLock::new();
 
 #[derive(Debug, SurrealValue)]
 struct EventTypeRecord {
@@ -20,7 +26,7 @@ async fn get_or_create_event_type(db: &DB, event_name: String) -> Result<RecordI
     if let Some(record) = result {
         Ok(record.id)
     } else {
-        //event type doesn't exist, create it then return it's ID
+        //event type doesn't exist, create it then return its ID
         let mut create_response = db
             .query("CREATE server_log_event_types SET name = $name RETURN id")
             .bind(("name", event_name))
@@ -31,8 +37,26 @@ async fn get_or_create_event_type(db: &DB, event_name: String) -> Result<RecordI
     }
 }
 
+// Checks the OnceLock cache first. Only calls get_or_create_event_type on the
+// very first use of each event type - after that it's just a memory read.
+// If two calls race on the first use, OnceLock::set silently drops the loser -
+// both values are identical so this is safe.
+async fn get_cached_event_type(
+    db: &DB,
+    cache: &OnceLock<RecordId>,
+    event_name: &str,
+) -> Result<RecordId, Box<dyn Error>> {
+    if let Some(id) = cache.get() {
+        return Ok(id.clone());
+    }
+
+    let id = get_or_create_event_type(db, event_name.to_string()).await?;
+    let _ = cache.set(id.clone());
+    Ok(id)
+}
+
 pub async fn log_startup(db: &DB, duration_ms: i64) -> Result<(), Box<dyn Error>> {
-    let event_type_id = get_or_create_event_type(db, "startup".to_string()).await?;
+    let event_type_id = get_cached_event_type(db, &STARTUP_ID, "startup").await?;
 
     db.query("CREATE server_logs SET event_type_id = $event_type_id, duration_ms = $duration_ms")
         .bind(("event_type_id", event_type_id))
@@ -43,7 +67,7 @@ pub async fn log_startup(db: &DB, duration_ms: i64) -> Result<(), Box<dyn Error>
 }
 
 pub async fn log_shutdown(db: &DB, duration_ms: i64) -> Result<(), Box<dyn Error>> {
-    let event_type_id = get_or_create_event_type(db, "shutdown".to_string()).await?;
+    let event_type_id = get_cached_event_type(db, &SHUTDOWN_ID, "shutdown").await?;
 
     db.query("CREATE server_logs SET event_type_id = $event_type_id, duration_ms = $duration_ms")
         .bind(("event_type_id", event_type_id))
@@ -54,7 +78,7 @@ pub async fn log_shutdown(db: &DB, duration_ms: i64) -> Result<(), Box<dyn Error
 }
 
 pub async fn log_error(db: &DB, message: String, error_code: u32) -> Result<(), Box<dyn Error>> {
-    let event_type_id = get_or_create_event_type(db, "error".to_string()).await?;
+    let event_type_id = get_cached_event_type(db, &ERROR_ID, "error").await?;
 
     db.query(
         "CREATE server_logs SET event_type_id = $event_type_id, message = $message, error_code = $error_code",

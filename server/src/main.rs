@@ -56,17 +56,21 @@ async fn main() {
     let timer = startup::create_timer();
     match db::schema::init(&_db).await {
         Ok(_) => {
-            startup::print_final_step("Initializing schema", true, startup::elapsed_ms(timer));
+            startup::print_step("Initializing schema", true, startup::elapsed_ms(timer));
             let _ = db::queries::server_logs::log_startup(&_db, startup::elapsed_ms(timer) as i64)
                 .await;
         }
         Err(e) => {
-            startup::print_final_step("Initializing schema", false, startup::elapsed_ms(timer));
+            startup::print_step("Initializing schema", false, startup::elapsed_ms(timer));
             eprintln!("{}", format!("  Error: {}", e).red());
             let _ = db::queries::server_logs::log_error(&_db, e.to_string(), 0).await;
             std::process::exit(1);
         }
     }
+
+    let timer = startup::create_timer();
+    utility::password::warmup().await;
+    startup::print_final_step("Warming up password hasher", true, startup::elapsed_ms(timer));
 
     startup::print_ready(port);
 

@@ -61,7 +61,7 @@ fn extract_user_id(user: &User) -> Result<String, String> {
 }
 
 pub async fn signup(
-    State((db, _jwt_config)): State<(DB, JwtConfig)>,
+    State((db, jwt_config)): State<(DB, JwtConfig)>,
     Json(payload): Json<SignupRequest>,
 ) -> (StatusCode, Json<AuthTokenResponse>) {
     let password_hash = match password::hash_password(&payload.password).await {
@@ -106,21 +106,6 @@ pub async fn signup(
         }
     };
 
-    let config = match crate::utility::jwt::JwtConfig::from_env() {
-        Ok(config) => config,
-        Err(_) => {
-            return (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                Json(AuthTokenResponse {
-                    success: false,
-                    user: None,
-                    tokens: None,
-                    message: "Failed to load JWT config".to_string(),
-                }),
-            );
-        }
-    };
-
     let user_id = match extract_user_id(&user) {
         Ok(id) => id,
         Err(e) => {
@@ -137,7 +122,7 @@ pub async fn signup(
     };
 
     let access_token =
-        match crate::utility::jwt::generate_access_token(&user_id, &user.username, &config) {
+        match crate::utility::jwt::generate_access_token(&user_id, &user.username, &jwt_config) {
             Ok(token) => token,
             Err(_) => {
                 return (
@@ -153,7 +138,7 @@ pub async fn signup(
         };
 
     let refresh_token =
-        match crate::utility::jwt::generate_refresh_token(&user_id, &user.username, &config) {
+        match crate::utility::jwt::generate_refresh_token(&user_id, &user.username, &jwt_config) {
             Ok(token) => token,
             Err(_) => {
                 return (
@@ -168,7 +153,7 @@ pub async fn signup(
             }
         };
 
-    let expires_at = chrono::Utc::now().timestamp() + (config.refresh_expiry_days * 86400);
+    let expires_at = chrono::Utc::now().timestamp() + (jwt_config.refresh_expiry_days * 86400);
     if let Err(_) = auth::store_refresh_token(&db, &user_id, &refresh_token, expires_at).await {
         return (
             StatusCode::INTERNAL_SERVER_ERROR,
@@ -189,7 +174,7 @@ pub async fn signup(
             tokens: Some(TokenResponse {
                 access_token,
                 refresh_token,
-                expires_in: config.access_expiry_minutes * 60,
+                expires_in: jwt_config.access_expiry_minutes * 60,
             }),
             message: "User created successfully".to_string(),
         }),
@@ -197,7 +182,7 @@ pub async fn signup(
 }
 
 pub async fn login(
-    State((db, _jwt_config)): State<(DB, JwtConfig)>,
+    State((db, jwt_config)): State<(DB, JwtConfig)>,
     Json(payload): Json<LoginRequest>,
 ) -> (StatusCode, Json<AuthTokenResponse>) {
     let user =
@@ -216,21 +201,6 @@ pub async fn login(
             }
         };
 
-    let config = match crate::utility::jwt::JwtConfig::from_env() {
-        Ok(config) => config,
-        Err(_) => {
-            return (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                Json(AuthTokenResponse {
-                    success: false,
-                    user: None,
-                    tokens: None,
-                    message: "Failed to load JWT config".to_string(),
-                }),
-            );
-        }
-    };
-
     let user_id = match extract_user_id(&user) {
         Ok(id) => id,
         Err(e) => {
@@ -247,7 +217,7 @@ pub async fn login(
     };
 
     let access_token =
-        match crate::utility::jwt::generate_access_token(&user_id, &user.username, &config) {
+        match crate::utility::jwt::generate_access_token(&user_id, &user.username, &jwt_config) {
             Ok(token) => token,
             Err(_) => {
                 return (
@@ -263,7 +233,7 @@ pub async fn login(
         };
 
     let refresh_token =
-        match crate::utility::jwt::generate_refresh_token(&user_id, &user.username, &config) {
+        match crate::utility::jwt::generate_refresh_token(&user_id, &user.username, &jwt_config) {
             Ok(token) => token,
             Err(_) => {
                 return (
@@ -278,7 +248,7 @@ pub async fn login(
             }
         };
 
-    let expires_at = chrono::Utc::now().timestamp() + (config.refresh_expiry_days * 86400);
+    let expires_at = chrono::Utc::now().timestamp() + (jwt_config.refresh_expiry_days * 86400);
     if let Err(_) = auth::store_refresh_token(&db, &user_id, &refresh_token, expires_at).await {
         return (
             StatusCode::INTERNAL_SERVER_ERROR,
@@ -299,7 +269,7 @@ pub async fn login(
             tokens: Some(TokenResponse {
                 access_token,
                 refresh_token,
-                expires_in: config.access_expiry_minutes * 60,
+                expires_in: jwt_config.access_expiry_minutes * 60,
             }),
             message: "Login successful".to_string(),
         }),
@@ -443,27 +413,11 @@ pub async fn get_user_data(
 }
 
 pub async fn refresh_token(
-    State((db, _jwt_config)): State<(DB, JwtConfig)>,
+    State((db, jwt_config)): State<(DB, JwtConfig)>,
     Json(payload): Json<RefreshTokenRequest>,
 ) -> (StatusCode, Json<AuthTokenResponse>) {
-    // Load config once at the start
-    let config = match crate::utility::jwt::JwtConfig::from_env() {
-        Ok(config) => config,
-        Err(_) => {
-            return (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                Json(AuthTokenResponse {
-                    success: false,
-                    user: None,
-                    tokens: None,
-                    message: "Failed to load JWT config".to_string(),
-                }),
-            );
-        }
-    };
-
     // Verify token
-    let claims = match crate::utility::jwt::verify_token(&payload.refresh_token, &config) {
+    let claims = match crate::utility::jwt::verify_token(&payload.refresh_token, &jwt_config) {
         Ok(claims) => claims,
         Err(_) => {
             return (
@@ -506,7 +460,7 @@ pub async fn refresh_token(
 
     // Generate new access token (reuse config)
     let access_token =
-        match crate::utility::jwt::generate_access_token(&claims.sub, &claims.username, &config) {
+        match crate::utility::jwt::generate_access_token(&claims.sub, &claims.username, &jwt_config) {
             Ok(token) => token,
             Err(_) => {
                 return (
@@ -529,7 +483,7 @@ pub async fn refresh_token(
             tokens: Some(TokenResponse {
                 access_token,
                 refresh_token: payload.refresh_token,
-                expires_in: config.access_expiry_minutes * 60,
+                expires_in: jwt_config.access_expiry_minutes * 60,
             }),
             message: "Token refreshed successfully".to_string(),
         }),
