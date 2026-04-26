@@ -1,3 +1,7 @@
+
+//! Authentication-related route handlers
+//! Handles user signup, login, account deletion, data retrieval, token refresh, and logout.
+
 use axum::{Json, extract::State, http::StatusCode};
 
 use crate::db::DB;
@@ -18,6 +22,20 @@ pub struct RefreshTokenRequest {
     pub refresh_token: String,
 }
 
+/// Verifies user credentials and returns the user if valid
+/// 
+/// # Arguments
+/// * `db` - Database connection
+/// * `username_or_email` - Username or email provided by the user
+/// * `password` - Password provided by the user
+///
+/// # Returns
+/// * `Ok(User)` - If credentials are valid
+/// * `Err((StatusCode, String))` - If credentials are invalid or an error occurs
+///
+/// # Error
+/// * `StatusCode::UNAUTHORIZED` - If username/email or password is incorrect
+/// * `StatusCode::INTERNAL_SERVER_ERROR` - If there is an error verifying the password
 async fn verify_user_credentials(
     db: &DB,
     username_or_email: &str,
@@ -52,6 +70,14 @@ async fn verify_user_credentials(
     ))
 }
 
+/// Extracts the user ID as a string from the User struct
+///
+/// # Arguments
+/// * `user` - The User struct from which to extract the ID
+///
+/// # Returns
+/// * `Ok(String)` - The user ID as a string if extraction is successful
+/// * `Err(String)` - An error message if the ID format is invalid
 fn extract_user_id(user: &User) -> Result<String, String> {
     match &user.id.key {
         surrealdb_types::RecordIdKey::String(s) => Ok(s.to_string()),
@@ -60,6 +86,28 @@ fn extract_user_id(user: &User) -> Result<String, String> {
     }
 }
 
+/// Handles user signup requests
+/// 
+/// # Arguments
+/// * `State((db, jwt_config))` - Shared state containing the database connection and JWT configuration
+/// * `Json(payload)` - The signup request payload containing username, email, and password
+///
+/// # Returns
+/// * `(StatusCode, Json<AuthTokenResponse>)` - The HTTP status code and JSON response containing the authentication token or error message
+///
+/// # Error
+/// * `StatusCode::INTERNAL_SERVER_ERROR` - If there is an error processing the password, creating the user, generating tokens, or storing the refresh token
+/// * `StatusCode::CONFLICT` - If the username already exists
+/// * `StatusCode::BAD_REQUEST` - If there is a user ID mismatch during account deletion
+///
+/// # Example
+/// ```rust
+/// let payload = SignupRequest {
+///     username: "newuser".to_string(),
+///     email: Some("newuser@example.com".to_string()),
+///     password: "password123".to_string(),
+/// };
+/// ```
 pub async fn signup(
     State((db, jwt_config)): State<(DB, JwtConfig)>,
     Json(payload): Json<SignupRequest>,
@@ -181,6 +229,26 @@ pub async fn signup(
     )
 }
 
+/// Handles user login requests
+///
+/// # Arguments
+/// * `State((db, jwt_config))` - Shared state containing the database connection and JWT configuration
+/// * `Json(payload)` - The login request payload containing username/email and password
+///
+/// # Returns
+/// * `(StatusCode, Json<AuthTokenResponse>)` - The HTTP status code and JSON response containing the authentication token or error message
+///
+/// # Error
+/// * `StatusCode::UNAUTHORIZED` - If the username/email or password is incorrect
+/// * `StatusCode::INTERNAL_SERVER_ERROR` - If there is an error verifying credentials, generating tokens, or storing the refresh token
+///
+/// # Example
+/// ```rust
+/// let payload = LoginRequest {
+///     username_or_email: "user@example.com".to_string(),
+///     password: "password123".to_string(),
+/// };
+/// ```
 pub async fn login(
     State((db, jwt_config)): State<(DB, JwtConfig)>,
     Json(payload): Json<LoginRequest>,
@@ -276,6 +344,28 @@ pub async fn login(
     )
 }
 
+/// Handles account deletion requests
+///
+/// # Arguments
+/// * `State((db, _jwt_config))` - Shared state containing the database connection and JWT configuration (JWT config is not used in this handler)
+/// * `Json(payload)` - The account deletion request payload containing username/email, password, and user ID
+///
+/// # Returns
+/// * `(StatusCode, Json<AuthResponse>)` - The HTTP status code and JSON response indicating success or failure of account deletion
+///
+/// # Error
+/// * `StatusCode::UNAUTHORIZED` - If the username/email or password is incorrect
+/// * `StatusCode::BAD_REQUEST` - If there is a user ID mismatch during account deletion
+/// * `StatusCode::INTERNAL_SERVER_ERROR` - If there is an error deleting the account
+///
+/// # Example
+/// ```rust
+/// let payload = DeleteAccountRequest {
+///     username_or_email: "user@example.com".to_string(),
+///     password: "password123".to_string(),
+///     user_id: "user_id".to_string(),
+/// };
+/// ```
 pub async fn delete_account(
     State((db, _jwt_config)): State<(DB, JwtConfig)>,
     Json(payload): Json<DeleteAccountRequest>,
@@ -340,6 +430,29 @@ pub async fn delete_account(
     }
 }
 
+/// Handles user data retrieval requests
+/// This request can be used to get any information about a user. It benefits better than having a separate endpoint for each field, 
+/// and it also allows the client to specify which fields they want to retrieve, reducing unnecessary data transfer.
+///
+/// # Arguments
+/// * `State((db, _jwt_config))` - Shared state containing the database connection and JWT configuration (JWT config is not used in this handler)
+/// * `Json(payload)` - The user data retrieval request payload containing username/email, password, and list of fields to retrieve
+///
+/// # Returns
+/// * `(StatusCode, Json<UserDataResponse>)` - The HTTP status code and JSON response containing the requested user data or an error message
+///
+/// # Error
+/// * `StatusCode::UNAUTHORIZED` - If the username/email or password is incorrect
+/// * `StatusCode::INTERNAL_SERVER_ERROR` - If there is an error verifying credentials or extracting user ID
+///
+/// # Example
+/// ```rust
+/// let payload = GetUserDataRequest {
+///     username_or_email: "user@example.com".to_string(),
+///     password: "password123".to_string(),
+///     fields: vec!["id".to_string(), "username".to_string(), "email".to_string()],
+/// };
+/// ```
 pub async fn get_user_data(
     State((db, _jwt_config)): State<(DB, JwtConfig)>,
     Json(payload): Json<GetUserDataRequest>,
@@ -412,6 +525,26 @@ pub async fn get_user_data(
     )
 }
 
+/// Handles token refresh requests
+/// This endpoint allows clients to obtain a new access token using a valid refresh token. It verifies the refresh token, checks its validity in the database, and generates a new access token if everything is valid. The refresh token is not rotated in this implementation, but it can be easily modified to do so if desired.
+///
+/// # Arguments
+/// * `State((db, jwt_config))` - Shared state containing the database connection and JWT configuration
+/// * `Json(payload)` - The refresh token request payload containing the refresh token
+///
+/// # Returns
+/// * `(StatusCode, Json<AuthTokenResponse>)` - The HTTP status code and JSON response containing the new access token or an error message
+/// 
+/// # Error
+/// * `StatusCode::UNAUTHORIZED` - If the refresh token is invalid, expired, of the wrong type, or not found in the database
+/// * `StatusCode::INTERNAL_SERVER_ERROR` - If there is an error generating the new access token
+///
+/// # Example
+/// ```rust
+/// let payload = RefreshTokenRequest {
+///     refresh_token: "valid_refresh_token".to_string(),
+/// };
+/// ```
 pub async fn refresh_token(
     State((db, jwt_config)): State<(DB, JwtConfig)>,
     Json(payload): Json<RefreshTokenRequest>,
@@ -493,6 +626,26 @@ pub async fn refresh_token(
     )
 }
 
+/// Handles user logout requests
+/// This endpoint allows clients to log out by revoking the provided refresh token. It removes the refresh token from the database, 
+/// effectively invalidating it and preventing any further use for obtaining new access tokens.
+///
+/// # Arguments
+/// * `State((db, _jwt_config))` - Shared state containing the database connection and JWT configuration (JWT config is not used in this handler)
+/// * `Json(payload)` - The logout request payload containing the refresh token to be revoked
+/// 
+/// # Returns
+/// * `(StatusCode, Json<AuthResponse>)` - The HTTP status code and JSON response indicating success or failure of the logout operation
+///
+/// # Error
+/// * `StatusCode::INTERNAL_SERVER_ERROR` - If there is an error revoking the refresh token
+///
+/// # Example
+/// ```rust
+/// let payload = RefreshTokenRequest {
+///     refresh_token: "valid_refresh_token".to_string(),
+/// };
+/// ```
 pub async fn logout(
     State((db, _jwt_config)): State<(DB, JwtConfig)>,
     Json(payload): Json<RefreshTokenRequest>,
