@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["get_cached_event_type","get_or_create_event_type","log_error","log_shutdown","log_startup"],"static":["ERROR_ID","SHUTDOWN_ID","STARTUP_ID"],"struct":["EventTypeRecord"]};

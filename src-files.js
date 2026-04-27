@@ -1,0 +1,2 @@
+createSrcSidebar('[["Quorum_backend",["",[["db",[["queries",[],["auth.rs","mod.rs","server_logs.rs","tokens.rs"]]],["mod.rs","schema.rs"]],["models",[],["mod.rs","user.rs"]],["routes",[],["auth.rs","echo.rs","health.rs","mod.rs","route.rs"]],["tests",[["functional",[],["auth_tests.rs","mod.rs"]]],["mod.rs"]],["utility",[],["jwt.rs","mod.rs","password.rs"]]],["main.rs","startup.rs"]]]]');
+//{"start":19,"fragment_lengths":[367]}
