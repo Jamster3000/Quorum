@@ -4,11 +4,11 @@
 //! It loads database credentials and configuration from environment variables and provides
 //! helpful error messages if connection or authentication fails.
 
+use crate::utility::config::Config;
 use std::error::Error;
 use surrealdb::Surreal;
 use surrealdb::engine::remote::ws::Ws;
 use surrealdb::opt::auth::Root;
-use crate::utility::config::Config;
 
 pub mod queries;
 pub mod schema;

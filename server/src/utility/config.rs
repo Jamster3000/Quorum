@@ -91,8 +91,7 @@ impl Config {
             .unwrap_or_else(|_| "3000".to_string())
             .parse()?;
 
-        let server_host = std::env::var("SERVER_HOST")
-            .unwrap_or_else(|_| "127.0.0.1".to_string());
+        let server_host = std::env::var("SERVER_HOST").unwrap_or_else(|_| "127.0.0.1".to_string());
 
         let config = Config {
             server_port,
@@ -124,7 +123,9 @@ impl Config {
                 .parse()?,
         };
 
-        CONFIG.set(config).map_err(|_| "Config already initialized".into())
+        CONFIG
+            .set(config)
+            .map_err(|_| "Config already initialized".into())
     }
 
     /// Returns a reference to the global configuration singleton.
@@ -142,6 +143,8 @@ impl Config {
     /// println!("Server port: {}", config.server_port);
     /// ```
     pub fn get() -> &'static Config {
-        CONFIG.get().expect("Config not initialized. Call Config::load() first.")
+        CONFIG
+            .get()
+            .expect("Config not initialized. Call Config::load() first.")
     }
 }

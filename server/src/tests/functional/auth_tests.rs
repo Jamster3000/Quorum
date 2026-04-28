@@ -1,7 +1,7 @@
 use crate::startup;
 use crate::tests::TestResult;
-use serde_json::json;
 use crate::utility::config::Config;
+use serde_json::json;
 
 static CLIENT: std::sync::OnceLock<reqwest::Client> = std::sync::OnceLock::new();
 

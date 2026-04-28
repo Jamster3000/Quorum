@@ -7,11 +7,11 @@ use crate::db::DB;
 use crate::db::queries::auth;
 use crate::models::user::User;
 use crate::models::user::{
-    AuthTokenResponse, DeleteAccountRequest, GetUserDataRequest, LoginRequest,
-    SignupRequest, TokenResponse, UserDataResponse,
+    AuthTokenResponse, DeleteAccountRequest, GetUserDataRequest, LoginRequest, SignupRequest,
+    TokenResponse, UserDataResponse,
 };
-use crate::utility::password;
 use crate::utility::config::Config;
+use crate::utility::password;
 
 use chrono;
 use serde::Deserialize;
@@ -183,7 +183,8 @@ pub async fn signup(
         }
     };
 
-    let refresh_token = match crate::utility::jwt::generate_refresh_token(&user_id, &user.username) {
+    let refresh_token = match crate::utility::jwt::generate_refresh_token(&user_id, &user.username)
+    {
         Ok(token) => token,
         Err(_) => {
             return (
@@ -297,7 +298,8 @@ pub async fn login(
         }
     };
 
-    let refresh_token = match crate::utility::jwt::generate_refresh_token(&user_id, &user.username) {
+    let refresh_token = match crate::utility::jwt::generate_refresh_token(&user_id, &user.username)
+    {
         Ok(token) => token,
         Err(_) => {
             return (
@@ -624,20 +626,21 @@ pub async fn refresh_token(
     };
 
     //Generate access token
-    let access_token = match crate::utility::jwt::generate_access_token(&claims.sub, &claims.username) {
-        Ok(token) => token,
-        Err(_) => {
-            return (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                Json(AuthTokenResponse {
-                    success: false,
-                    user: None,
-                    tokens: None,
-                    message: "Failed to generate access token".to_string(),
-                }),
-            );
-        }
-    };
+    let access_token =
+        match crate::utility::jwt::generate_access_token(&claims.sub, &claims.username) {
+            Ok(token) => token,
+            Err(_) => {
+                return (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    Json(AuthTokenResponse {
+                        success: false,
+                        user: None,
+                        tokens: None,
+                        message: "Failed to generate access token".to_string(),
+                    }),
+                );
+            }
+        };
 
     (
         StatusCode::OK,

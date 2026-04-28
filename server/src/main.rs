@@ -149,7 +149,10 @@ async fn main() {
         .expect("Invalid SERVER_HOST IP address");
     let addr = SocketAddr::from((host, utility::config::Config::get().server_port));
     let listener = tokio::net::TcpListener::bind(addr).await.unwrap();
-    let server = axum::serve(listener, app.into_make_service_with_connect_info::<SocketAddr>());
+    let server = axum::serve(
+        listener,
+        app.into_make_service_with_connect_info::<SocketAddr>(),
+    );
 
     //run the tests to ensure the server is fully functional without errors
     if utility::config::Config::get().enable_testing == true {

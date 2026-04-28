@@ -4,12 +4,11 @@
 //! and to validate tokens against the configured JWT secret. All configuration values are loaded
 //! from environment variables and cached in the `Config` singleton.
 
+use crate::utility::config::Config;
 use chrono::{Duration, Utc};
 use jsonwebtoken::{DecodingKey, EncodingKey, Header, Validation, decode, encode};
 use serde::{Deserialize, Serialize};
 use std::error::Error;
-use crate::utility::config::Config;
-
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Claims {
@@ -48,10 +47,7 @@ pub struct Claims {
 ///     .expect("Failed to generate token");
 /// println!("Access token: {}", token);
 /// ```
-pub fn generate_access_token(
-    user_id: &str,
-    username: &str,
-) -> Result<String, Box<dyn Error>> {
+pub fn generate_access_token(user_id: &str, username: &str) -> Result<String, Box<dyn Error>> {
     let config = Config::get();
     let now = Utc::now();
     let expiry = now + Duration::minutes(config.jwt_access_minutes);
@@ -101,10 +97,7 @@ pub fn generate_access_token(
 ///     .expect("Failed to generate token");
 /// println!("Refresh token: {}", token);
 /// ```
-pub fn generate_refresh_token(
-    user_id: &str,
-    username: &str,
-) -> Result<String, Box<dyn Error>> {
+pub fn generate_refresh_token(user_id: &str, username: &str) -> Result<String, Box<dyn Error>> {
     let config = Config::get();
     let now = Utc::now();
     let expiry = now + Duration::days(config.jwt_refresh_days);
