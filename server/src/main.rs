@@ -1,4 +1,4 @@
-//! Entry point for the Quorum backend server.
+﻿//! Entry point for the Quorum backend server.
 //!
 //! This module initializes the entire backend application, including:
 //! - Loading environment variables from `.env`
@@ -18,6 +18,8 @@ mod routes;
 mod startup;
 mod tests;
 mod utility;
+
+use utility::docker;
 
 use routes::route::create_router;
 
@@ -58,14 +60,40 @@ async fn main() {
     //Load up and connect to the database
     let timer = startup::create_timer();
     let _db = match db::init().await {
-        Ok(db) => db,
-        Err(e) => {
-            startup::print_step("Connecting to database", false, startup::elapsed_ms(timer));
-            eprintln!("{}", format!("  Error: {}", e).red());
-            std::process::exit(1);
+        Ok(db) => {
+            startup::print_step("Connecting to database", true, startup::elapsed_ms(timer));
+            db
+        }
+        Err(_) => {
+            // Don't print failure yet - try Docker first
+            let docker_timer = startup::create_timer();
+            match docker::ensure_containers_running().await {
+                Ok(()) => {
+                    startup::print_step("Starting Docker", true, startup::elapsed_ms(docker_timer));
+
+                    let retry_timer = startup::create_timer();
+                    match db::init().await {
+                        Ok(db) => {
+                            startup::print_step("Connecting to database", true, startup::elapsed_ms(retry_timer));
+                            db
+                        }
+                        Err(e) => {
+                            startup::print_step("Connecting to database", false, startup::elapsed_ms(retry_timer));
+                            eprintln!("{}", format!("  Error: {}", e).red());
+                            std::process::exit(1);
+                        }
+                    }
+                }
+                Err(docker_err) => {
+                    // Now we show the original DB failure, then Docker failure
+                    startup::print_step("Connecting to database", false, startup::elapsed_ms(timer));
+                    startup::print_step("Starting Docker", false, startup::elapsed_ms(docker_timer));
+                    eprintln!("{}", format!("  Error: {}", docker_err).red());
+                    std::process::exit(1);
+                }
+            }
         }
     };
-    startup::print_step("Connecting to database", true, startup::elapsed_ms(timer));
 
     let timer = startup::create_timer();
     let jwt_config = match utility::jwt::JwtConfig::from_env() {
