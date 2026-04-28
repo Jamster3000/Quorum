@@ -1,3 +1,9 @@
+//! Database initialization and connection management.
+//!
+//! This module handles establishing connections to SurrealDB using WebSocket protocol.
+//! It loads database credentials and configuration from environment variables and provides
+//! helpful error messages if connection or authentication fails.
+
 use std::error::Error;
 use surrealdb::Surreal;
 use surrealdb::engine::remote::ws::Ws;
@@ -9,6 +15,30 @@ pub mod schema;
 
 pub type DB = Surreal<surrealdb::engine::remote::ws::Client>;
 
+/// Initializes and authenticates a connection to SurrealDB.
+/// Loads database connection parameters from the centralized config, establishes a WebSocket
+/// connection to SurrealDB, authenticates with root credentials, and selects the target namespace
+/// and database. If any step fails, returns a descriptive error message with helpful troubleshooting hints.
+///
+/// # Returns
+/// * `Ok(DB)` - A connected and authenticated SurrealDB client ready for queries
+/// * `Err(Box<dyn Error>)` - An error with a descriptive message and troubleshooting hint
+///
+/// # Errors
+/// * Connection refused - SurrealDB is not running or the port is blocked
+/// * Cannot resolve hostname - The `SURREAL_URL` is invalid or DNS resolution failed
+/// * Authentication failed - `SURREAL_USER` or `SURREAL_PASS` credentials are incorrect
+/// * Database selection failed - The namespace or database name does not exist
+///
+/// # Example
+/// ```rust
+/// use crate::db;
+///
+/// #[tokio::main]
+/// async fn main() {
+///     let db = db::init().await.expect("Failed to connect to database");
+/// }
+/// ```
 pub async fn init() -> Result<DB, Box<dyn Error>> {
     let config = Config::get();
     let url = &config.surreal_url;

@@ -15,10 +15,10 @@ use super::echo::echo;
 use super::health::health;
 
 /// Creates the router with all the defined routes and their handlers.
+/// Includes request limiting to avoid getting too many requests at once.
 ///
 /// # Arguments
 /// * `db` - The database connection pool.
-/// * `jwt_config` - The JWT configuration for authentication.
 ///
 /// # Returns
 /// A configured `Router` instance with all routes and their handlers.

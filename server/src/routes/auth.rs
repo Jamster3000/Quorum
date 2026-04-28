@@ -574,7 +574,7 @@ pub async fn get_user_data(
 /// This endpoint allows clients to obtain a new access token using a valid refresh token. It verifies the refresh token, checks its validity in the database, and generates a new access token if everything is valid. The refresh token is not rotated in this implementation, but it can be easily modified to do so if desired.
 ///
 /// # Arguments
-/// * `State(db)` - Shared state containing the database connection and JWT configuration
+/// * `State(_db)` - Shared state containing the database connection (not used but required by Axum)
 /// * `Json(payload)` - The refresh token request payload containing the refresh token
 ///
 /// # Returns
@@ -623,6 +623,7 @@ pub async fn refresh_token(
         }
     };
 
+    //Generate access token
     let access_token = match crate::utility::jwt::generate_access_token(&claims.sub, &claims.username) {
         Ok(token) => token,
         Err(_) => {
