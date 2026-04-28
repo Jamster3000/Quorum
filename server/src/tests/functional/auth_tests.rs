@@ -1,6 +1,7 @@
 use crate::startup;
 use crate::tests::TestResult;
 use serde_json::json;
+use crate::utility::config::Config;
 
 static CLIENT: std::sync::OnceLock<reqwest::Client> = std::sync::OnceLock::new();
 
@@ -15,8 +16,7 @@ async fn make_auth_request(
     expected_status: u16,
 ) -> Result<serde_json::Value, String> {
     let client = get_client();
-    let server_url =
-        std::env::var("SERVER_URL").unwrap_or_else(|_| "http://localhost:3000".to_string());
+    let server_url = Config::get().server_url.clone();
 
     //Make a request to an endpoint and return the response
     let response = client

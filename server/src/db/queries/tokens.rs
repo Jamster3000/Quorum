@@ -44,45 +44,6 @@ pub async fn store_refresh_token(
     Ok(())
 }
 
-/// Validates a refresh token by checking if it exists in the database and is not revoked.
-/// The token is hashed before the lookup for security purposes.
-///
-/// # Arguments
-/// * `db` - A reference to the database connection.
-/// * `user_id` - The ID of the user the token belongs to.
-/// * `refresh_token` - The refresh token to be validated.
-///
-/// # Returns
-/// * `Ok(true)` if the token is valid and exists in the database.
-/// * `Ok(false)` if the token is not valid or does not exist in the database.
-/// * `Err` if there was an error during the database operation.
-///
-/// # Example
-/// ```rust
-/// use crate::db::DB;
-/// use crate::db::queries::tokens::validate_refresh_token;
-/// let db = DB::new("localhost:8529", "my_database").await.unwrap();
-/// let is_valid = validate_refresh_token(&db, "user123", "some_refresh_token").await.unwrap();
-/// assert!(is_valid);
-/// ```
-pub async fn validate_refresh_token(
-    db: &DB,
-    user_id: &str,
-    refresh_token: &str,
-) -> Result<bool, Box<dyn Error>> {
-    let token_hash = hash_token(refresh_token);
-    let query = "SELECT id FROM refresh_token WHERE user_id = $user_id AND token_hash = $token_hash AND is_revoked = false LIMIT 1";
-
-    let mut response = db
-        .query(query)
-        .bind(("user_id", format!("users:{}", user_id)))
-        .bind(("token_hash", token_hash))
-        .await?;
-
-    let results: Vec<serde_json::Value> = response.take(0)?;
-    Ok(!results.is_empty())
-}
-
 /// Revokes a refresh token by setting its `is_revoked` flag to true in the database.
 ///
 /// # Arguments

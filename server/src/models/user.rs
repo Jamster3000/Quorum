@@ -48,13 +48,6 @@ pub struct UserDataResponse {
 }
 
 #[derive(Debug, Serialize)]
-pub struct AuthResponse {
-    pub success: bool,
-    pub user: Option<UserResponse>,
-    pub message: String,
-}
-
-#[derive(Debug, Serialize)]
 pub struct UserResponse {
     pub id: String,
     pub username: String,

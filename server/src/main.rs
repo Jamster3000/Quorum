@@ -48,11 +48,17 @@ async fn main() {
     startup::print_banner(); //outputs the name using ASCII
     startup::print_initializing(); //output the initializing text
 
-    //Find the correct valid port - default to 3000
-    let port = std::env::var("SERVER_PORT")
-        .unwrap_or_else(|_| "3000".to_string())
-        .parse::<u16>()
-        .expect("SERVER_PORT must be a valid u16");
+    //Load configs from .env
+    let timer = startup::create_timer();
+    match utility::config::Config::load() {
+        Ok(config_load) => config_load,
+        Err(e) => {
+            startup::print_step("Loading config", false, startup::elapsed_ms(timer));
+            eprintln!("{}", format!("  Error: {}", e).red());
+            std::process::exit(1);
+        }
+    };
+    startup::print_step("Loading config", true, startup::elapsed_ms(timer));
 
     let timer = startup::create_timer();
     startup::print_step("Loading environment", true, startup::elapsed_ms(timer));
@@ -109,17 +115,6 @@ async fn main() {
         }
     };
 
-    let timer = startup::create_timer();
-    let jwt_config = match utility::jwt::JwtConfig::from_env() {
-        Ok(config) => config,
-        Err(e) => {
-            startup::print_step("Loading JWT config", false, startup::elapsed_ms(timer));
-            eprintln!("{}", format!("  Error: {}", e).red());
-            std::process::exit(1);
-        }
-    };
-    startup::print_step("Loading JWT config", true, startup::elapsed_ms(timer));
-
     //Write the tables to the database if they don't exist (initial.squrl)
     let timer = startup::create_timer();
     match db::schema::init(&_db).await {
@@ -144,16 +139,20 @@ async fn main() {
         startup::elapsed_ms(timer),
     );
 
-    startup::print_ready(port);
+    startup::print_ready(utility::config::Config::get().server_port);
 
     //start the router
-    let app = create_router(_db.clone(), jwt_config);
-    let addr = SocketAddr::from(([127, 0, 0, 1], port));
+    let app = create_router(_db.clone());
+    let host = utility::config::Config::get()
+        .server_host
+        .parse::<std::net::IpAddr>()
+        .expect("Invalid SERVER_HOST IP address");
+    let addr = SocketAddr::from((host, utility::config::Config::get().server_port));
     let listener = tokio::net::TcpListener::bind(addr).await.unwrap();
-    let server = axum::serve(listener, app);
+    let server = axum::serve(listener, app.into_make_service_with_connect_info::<SocketAddr>());
 
     //run the tests to ensure the server is fully functional without errors
-    if std::env::var("ENABLE_TESTS").unwrap_or_else(|_| "true".to_string()) == "true" {
+    if utility::config::Config::get().enable_testing == true {
         //spawn server in background
         //to ensure the server runs smoothly at the same time as running the tests
         //the sever is spawned in its own thread whilst the tests run on main thread

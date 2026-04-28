@@ -2,6 +2,7 @@ use std::error::Error;
 use surrealdb::Surreal;
 use surrealdb::engine::remote::ws::Ws;
 use surrealdb::opt::auth::Root;
+use crate::utility::config::Config;
 
 pub mod queries;
 pub mod schema;
@@ -9,13 +10,14 @@ pub mod schema;
 pub type DB = Surreal<surrealdb::engine::remote::ws::Client>;
 
 pub async fn init() -> Result<DB, Box<dyn Error>> {
-    let url = std::env::var("SURREAL_URL").unwrap_or_else(|_| "ws://127.0.0.1:8000".to_string());
-    let user = std::env::var("SURREAL_USER")?;
-    let pass = std::env::var("SURREAL_PASS")?;
-    let ns = std::env::var("SURREAL_NS")?;
-    let db_name = std::env::var("SURREAL_DB")?;
+    let config = Config::get();
+    let url = &config.surreal_url;
+    let user = &config.surreal_user;
+    let pass = &config.surreal_pass;
+    let ns = &config.surreal_ns;
+    let db_name = &config.surreal_db;
 
-    let db = Surreal::new::<Ws>(&url).await.map_err(|e| -> Box<dyn Error> {
+    let db = Surreal::new::<Ws>(url).await.map_err(|e| -> Box<dyn Error> {
         let error_msg = e.to_string();
 
         let hint = if error_msg.contains("10061") || error_msg.contains("actively refused") {
@@ -32,8 +34,8 @@ pub async fn init() -> Result<DB, Box<dyn Error>> {
     })?;
 
     db.signin(Root {
-        username: user,
-        password: pass,
+        username: user.to_string(),
+        password: pass.to_string(),
     })
     .await
     .map_err(|e| -> Box<dyn Error> {
@@ -41,7 +43,7 @@ pub async fn init() -> Result<DB, Box<dyn Error>> {
         format!("Failed to authenticate\n{}\n\nError: {}", hint, e).into()
     })?;
 
-    db.use_ns(&ns).use_db(&db_name).await.map_err(|e| -> Box<dyn Error> {
+    db.use_ns(ns).use_db(db_name).await.map_err(|e| -> Box<dyn Error> {
         let hint = "Hint: Verify SURREAL_NS and SURREAL_DB in .env exist. Run schema/initial.surql to create them.";
         format!("Failed to select database\n{}\n\nError: {}", hint, e).into()
     })?;
