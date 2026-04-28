@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["run_all_tests"],"mod":["functional"],"struct":["TestResult"]};
+window.SIDEBAR_ITEMS = {"fn":["run_all_tests"],"mod":["functional"],"struct":["TestResult"],"type":["TestFn"]};

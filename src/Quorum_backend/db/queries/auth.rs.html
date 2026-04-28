@@ -167,69 +167,33 @@
 <a href=#167 id=167 data-nosnippet>167</a>    tokens::store_refresh_token(db, user_id, refresh_token, expires_at).<span class="kw">await
 <a href=#168 id=168 data-nosnippet>168</a></span>}
 <a href=#169 id=169 data-nosnippet>169</a>
-<a href=#170 id=170 data-nosnippet>170</a><span class="doccomment">/// Validates a refresh token for a specific user
+<a href=#170 id=170 data-nosnippet>170</a><span class="doccomment">/// Revokes a refresh token, preventing it from being used for future authentication
 <a href=#171 id=171 data-nosnippet>171</a>///
 <a href=#172 id=172 data-nosnippet>172</a>/// # Arguments
 <a href=#173 id=173 data-nosnippet>173</a>/// * `db` - A reference to the database connection
-<a href=#174 id=174 data-nosnippet>174</a>/// * `user_id` - The ID of the user for whom the refresh token is being validated
-<a href=#175 id=175 data-nosnippet>175</a>/// * `refresh_token` - The refresh token string to validate
-<a href=#176 id=176 data-nosnippet>176</a>///
-<a href=#177 id=177 data-nosnippet>177</a>/// # Returns
-<a href=#178 id=178 data-nosnippet>178</a>/// * `Ok(bool)` - `true` if the refresh token is valid, `false` if it is invalid or expired
-<a href=#179 id=179 data-nosnippet>179</a>/// * `Err(Box&lt;dyn Error&gt;)` - An error if the operation failed, such as if there was a database error
-<a href=#180 id=180 data-nosnippet>180</a>///
-<a href=#181 id=181 data-nosnippet>181</a>/// # Errors
-<a href=#182 id=182 data-nosnippet>182</a>/// * "Failed to validate refresh token" - If the database query did not execute successfully, indicating that the refresh token could not be validated
-<a href=#183 id=183 data-nosnippet>183</a>///
-<a href=#184 id=184 data-nosnippet>184</a>/// # Example
-<a href=#185 id=185 data-nosnippet>185</a>/// ```rust
-<a href=#186 id=186 data-nosnippet>186</a>/// use crate::db::DB;
-<a href=#187 id=187 data-nosnippet>187</a>/// use crate::db::queries::auth;
-<a href=#188 id=188 data-nosnippet>188</a>/// async fn example_validate_refresh_token(db: &amp;DB) {
-<a href=#189 id=189 data-nosnippet>189</a>///     let user_id = "user_id";
-<a href=#190 id=190 data-nosnippet>190</a>///     let refresh_token = "refresh_token_string";
-<a href=#191 id=191 data-nosnippet>191</a>///     match auth::validate_refresh_token(db, user_id, refresh_token).await {
-<a href=#192 id=192 data-nosnippet>192</a>///         Ok(is_valid) =&gt; println!("Refresh token valid: {}", is_valid),
-<a href=#193 id=193 data-nosnippet>193</a>///         Err(e) =&gt; eprintln!("Error validating refresh token: {}", e),
-<a href=#194 id=194 data-nosnippet>194</a>///     }
-<a href=#195 id=195 data-nosnippet>195</a>/// }
-<a href=#196 id=196 data-nosnippet>196</a>///```
-<a href=#197 id=197 data-nosnippet>197</a></span><span class="kw">pub async fn </span>validate_refresh_token(
-<a href=#198 id=198 data-nosnippet>198</a>    db: <span class="kw-2">&amp;</span>DB,
-<a href=#199 id=199 data-nosnippet>199</a>    user_id: <span class="kw-2">&amp;</span>str,
-<a href=#200 id=200 data-nosnippet>200</a>    refresh_token: <span class="kw-2">&amp;</span>str,
-<a href=#201 id=201 data-nosnippet>201</a>) -&gt; <span class="prelude-ty">Result</span>&lt;bool, Box&lt;<span class="kw">dyn </span>Error&gt;&gt; {
-<a href=#202 id=202 data-nosnippet>202</a>    <span class="kw">use </span><span class="kw">crate</span>::db::queries::tokens;
-<a href=#203 id=203 data-nosnippet>203</a>    tokens::validate_refresh_token(db, user_id, refresh_token).<span class="kw">await
-<a href=#204 id=204 data-nosnippet>204</a></span>}
-<a href=#205 id=205 data-nosnippet>205</a>
-<a href=#206 id=206 data-nosnippet>206</a><span class="doccomment">/// Revokes a refresh token, preventing it from being used for future authentication
-<a href=#207 id=207 data-nosnippet>207</a>///
-<a href=#208 id=208 data-nosnippet>208</a>/// # Arguments
-<a href=#209 id=209 data-nosnippet>209</a>/// * `db` - A reference to the database connection
-<a href=#210 id=210 data-nosnippet>210</a>/// * `refresh_token` - The refresh token string to revoke
-<a href=#211 id=211 data-nosnippet>211</a>///
-<a href=#212 id=212 data-nosnippet>212</a>/// # Returns
-<a href=#213 id=213 data-nosnippet>213</a>/// * `Ok(())` - If the refresh token was successfully revoked
-<a href=#214 id=214 data-nosnippet>214</a>/// * `Err(Box&lt;dyn Error&gt;)` - An error if the operation failed, such as if there was a database error
-<a href=#215 id=215 data-nosnippet>215</a>///
-<a href=#216 id=216 data-nosnippet>216</a>/// # Errors
-<a href=#217 id=217 data-nosnippet>217</a>/// * "Failed to revoke refresh token" - If the database query did not execute successfully, indicating that the refresh token could not be revoked
-<a href=#218 id=218 data-nosnippet>218</a>///
-<a href=#219 id=219 data-nosnippet>219</a>/// # Example
-<a href=#220 id=220 data-nosnippet>220</a>/// ```rust
-<a href=#221 id=221 data-nosnippet>221</a>/// use crate::db::DB;
-<a href=#222 id=222 data-nosnippet>222</a>/// use crate::db::queries::auth;
-<a href=#223 id=223 data-nosnippet>223</a>/// async fn example_revoke_refresh_token(db: &amp;DB) {
-<a href=#224 id=224 data-nosnippet>224</a>///     let refresh_token = "refresh_token_string";
-<a href=#225 id=225 data-nosnippet>225</a>///     match auth::revoke_refresh_token(db, refresh_token).await {
-<a href=#226 id=226 data-nosnippet>226</a>///         Ok(()) =&gt; println!("Refresh token revoked successfully"),
-<a href=#227 id=227 data-nosnippet>227</a>///         Err(e) =&gt; eprintln!("Error revoking refresh token: {}", e),
-<a href=#228 id=228 data-nosnippet>228</a>///     }
-<a href=#229 id=229 data-nosnippet>229</a>/// }
-<a href=#230 id=230 data-nosnippet>230</a>///```  
-<a href=#231 id=231 data-nosnippet>231</a></span><span class="kw">pub async fn </span>revoke_refresh_token(db: <span class="kw-2">&amp;</span>DB, refresh_token: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;(), Box&lt;<span class="kw">dyn </span>Error&gt;&gt; {
-<a href=#232 id=232 data-nosnippet>232</a>    <span class="kw">use </span><span class="kw">crate</span>::db::queries::tokens;
-<a href=#233 id=233 data-nosnippet>233</a>    tokens::revoke_refresh_token(db, refresh_token).<span class="kw">await
-<a href=#234 id=234 data-nosnippet>234</a></span>}
+<a href=#174 id=174 data-nosnippet>174</a>/// * `refresh_token` - The refresh token string to revoke
+<a href=#175 id=175 data-nosnippet>175</a>///
+<a href=#176 id=176 data-nosnippet>176</a>/// # Returns
+<a href=#177 id=177 data-nosnippet>177</a>/// * `Ok(())` - If the refresh token was successfully revoked
+<a href=#178 id=178 data-nosnippet>178</a>/// * `Err(Box&lt;dyn Error&gt;)` - An error if the operation failed, such as if there was a database error
+<a href=#179 id=179 data-nosnippet>179</a>///
+<a href=#180 id=180 data-nosnippet>180</a>/// # Errors
+<a href=#181 id=181 data-nosnippet>181</a>/// * "Failed to revoke refresh token" - If the database query did not execute successfully, indicating that the refresh token could not be revoked
+<a href=#182 id=182 data-nosnippet>182</a>///
+<a href=#183 id=183 data-nosnippet>183</a>/// # Example
+<a href=#184 id=184 data-nosnippet>184</a>/// ```rust
+<a href=#185 id=185 data-nosnippet>185</a>/// use crate::db::DB;
+<a href=#186 id=186 data-nosnippet>186</a>/// use crate::db::queries::auth;
+<a href=#187 id=187 data-nosnippet>187</a>/// async fn example_revoke_refresh_token(db: &amp;DB) {
+<a href=#188 id=188 data-nosnippet>188</a>///     let refresh_token = "refresh_token_string";
+<a href=#189 id=189 data-nosnippet>189</a>///     match auth::revoke_refresh_token(db, refresh_token).await {
+<a href=#190 id=190 data-nosnippet>190</a>///         Ok(()) =&gt; println!("Refresh token revoked successfully"),
+<a href=#191 id=191 data-nosnippet>191</a>///         Err(e) =&gt; eprintln!("Error revoking refresh token: {}", e),
+<a href=#192 id=192 data-nosnippet>192</a>///     }
+<a href=#193 id=193 data-nosnippet>193</a>/// }
+<a href=#194 id=194 data-nosnippet>194</a>///```  
+<a href=#195 id=195 data-nosnippet>195</a></span><span class="kw">pub async fn </span>revoke_refresh_token(db: <span class="kw-2">&amp;</span>DB, refresh_token: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;(), Box&lt;<span class="kw">dyn </span>Error&gt;&gt; {
+<a href=#196 id=196 data-nosnippet>196</a>    <span class="kw">use </span><span class="kw">crate</span>::db::queries::tokens;
+<a href=#197 id=197 data-nosnippet>197</a>    tokens::revoke_refresh_token(db, refresh_token).<span class="kw">await
+<a href=#198 id=198 data-nosnippet>198</a></span>}
 </code></pre></div></section></main></body></html>
