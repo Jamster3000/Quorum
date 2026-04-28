@@ -167,42 +167,6 @@ pub async fn store_refresh_token(
     tokens::store_refresh_token(db, user_id, refresh_token, expires_at).await
 }
 
-/// Validates a refresh token for a specific user
-///
-/// # Arguments
-/// * `db` - A reference to the database connection
-/// * `user_id` - The ID of the user for whom the refresh token is being validated
-/// * `refresh_token` - The refresh token string to validate
-///
-/// # Returns
-/// * `Ok(bool)` - `true` if the refresh token is valid, `false` if it is invalid or expired
-/// * `Err(Box<dyn Error>)` - An error if the operation failed, such as if there was a database error
-///
-/// # Errors
-/// * "Failed to validate refresh token" - If the database query did not execute successfully, indicating that the refresh token could not be validated
-///
-/// # Example
-/// ```rust
-/// use crate::db::DB;
-/// use crate::db::queries::auth;
-/// async fn example_validate_refresh_token(db: &DB) {
-///     let user_id = "user_id";
-///     let refresh_token = "refresh_token_string";
-///     match auth::validate_refresh_token(db, user_id, refresh_token).await {
-///         Ok(is_valid) => println!("Refresh token valid: {}", is_valid),
-///         Err(e) => eprintln!("Error validating refresh token: {}", e),
-///     }
-/// }
-///```
-pub async fn validate_refresh_token(
-    db: &DB,
-    user_id: &str,
-    refresh_token: &str,
-) -> Result<bool, Box<dyn Error>> {
-    use crate::db::queries::tokens;
-    tokens::validate_refresh_token(db, user_id, refresh_token).await
-}
-
 /// Revokes a refresh token, preventing it from being used for future authentication
 ///
 /// # Arguments

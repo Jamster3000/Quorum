@@ -155,7 +155,7 @@ async fn main() {
     );
 
     //run the tests to ensure the server is fully functional without errors
-    if utility::config::Config::get().enable_testing == true {
+    if utility::config::Config::get().enable_testing {
         //spawn server in background
         //to ensure the server runs smoothly at the same time as running the tests
         //the sever is spawned in its own thread whilst the tests run on main thread

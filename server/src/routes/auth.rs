@@ -201,7 +201,10 @@ pub async fn signup(
 
     let config = crate::utility::config::Config::get();
     let expires_at = chrono::Utc::now().timestamp() + (config.jwt_refresh_days * 86400);
-    if let Err(_) = auth::store_refresh_token(&db, &user_id, &refresh_token, expires_at).await {
+    if auth::store_refresh_token(&db, &user_id, &refresh_token, expires_at)
+        .await
+        .is_err()
+    {
         return (
             StatusCode::INTERNAL_SERVER_ERROR,
             Json(AuthTokenResponse {
@@ -315,7 +318,10 @@ pub async fn login(
     };
 
     let expires_at = chrono::Utc::now().timestamp() + (Config::get().jwt_refresh_days * 86400);
-    if let Err(_) = auth::store_refresh_token(&db, &user_id, &refresh_token, expires_at).await {
+    if auth::store_refresh_token(&db, &user_id, &refresh_token, expires_at)
+        .await
+        .is_err()
+    {
         return (
             StatusCode::INTERNAL_SERVER_ERROR,
             Json(AuthTokenResponse {
@@ -425,7 +431,10 @@ pub async fn delete_account(
         );
     }
 
-    if let Err(_) = auth::delete_user_by_id(&db, &payload.user_id).await {
+    if auth::delete_user_by_id(&db, &payload.user_id)
+        .await
+        .is_err()
+    {
         return (
             StatusCode::INTERNAL_SERVER_ERROR,
             Json(AuthTokenResponse {
@@ -681,7 +690,10 @@ pub async fn logout(
     State(db): State<DB>,
     Json(payload): Json<RefreshTokenRequest>,
 ) -> (StatusCode, Json<AuthTokenResponse>) {
-    if let Err(_) = auth::revoke_refresh_token(&db, &payload.refresh_token).await {
+    if auth::revoke_refresh_token(&db, &payload.refresh_token)
+        .await
+        .is_err()
+    {
         return (
             StatusCode::INTERNAL_SERVER_ERROR,
             Json(AuthTokenResponse {
