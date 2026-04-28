@@ -34,7 +34,7 @@ pub async fn ensure_containers_running() -> Result<(), Box<dyn Error>> {
     }
 
     let output = Command::new("docker")
-        .args(&["compose", "up", "-d"])
+        .args(["compose", "up", "-d"])
         .current_dir(&docker_dir)
         .output()
         .map_err(|_| "Failed to execute docker compose command")?;

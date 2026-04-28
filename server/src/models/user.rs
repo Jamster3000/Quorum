@@ -83,7 +83,7 @@ impl User {
             id: format!("{:?}", self.id.key),
             username: self.username.clone(),
             email: self.email.clone(),
-            created_at: self.created_at.clone(),
+            created_at: self.created_at,
         }
     }
 }

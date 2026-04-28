@@ -201,7 +201,7 @@ pub async fn signup(
         };
 
     let expires_at = chrono::Utc::now().timestamp() + (jwt_config.refresh_expiry_days * 86400);
-    if let Err(_) = auth::store_refresh_token(&db, &user_id, &refresh_token, expires_at).await {
+    if auth::store_refresh_token(&db, &user_id, &refresh_token, expires_at).await.is_err() {
         return (
             StatusCode::INTERNAL_SERVER_ERROR,
             Json(AuthTokenResponse {
@@ -316,7 +316,7 @@ pub async fn login(
         };
 
     let expires_at = chrono::Utc::now().timestamp() + (jwt_config.refresh_expiry_days * 86400);
-    if let Err(_) = auth::store_refresh_token(&db, &user_id, &refresh_token, expires_at).await {
+    if auth::store_refresh_token(&db, &user_id, &refresh_token, expires_at).await.is_err() {
         return (
             StatusCode::INTERNAL_SERVER_ERROR,
             Json(AuthTokenResponse {
@@ -578,7 +578,7 @@ pub async fn refresh_token(
     }
 
     // Validate refresh token in database
-    if let Err(_) = auth::validate_refresh_token(&db, &claims.sub, &payload.refresh_token).await {
+    if auth::validate_refresh_token(&db, &claims.sub, &payload.refresh_token).await.is_err() {
         return (
             StatusCode::UNAUTHORIZED,
             Json(AuthTokenResponse {

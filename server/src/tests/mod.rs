@@ -2,6 +2,9 @@ mod functional;
 
 use crate::startup;
 use colored::*;
+use futures::future::BoxFuture;
+
+type TestFn = fn() -> BoxFuture<'static, Result<TestResult, String>>;
 
 pub struct TestResult {
     pub endpoint_time: u128,
@@ -10,10 +13,7 @@ pub struct TestResult {
 pub async fn run_all_tests() {
     println!("\n{}", "Running Tests...".yellow().bold());
 
-    let tests: Vec<(
-        &str,
-        fn() -> futures::future::BoxFuture<'static, Result<TestResult, String>>,
-    )> = vec![
+    let tests: Vec<(&str, TestFn)> = vec![
         ("Auth signup with email + password test", || {
             Box::pin(functional::auth_tests::test_signup_email())
         }),

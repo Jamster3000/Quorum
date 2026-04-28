@@ -54,7 +54,7 @@ pub fn print_initializing() {
 /// and elapsed tim in milliseconds.
 ///
 /// # Arguments
-//// * `step` - A string describing the initialization step being performed.
+/// * `step` - A string describing the initialization step being performed.
 /// * `success` - A boolean indicating whether the step succeeded (true) or failed (false).
 /// * `duration_ms` - The time taken to complete the step, in milliseconds.
 ///
@@ -75,7 +75,7 @@ pub fn print_step(step: &str, success: bool, duration_ms: u128) {
 /// Similar to `print_step` but uses a different end tree character.
 ///
 /// # Arguments
-//// * `step` - A string describing the final initialization step being performed.
+/// * `step` - A string describing the final initialization step being performed.
 /// * `success` - A boolean indicating whether the step succeeded (true) or failed (false).
 /// * `duration_ms` - The time taken to complete the step, in milliseconds.
 ///

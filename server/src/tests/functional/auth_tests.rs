@@ -4,6 +4,7 @@ use serde_json::json;
 
 static CLIENT: std::sync::OnceLock<reqwest::Client> = std::sync::OnceLock::new();
 
+#[allow(clippy::redundant_closure)]
 fn get_client() -> &'static reqwest::Client {
     CLIENT.get_or_init(|| reqwest::Client::new())
 }
@@ -19,7 +20,7 @@ async fn make_auth_request(
 
     //Make a request to an endpoint and return the response
     let response = client
-        .post(&format!("{}{}", server_url, endpoint))
+        .post(format!("{}{}", server_url, endpoint))
         .json(payload)
         .send()
         .await
