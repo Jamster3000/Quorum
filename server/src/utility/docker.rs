@@ -1,12 +1,12 @@
 //! Utility functions for managing Docker containers
-//! If the docker container for SurrealDB and minio isn't running the 
+//! If the docker container for SurrealDB and minio isn't running the
 //! `ensure_containers_running` funtion will check and execute `docker compose up -d`
 //! to start the containers.
 
 use std::error::Error;
 use std::process::Command;
 
-/// ensure_containers_running checks if the required Docker 
+/// ensure_containers_running checks if the required Docker
 /// containers are running and starts them if they are not.
 ///
 /// # returns
@@ -41,11 +41,7 @@ pub async fn ensure_containers_running() -> Result<(), Box<dyn Error>> {
 
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
-        return Err(format!(
-            "Failed to start Docker containers: {}",
-            stderr.trim()
-        )
-        .into());
+        return Err(format!("Failed to start Docker containers: {}", stderr.trim()).into());
     }
 
     tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;
