@@ -11,7 +11,6 @@ pub struct TestResult {
 
 pub struct RobustnessTestResult {
     pub endpoint_time: u128,
-    pub status_code: u16,
 }
 
 pub async fn run_all_tests() {

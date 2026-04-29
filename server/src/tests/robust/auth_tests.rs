@@ -13,7 +13,7 @@ pub async fn test_signup_short_username() -> Result<RobustnessTestResult, String
     let timer = startup::create_timer();
     make_auth_request_raw("/auth/signup", &payload, 500).await?;
     let endpoint_time = startup::elapsed_ms(timer);
-    Ok(RobustnessTestResult { endpoint_time, status_code: 500 })
+    Ok(RobustnessTestResult { endpoint_time })
 }
 
 /// Test signup with very long username (256+ characters)
@@ -27,7 +27,7 @@ pub async fn test_signup_long_username() -> Result<RobustnessTestResult, String>
     let timer = startup::create_timer();
     make_auth_request_raw("/auth/signup", &payload, 500).await?;
     let endpoint_time = startup::elapsed_ms(timer);
-    Ok(RobustnessTestResult { endpoint_time, status_code: 500 })
+    Ok(RobustnessTestResult { endpoint_time })
 }
 
 /// Test signup with empty password
@@ -41,7 +41,7 @@ pub async fn test_signup_empty_password() -> Result<RobustnessTestResult, String
     let timer = startup::create_timer();
     make_auth_request_raw("/auth/signup", &payload, 400).await?;
     let endpoint_time = startup::elapsed_ms(timer);
-    Ok(RobustnessTestResult { endpoint_time, status_code: 400 })
+    Ok(RobustnessTestResult { endpoint_time })
 }
 
 /// Test signup with very short password (1 character)
@@ -55,7 +55,7 @@ pub async fn test_signup_short_password() -> Result<RobustnessTestResult, String
     let timer = startup::create_timer();
     make_auth_request_raw("/auth/signup", &payload, 400).await?;
     let endpoint_time = startup::elapsed_ms(timer);
-    Ok(RobustnessTestResult { endpoint_time, status_code: 400 })
+    Ok(RobustnessTestResult { endpoint_time })
 }
 
 /// Test signup with very long password (1000+ characters)
@@ -70,7 +70,7 @@ pub async fn test_signup_long_password() -> Result<RobustnessTestResult, String>
     let timer = startup::create_timer();
     make_auth_request_raw("/auth/signup", &payload, 400).await?;
     let endpoint_time = startup::elapsed_ms(timer);
-    Ok(RobustnessTestResult { endpoint_time, status_code: 400 })
+    Ok(RobustnessTestResult { endpoint_time})
 }
 
 /// Test signup with invalid email format
@@ -85,7 +85,7 @@ pub async fn test_signup_invalid_email() -> Result<RobustnessTestResult, String>
     let timer = startup::create_timer();
     make_auth_request_raw("/auth/signup", &payload, 500).await?;
     let endpoint_time = startup::elapsed_ms(timer);
-    Ok(RobustnessTestResult { endpoint_time, status_code: 500 })
+    Ok(RobustnessTestResult { endpoint_time})
 }
 
 /// Test signup with duplicate username
@@ -106,7 +106,7 @@ pub async fn test_signup_duplicate_username() -> Result<RobustnessTestResult, St
     let timer = startup::create_timer();
     make_auth_request_raw("/auth/signup", &duplicate_payload, 400).await?;
     let endpoint_time = startup::elapsed_ms(timer);
-    Ok(RobustnessTestResult { endpoint_time, status_code: 400 })
+    Ok(RobustnessTestResult { endpoint_time})
 }
 
 /// Test login with wrong password
@@ -127,7 +127,7 @@ pub async fn test_login_wrong_password() -> Result<RobustnessTestResult, String>
     let timer = startup::create_timer();
     make_auth_request_raw("/auth/login", &login_payload, 401).await?;
     let endpoint_time = startup::elapsed_ms(timer);
-    Ok(RobustnessTestResult { endpoint_time, status_code: 401 })
+    Ok(RobustnessTestResult { endpoint_time})
 }
 
 /// Test login with nonexistent user
@@ -140,7 +140,7 @@ pub async fn test_login_nonexistent_user() -> Result<RobustnessTestResult, Strin
     let timer = startup::create_timer();
     make_auth_request_raw("/auth/login", &payload, 401).await?;
     let endpoint_time = startup::elapsed_ms(timer);
-    Ok(RobustnessTestResult { endpoint_time, status_code: 401 })
+    Ok(RobustnessTestResult { endpoint_time})
 }
 
 /// Test login with empty username
@@ -153,7 +153,7 @@ pub async fn test_login_empty_username() -> Result<RobustnessTestResult, String>
     let timer = startup::create_timer();
     make_auth_request_raw("/auth/login", &payload, 401).await?;
     let endpoint_time = startup::elapsed_ms(timer);
-    Ok(RobustnessTestResult { endpoint_time, status_code: 401 })
+    Ok(RobustnessTestResult { endpoint_time})
 }
 
 /// Test refresh token with invalid token format
@@ -165,7 +165,7 @@ pub async fn test_refresh_invalid_token() -> Result<RobustnessTestResult, String
     let timer = startup::create_timer();
     make_auth_request_raw("/auth/refresh", &payload, 401).await?;
     let endpoint_time = startup::elapsed_ms(timer);
-    Ok(RobustnessTestResult { endpoint_time, status_code: 401 })
+    Ok(RobustnessTestResult { endpoint_time})
 }
 
 /// Test refresh token with empty token
@@ -177,7 +177,7 @@ pub async fn test_refresh_empty_token() -> Result<RobustnessTestResult, String> 
     let timer = startup::create_timer();
     make_auth_request_raw("/auth/refresh", &payload, 401).await?;
     let endpoint_time = startup::elapsed_ms(timer);
-    Ok(RobustnessTestResult { endpoint_time, status_code: 401 })
+    Ok(RobustnessTestResult { endpoint_time})
 }
 
 /// Test delete with wrong password
@@ -211,7 +211,7 @@ pub async fn test_delete_wrong_password() -> Result<RobustnessTestResult, String
     let timer = startup::create_timer();
     make_auth_request_raw("/auth/delete", &delete_payload, 401).await?;
     let endpoint_time = startup::elapsed_ms(timer);
-    Ok(RobustnessTestResult { endpoint_time, status_code: 401 })
+    Ok(RobustnessTestResult { endpoint_time})
 }
 
 /// Test get user data with wrong password
@@ -233,7 +233,7 @@ pub async fn test_get_user_data_wrong_password() -> Result<RobustnessTestResult,
     let timer = startup::create_timer();
     make_auth_request_raw("/auth/me", &payload, 401).await?;
     let endpoint_time = startup::elapsed_ms(timer);
-    Ok(RobustnessTestResult { endpoint_time, status_code: 401 })
+    Ok(RobustnessTestResult { endpoint_time})
 }
 
 /// Test logout with invalid refresh token
@@ -245,5 +245,5 @@ pub async fn test_logout_invalid_token() -> Result<RobustnessTestResult, String>
     let timer = startup::create_timer();
     make_auth_request_raw("/auth/logout", &payload, 401).await?;
     let endpoint_time = startup::elapsed_ms(timer);
-    Ok(RobustnessTestResult { endpoint_time, status_code: 401 })
+    Ok(RobustnessTestResult { endpoint_time})
 }
