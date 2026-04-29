@@ -11,7 +11,6 @@ use crate::models::user::{
     TokenResponse, UserDataResponse,
 };
 use crate::utility::config::Config;
-use crate::utility::password;
 
 use chrono;
 use serde::Deserialize;
@@ -21,52 +20,14 @@ pub struct RefreshTokenRequest {
     pub refresh_token: String,
 }
 
-/// Verifies user credentials and returns the user if valid
-///
-/// # Arguments
-/// * `db` - Database connection
-/// * `username_or_email` - Username or email provided by the user
-/// * `password` - Password provided by the user
-///
-/// # Returns
-/// * `Ok(User)` - If credentials are valid
-/// * `Err((StatusCode, String))` - If credentials are invalid or an error occurs
-///
-/// # Error
-/// * `StatusCode::UNAUTHORIZED` - If username/email or password is incorrect
-/// * `StatusCode::INTERNAL_SERVER_ERROR` - If there is an error verifying the password
 async fn verify_user_credentials(
     db: &DB,
     username_or_email: &str,
     password: &str,
 ) -> Result<User, (StatusCode, String)> {
-    let user = auth::get_user_by_username_or_email(db, username_or_email)
+    auth::verify_user_credentials(db, username_or_email, password)
         .await
-        .map_err(|_| {
-            (
-                StatusCode::UNAUTHORIZED,
-                "Invalid username/email or password".to_string(),
-            )
-        })?;
-
-    let password_hash = user.password_hash.as_ref().ok_or((
-        StatusCode::UNAUTHORIZED,
-        "Invalid username/email or password".to_string(),
-    ))?;
-
-    let is_valid = password::verify_password(password, password_hash)
-        .await
-        .map_err(|_| {
-            (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                "Error verifying password".to_string(),
-            )
-        })?;
-
-    is_valid.then_some(user).ok_or((
-        StatusCode::UNAUTHORIZED,
-        "Invalid username/email or password".to_string(),
-    ))
+        .map_err(|_| (StatusCode::UNAUTHORIZED, "Invalid username/email or password".to_string()))
 }
 
 /// Extracts the user ID as a string from the User struct
@@ -111,43 +72,34 @@ pub async fn signup(
     State(db): State<DB>,
     Json(payload): Json<SignupRequest>,
 ) -> (StatusCode, Json<AuthTokenResponse>) {
-    let password_hash = match password::hash_password(&payload.password).await {
-        Ok(hash) => hash,
-        Err(_) => {
-            return (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                Json(AuthTokenResponse {
-                    success: false,
-                    user: None,
-                    tokens: None,
-                    message: "Failed to process password".to_string(),
-                }),
-            );
-        }
-    };
-
     let user = match auth::signup_user(
         &db,
         &payload.username,
         payload.email.as_deref(),
-        &password_hash,
+        &payload.password,
     )
     .await
     {
         Ok(user) => user,
         Err(e) => {
-            let message = if e.to_string().contains("idx_username") {
-                "Username already exists".to_string()
+            let message = e.to_string();
+            let status = if message.contains("Invalid password length") 
+                || message.contains("idx_username")
+                || message.contains("idx_email") {
+                StatusCode::BAD_REQUEST
+            } else if message.contains("idx_username") || message.contains("UNIQUE") {
+                StatusCode::CONFLICT
             } else {
-                format!("Failed to create user: {}", e)
+                StatusCode::INTERNAL_SERVER_ERROR
             };
+            
             return (
-                StatusCode::CONFLICT,
+                status,
                 Json(AuthTokenResponse {
                     success: false,
                     user: None,
                     tokens: None,
-                    message,
+                    message: format!("Failed to create user: {}", e),
                 }),
             );
         }
@@ -183,8 +135,7 @@ pub async fn signup(
         }
     };
 
-    let refresh_token = match crate::utility::jwt::generate_refresh_token(&user_id, &user.username)
-    {
+    let refresh_token = match crate::utility::jwt::generate_refresh_token(&user_id, &user.username) {
         Ok(token) => token,
         Err(_) => {
             return (
@@ -201,10 +152,7 @@ pub async fn signup(
 
     let config = crate::utility::config::Config::get();
     let expires_at = chrono::Utc::now().timestamp() + (config.jwt_refresh_days * 86400);
-    if auth::store_refresh_token(&db, &user_id, &refresh_token, expires_at)
-        .await
-        .is_err()
-    {
+    if let Err(_) = auth::store_refresh_token(&db, &user_id, &refresh_token, expires_at).await {
         return (
             StatusCode::INTERNAL_SERVER_ERROR,
             Json(AuthTokenResponse {
@@ -224,7 +172,7 @@ pub async fn signup(
             tokens: Some(TokenResponse {
                 access_token,
                 refresh_token,
-                expires_in: Config::get().jwt_access_minutes * 60,
+                expires_in: crate::utility::config::Config::get().jwt_access_minutes * 60,
             }),
             message: "User created successfully".to_string(),
         }),
@@ -348,237 +296,48 @@ pub async fn login(
     )
 }
 
-/// Handles account deletion requests
-///
-/// # Arguments
-/// * `State(db)` - Shared state containing the database connection and JWT configuration (JWT config is not used in this handler)
-/// * `Json(payload)` - The account deletion request payload containing username/email, password, and user ID
-///
-/// # Returns
-/// * `(StatusCode, Json<AuthResponse>)` - The HTTP status code and JSON response indicating success or failure of account deletion
-///
-/// # Error
-/// * `StatusCode::UNAUTHORIZED` - If the username/email or password is incorrect
-/// * `StatusCode::BAD_REQUEST` - If there is a user ID mismatch during account deletion
-/// * `StatusCode::INTERNAL_SERVER_ERROR` - If there is an error deleting the account
-///
-/// # Example
-/// ```rust
-/// let payload = DeleteAccountRequest {
-///     username_or_email: "user@example.com".to_string(),
-///     password: "password123".to_string(),
-///     user_id: "user_id".to_string(),
-/// };
-/// ```
 pub async fn delete_account(
     State(db): State<DB>,
     Json(payload): Json<DeleteAccountRequest>,
 ) -> (StatusCode, Json<AuthTokenResponse>) {
-    let user = match auth::get_user_by_username_or_email(&db, &payload.username_or_email).await {
+    let _user = match auth::verify_user_credentials(&db, &payload.username_or_email, &payload.password).await {
         Ok(user) => user,
-        Err(_) => {
-            return (
-                StatusCode::UNAUTHORIZED,
-                Json(AuthTokenResponse {
-                    success: false,
-                    user: None,
-                    tokens: None,
-                    message: "Invalid username/email or password".to_string(),
-                }),
-            );
+        Err((status, message)) => {
+            return (status, Json(AuthTokenResponse { success: false, user: None, tokens: None, message }));
         }
     };
 
-    let password_hash = match user.password_hash.as_ref() {
-        Some(hash) => hash,
-        None => {
-            return (
-                StatusCode::UNAUTHORIZED,
-                Json(AuthTokenResponse {
-                    success: false,
-                    user: None,
-                    tokens: None,
-                    message: "Invalid username/email or password".to_string(),
-                }),
-            );
-        }
-    };
-
-    let is_valid = match password::verify_password(&payload.password, password_hash).await {
-        Ok(valid) => valid,
-        Err(_) => {
-            return (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                Json(AuthTokenResponse {
-                    success: false,
-                    user: None,
-                    tokens: None,
-                    message: "Error verifying password".to_string(),
-                }),
-            );
-        }
-    };
-
-    if !is_valid {
-        return (
-            StatusCode::UNAUTHORIZED,
-            Json(AuthTokenResponse {
-                success: false,
-                user: None,
-                tokens: None,
-                message: "Invalid username/email or password".to_string(),
-            }),
-        );
+    if auth::delete_user_by_id(&db, &payload.user_id).await.is_err() {
+        return (StatusCode::INTERNAL_SERVER_ERROR, Json(AuthTokenResponse { success: false, user: None, tokens: None, message: "Failed to delete account".to_string() }));
     }
 
-    if auth::delete_user_by_id(&db, &payload.user_id)
-        .await
-        .is_err()
-    {
-        return (
-            StatusCode::INTERNAL_SERVER_ERROR,
-            Json(AuthTokenResponse {
-                success: false,
-                user: None,
-                tokens: None,
-                message: "Failed to delete account".to_string(),
-            }),
-        );
-    }
-
-    (
-        StatusCode::OK,
-        Json(AuthTokenResponse {
-            success: true,
-            user: None,
-            tokens: None,
-            message: "Account deleted successfully".to_string(),
-        }),
-    )
+    (StatusCode::OK, Json(AuthTokenResponse { success: true, user: None, tokens: None, message: "Account deleted successfully".to_string() }))
 }
 
-/// Handles user data retrieval requests
-/// This request can be used to get any information about a user. It benefits better than having a separate endpoint for each field,
-/// and it also allows the client to specify which fields they want to retrieve, reducing unnecessary data transfer.
-///
-/// # Arguments
-/// * `State(db)` - Shared state containing the database connection and JWT configuration (JWT config is not used in this handler)
-/// * `Json(payload)` - The user data retrieval request payload containing username/email, password, and list of fields to retrieve
-///
-/// # Returns
-/// * `(StatusCode, Json<UserDataResponse>)` - The HTTP status code and JSON response containing the requested user data or an error message
-///
-/// # Error
-/// * `StatusCode::UNAUTHORIZED` - If the username/email or password is incorrect
-/// * `StatusCode::INTERNAL_SERVER_ERROR` - If there is an error verifying credentials or extracting user ID
-///
-/// # Example
-/// ```rust
-/// let payload = GetUserDataRequest {
-///     username_or_email: "user@example.com".to_string(),
-///     password: "password123".to_string(),
-///     fields: vec!["id".to_string(), "username".to_string(), "email".to_string()],
-/// };
-/// ```
 pub async fn get_user_data(
     State(db): State<DB>,
     Json(payload): Json<GetUserDataRequest>,
 ) -> (StatusCode, Json<UserDataResponse>) {
-    let user = match auth::get_user_by_username_or_email(&db, &payload.username_or_email).await {
+    let user = match verify_user_credentials(&db, &payload.username_or_email, &payload.password).await {
         Ok(user) => user,
-        Err(_) => {
-            return (
-                StatusCode::UNAUTHORIZED,
-                Json(UserDataResponse {
-                    success: false,
-                    data: None,
-                    message: "Invalid username/email or password".to_string(),
-                }),
-            );
+        Err((status, message)) => {
+            return (status, Json(UserDataResponse { success: false, data: None, message }));
         }
     };
-
-    let password_hash = match user.password_hash.as_ref() {
-        Some(hash) => hash,
-        None => {
-            return (
-                StatusCode::UNAUTHORIZED,
-                Json(UserDataResponse {
-                    success: false,
-                    data: None,
-                    message: "Invalid username/email or password".to_string(),
-                }),
-            );
-        }
-    };
-
-    let is_valid = match password::verify_password(&payload.password, password_hash).await {
-        Ok(valid) => valid,
-        Err(_) => {
-            return (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                Json(UserDataResponse {
-                    success: false,
-                    data: None,
-                    message: "Error verifying password".to_string(),
-                }),
-            );
-        }
-    };
-
-    if !is_valid {
-        return (
-            StatusCode::UNAUTHORIZED,
-            Json(UserDataResponse {
-                success: false,
-                data: None,
-                message: "Invalid username/email or password".to_string(),
-            }),
-        );
-    }
 
     let mut user_data = serde_json::Map::new();
 
     for field in &payload.fields {
         match field.as_str() {
-            "id" => {
-                user_data.insert(
-                    "id".to_string(),
-                    serde_json::Value::String(format!("{:?}", user.id.key)),
-                );
-            }
-            "username" => {
-                user_data.insert(
-                    "username".to_string(),
-                    serde_json::Value::String(user.username.clone()),
-                );
-            }
-            "email" => {
-                if let Some(email) = &user.email {
-                    user_data.insert(
-                        "email".to_string(),
-                        serde_json::Value::String(email.clone()),
-                    );
-                }
-            }
-            "created_at" => {
-                user_data.insert(
-                    "created_at".to_string(),
-                    serde_json::Value::String(user.created_at.to_string()),
-                );
-            }
+            "id" => { user_data.insert("id".to_string(), serde_json::Value::String(format!("{:?}", user.id.key))); }
+            "username" => { user_data.insert("username".to_string(), serde_json::Value::String(user.username.clone())); }
+            "email" => { if let Some(email) = &user.email { user_data.insert("email".to_string(), serde_json::Value::String(email.clone())); } }
+            "created_at" => { user_data.insert("created_at".to_string(), serde_json::Value::String(user.created_at.to_string())); }
             _ => {}
         }
     }
 
-    (
-        StatusCode::OK,
-        Json(UserDataResponse {
-            success: true,
-            data: Some(user_data),
-            message: "User data retrieved successfully".to_string(),
-        }),
-    )
+    (StatusCode::OK, Json(UserDataResponse { success: true, data: Some(user_data), message: "User data retrieved successfully".to_string() }))
 }
 
 /// Handles token refresh requests
@@ -690,6 +449,18 @@ pub async fn logout(
     State(db): State<DB>,
     Json(payload): Json<RefreshTokenRequest>,
 ) -> (StatusCode, Json<AuthTokenResponse>) {
+    if crate::utility::jwt::verify_token(&payload.refresh_token).is_err() {
+        return (
+            StatusCode::UNAUTHORIZED,
+            Json(AuthTokenResponse {
+                success: false,
+                user: None,
+                tokens: None,
+                message: "Invalid or expired refresh token".to_string(),
+            }),
+        );
+    }
+
     if auth::revoke_refresh_token(&db, &payload.refresh_token)
         .await
         .is_err()

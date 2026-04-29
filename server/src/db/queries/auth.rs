@@ -2,6 +2,7 @@
 //!
 //! This file contains functions for Creating an account (signup), login, token management and deleteing a user account.
 
+use axum::http::StatusCode;
 use crate::db::DB;
 use crate::models::user::User;
 use std::error::Error;
@@ -39,59 +40,30 @@ pub async fn signup_user(
     db: &DB,
     username: &str,
     email: Option<&str>,
-    password_hash: &str,
+    password: &str,
 ) -> Result<User, Box<dyn Error>> {
     let mut response = db
         .query(
-            "CREATE users SET username = $username, email = $email, password_hash = $password_hash",
+            "CREATE users SET 
+                username = $username, 
+                email = $email,
+                password_hash = IF string::len($password) < $MIN_PASSWORD_BYTES OR string::len($password) > $MAX_PASSWORD_BYTES {
+                    THROW 'Invalid password length'
+                } ELSE IF $email != NONE AND !string::is_email($email) {
+                    THROW 'Invalid email address'
+                } ELSE {
+                    crypto::argon2::generate($password)
+                }",
         )
         .bind(("username", username.to_string()))
         .bind(("email", email.map(|e| e.to_string())))
-        .bind(("password_hash", password_hash.to_string()))
+        .bind(("password", password.to_string()))
         .await?;
 
     let user: Vec<User> = response.take(0)?;
     user.into_iter()
         .next()
         .ok_or("Failed to create user".into())
-}
-
-/// Retrieves a user from the database by their username or email
-///
-/// # Arguments
-/// * `db` - A reference to the database connection
-/// * `username_or_email` - The username or email address to search for
-///
-/// # Returns
-/// * `Ok(User)` - The user object if a matching user was found
-/// * `Err(Box<dyn Error>)` - An error if the operation failed, such as if there was a database error or if no user was found
-///
-/// # Errors
-/// * "User not found" - If no user was found with the given username or email
-///
-/// # Example
-/// ```
-/// use crate::db::DB;
-/// use crate::db::queries::auth;
-/// async fn example_get_user(db: &DB) {
-///     let username_or_email = "existing_user";
-///     match auth::get_user_by_username_or_email(db, username_or_email).await {
-///         Ok(user) => println!("User found: {:?}", user),
-///         Err(e) => eprintln!("Error retrieving user: {}", e),
-///     }
-/// }
-///```
-pub async fn get_user_by_username_or_email(
-    db: &DB,
-    username_or_email: &str,
-) -> Result<User, Box<dyn Error>> {
-    let mut response = db
-		.query("SELECT id, username, email, password_hash, created_at, last_login, is_banned, is_deleted FROM users WHERE username = $value OR email = $value LIMIT 1")
-		.bind(("value", username_or_email.to_string()))
-		.await?;
-
-    let user: Vec<User> = response.take(0)?;
-    user.into_iter().next().ok_or("User not found".into())
 }
 
 /// Deletes a user from the database by their ID
@@ -195,4 +167,24 @@ pub async fn store_refresh_token(
 pub async fn revoke_refresh_token(db: &DB, refresh_token: &str) -> Result<(), Box<dyn Error>> {
     use crate::db::queries::tokens;
     tokens::revoke_refresh_token(db, refresh_token).await
+}
+
+pub async fn verify_user_credentials(
+    db: &DB,
+    username_or_email: &str,
+    password: &str,
+) -> Result<User, (StatusCode, String)> {
+    let mut response = db
+        .query("SELECT * FROM users WHERE (username = $value OR email = $value) AND crypto::argon2::compare(password_hash, $password) AND is_banned = false AND is_deleted = false LIMIT 1")
+        .bind(("value", username_or_email.to_string()))
+        .bind(("password", password.to_string()))
+        .await
+        .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, "Database error".to_string()))?;
+
+    let user: Vec<User> = response.take(0)
+        .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, "Database error".to_string()))?;
+
+    user.into_iter()
+        .next()
+        .ok_or((StatusCode::UNAUTHORIZED, "Invalid username/email or password".to_string()))
 }
