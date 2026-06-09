@@ -1,5 +1,28 @@
-html,
-body {
+:root {
+    /* Colours */
+    --primary-colour: #178070;
+    --secondary-colour: #8b7cf8;
+    --card-colour: #2b2d31;
+    --background-colour: #1e1f22;
+    --border-colour: #3a3b3f;
+    --text-colour: #f2f3f5;
+
+    /* Semantic Colours */
+    --success-colour: #4caf50;
+    --warning-colour: #ff9800;
+    --error-colour: #f44336;
+
+    /* Misc */
+    --titlebar-height: 28px;
+}
+
+* {
     margin: 0;
     padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    padding-top: var(--titlebar-height);
+    background-color: var(--background-colour);
 }

@@ -126,6 +126,11 @@ docker compose down -v
 
 ---
 
+# Icons 
+Using icons from Tabler Icons, licensed under MIT License via the package `icons-svelte`
+https://tabler.io/icons
+
+
 ## Contributing
 
 Contributions are welcome. Please read [CONTRIBUTE.md](CONTRIBUTE.md) before opening a pull request.

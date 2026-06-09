@@ -1,48 +1,74 @@
-<script>
-import { getCurrentWindow } from '@tauri-apps/api/window';
+<script lang="ts">
+  import { getCurrentWindow } from '@tauri-apps/api/window';
+  import { IconMinus, IconSquare, IconX, IconHeartHandshake } from '@tabler/icons-svelte';
 
-const appWindow = getCurrentWindow();
-
+  const appWindow = getCurrentWindow();
 </script>
 
 <div class="titlebar" data-tauri-drag-region>
-  <div class="titlebar-title" data-tauri-drag-region>quorum</div>
+  <div class="titlebar-title" data-tauri-drag-region>
+    <IconHeartHandshake size={18} color="var(--text-colour)" />  
+    Quorum
+  </div>
 
   <div class="titlebar-controls">
-    <button type="button" on:click={() => appWindow.minimize()}>—</button>
-    <button type="button" on:click={() => appWindow.toggleMaximize()}>□</button>
-    <button type="button" on:click={() => appWindow.close()}>✕</button>
+    <button class="minimise" type="button" on:click={() => appWindow.minimize()}>
+        <IconMinus size={16} color="var(--text-colour)" />
+    </button>
+
+    <button class="maximise" type="button" on:click={() => appWindow.toggleMaximize()}>
+        <IconSquare size={16} color="var(--text-colour)" />
+    </button>
+
+    <button class="close" type="button" on:click={() => appWindow.close()}>
+        <IconX size={16} color="var(--text-colour)" />
+    </button>
   </div>
 </div>
 
 <style>
 .titlebar {
-  height: 32px;
+  height: var(--titlebar-height);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 8px;
   user-select: none;
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
-  background: #1e1e1e;
-  color: white;
+  background: var(--primary-colour);
+  color: var(--text-colour);
+}
+
+.titlebar-title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding-left: 8px;
 }
 
 .titlebar-controls {
   display: flex;
   gap: 4px;
+  align-self: stretch;
 }
 
 .titlebar-controls button {
-  width: 32px;
-  height: 24px;
+  width: 46px;
+  height: 100%;
   border: 0;
   background: transparent;
   color: inherit;
   cursor: pointer;
+  transition: background 0.15s;
 }
 
+.titlebar-controls button:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.titlebar-controls button.close:hover {
+  background: var(--error-colour);
+}
 </style>
