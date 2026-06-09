@@ -159,7 +159,10 @@ pub async fn signup(
 
     let config = crate::utility::config::Config::get();
     let expires_at = chrono::Utc::now().timestamp() + (config.jwt_refresh_days * 86400);
-    if auth::store_refresh_token(&db, &user_id, &refresh_token, expires_at).await.is_err() {
+    if auth::store_refresh_token(&db, &user_id, &refresh_token, expires_at)
+        .await
+        .is_err()
+    {
         return (
             StatusCode::INTERNAL_SERVER_ERROR,
             Json(AuthTokenResponse {

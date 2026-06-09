@@ -6,8 +6,8 @@ mod tests;
 mod utility;
 use crate::utility::docker;
 
-use routes::route::create_router;
 use colored::Colorize;
+use routes::route::create_router;
 use std::net::SocketAddr;
 
 #[tokio::main]
@@ -70,16 +70,8 @@ async fn main() {
                     }
                 }
                 Err(docker_err) => {
-                    startup::print_step(
-                        "Connecting to database",
-                        false,
-                        startup::elapsed(timer),
-                    );
-                    startup::print_step(
-                        "Starting Docker",
-                        false,
-                        startup::elapsed(docker_timer),
-                    );
+                    startup::print_step("Connecting to database", false, startup::elapsed(timer));
+                    startup::print_step("Starting Docker", false, startup::elapsed(docker_timer));
                     eprintln!("{}", format!("  Error: {}", docker_err).red());
                     std::process::exit(1);
                 }
@@ -93,8 +85,11 @@ async fn main() {
         Ok(_) => {
             startup::print_step("Initializing schema", true, startup::elapsed(timer));
 
-            let _ = db::queries::server_logs::log_startup(&_db, startup::elapsed(timer).as_millis() as i64)
-                .await;
+            let _ = db::queries::server_logs::log_startup(
+                &_db,
+                startup::elapsed(timer).as_millis() as i64,
+            )
+            .await;
         }
         Err(e) => {
             startup::print_step("Initializing schema", false, startup::elapsed(timer));
