@@ -34,8 +34,6 @@ Discord harvests and shares user data with third parties, trains AI on your conv
 Quorum/
 ├── client/          # Tauri desktop app (Svelte frontend)
 ├── docker/          # Docker Compose configuration
-├── docs/            # Whehre all of quorum's documentation lays
-├── ERD              # Entity Relationship Diagram used for visual representation of the database
 ├── schema/          # SurrealQL database schema
 ├── server/          # Axum backend (Rust)
 ├── wireframes/      # UI design sketches
