@@ -55,3 +55,6 @@ src-tauri/.env
 .env
 .env.local
 *.env.local
+/client/src-tauri/gen/schemas/acl-manifests.json
+/client/src-tauri/gen/schemas/desktop-schema.json
+/client/src-tauri/gen/schemas/windows-schema.json
