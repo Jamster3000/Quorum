@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":["config","docker","jwt","password"]};
+window.SIDEBAR_ITEMS = {"mod":["config","docker","jwt"]};

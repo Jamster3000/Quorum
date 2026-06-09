@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"fn":["get_argon2","hash_password","hash_password_sync","verify_password","verify_password_sync","warmup"],"static":["HASH_SEMAPHORE"]};

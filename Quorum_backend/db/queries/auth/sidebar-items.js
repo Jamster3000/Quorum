@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["delete_user_by_id","get_user_by_username_or_email","revoke_refresh_token","signup_user","store_refresh_token"]};
+window.SIDEBAR_ITEMS = {"fn":["delete_user_by_id","revoke_refresh_token","signup_user","store_refresh_token","verify_user_credentials"]};

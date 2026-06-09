@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["create_timer","elapsed_ms","print_banner","print_final_step","print_initializing","print_ready","print_step"]};
+window.SIDEBAR_ITEMS = {"fn":["create_timer","elapsed","print_banner","print_final_step","print_initializing","print_ready","print_step"]};
