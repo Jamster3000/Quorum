@@ -22,8 +22,8 @@ pub fn print_banner() {
     //ASCII art generated with https://patorjk.com/software/taag/#p=display
     println!(
         r#"
-     ██████                                                            
-   ███░░░░███                                                          
+     ██████
+   ███░░░░███
   ███    ░░███ █████ ████  ██████  ████████  █████ ████ █████████████
  ░███     ░███░░███ ░███  ███░░███░░███░░███░░███ ░███ ░░███░░███░░███
  ░███   ██░███ ░███ ░███ ░███ ░███ ░███ ░░░  ░███ ░███  ░███ ░███ ░███
@@ -63,9 +63,9 @@ pub fn print_initializing() {
 /// let timer = create_timer();
 /// print_step("Initializing database", true, elapsed_ms(timer));
 /// ```
-pub fn print_step(step: &str, success: bool, duration_ms: u128) {
+pub fn print_step(step: &str, success: bool, duration: Duration) {
     let status = if success { "✓".green() } else { "✗".red() };
-    let timing = format!("({:.0}ms)", duration_ms).dimmed();
+    let timing = format!("({:?})", duration).dimmed();
     println!("{}{} {} {}", "  ├─ ".blue(), step.white(), status, timing);
     thread::sleep(Duration::from_millis(200));
 }
@@ -84,9 +84,9 @@ pub fn print_step(step: &str, success: bool, duration_ms: u128) {
 /// let timer = create_timer();
 /// print_final_step("Starting server", true, elapsed_ms(timer));
 /// ```
-pub fn print_final_step(step: &str, success: bool, duration_ms: u128) {
+pub fn print_final_step(step: &str, success: bool, duration: Duration) {
     let status = if success { "✓".green() } else { "✗".red() };
-    let timing = format!("({:.0}ms)", duration_ms).dimmed();
+    let timing = format!("({:?})", duration).dimmed();
     println!("{}{} {} {}", "  └─ ".blue(), step.white(), status, timing);
     thread::sleep(Duration::from_millis(200));
 }
@@ -128,20 +128,20 @@ pub fn create_timer() -> Instant {
     Instant::now()
 }
 
-/// Calculate elapsed time in milliseconds from a given timer
+/// Calculate elapsed time as a `Duration` from a given timer
 ///
 /// # Arguments
 /// * `timer` - An `Instant` representing the start time of an operation.
 ///
 /// # Returns
-/// The elapsed time in milliseconds as a `u128`.
+/// The elapsed time as a `Duration`.
 ///
 /// # Example
 /// ```rust
 /// let timer = create_timer();
-/// let elapsed = elapsed_ms(timer);
-/// println!("Operation completed in {} ms", elapsed);
+/// let elapsed = elapsed(timer);
+/// println!("Operation completed in {:?}", elapsed);
 /// ```
-pub fn elapsed_ms(timer: Instant) -> u128 {
-    timer.elapsed().as_millis()
+pub fn elapsed(timer: Instant) -> Duration {
+    timer.elapsed()
 }

@@ -1,16 +1,22 @@
+mod common;
 mod functional;
 mod robust;
-mod common;
 
 use crate::startup;
 use colored::*;
+use futures::future::BoxFuture;
+use std::time::Duration;
+
+// 1. Define Type Aliases to dramatically simplify the code
+type FunctionalTestFn = fn() -> BoxFuture<'static, Result<TestResult, String>>;
+type RobustnessTestFn = fn() -> BoxFuture<'static, Result<RobustnessTestResult, String>>;
 
 pub struct TestResult {
-    pub endpoint_time: u128,
+    pub endpoint_time: Duration,
 }
 
 pub struct RobustnessTestResult {
-    pub endpoint_time: u128,
+    pub endpoint_time: Duration,
 }
 
 pub async fn run_all_tests() {
@@ -23,10 +29,7 @@ pub async fn run_all_tests() {
 async fn run_functional_tests() {
     println!("\n{}", "Running Functional Tests...".cyan().bold());
 
-    let tests: Vec<(
-        &str,
-        fn() -> futures::future::BoxFuture<'static, Result<TestResult, String>>,
-    )> = vec![
+    let tests: Vec<(&str, FunctionalTestFn)> = vec![
         ("Auth signup with email + password test", || {
             Box::pin(functional::auth_tests::test_signup_email())
         }),
@@ -59,10 +62,7 @@ async fn run_functional_tests() {
 async fn run_robust_tests() {
     println!("\n{}", "Running Robustness Tests...".magenta().bold());
 
-    let tests: Vec<(
-        &str,
-        fn() -> futures::future::BoxFuture<'static, Result<RobustnessTestResult, String>>,
-    )> = vec![
+    let tests: Vec<(&str, RobustnessTestFn)> = vec![
         ("Signup with short username", || {
             Box::pin(robust::auth_tests::test_signup_short_username())
         }),
@@ -113,12 +113,7 @@ async fn run_robust_tests() {
     run_robustness_suite(&tests).await;
 }
 
-async fn run_test_suite(
-    tests: &[(
-        &str,
-        fn() -> futures::future::BoxFuture<'static, Result<TestResult, String>>,
-    )],
-) {
+async fn run_test_suite(tests: &[(&str, FunctionalTestFn)]) {
     let mut failed_tests = Vec::new();
 
     for (i, (test_name, test_fn)) in tests.iter().enumerate() {
@@ -134,7 +129,7 @@ async fn run_test_suite(
                 }
             }
             Err(e) => {
-                let elapsed = startup::elapsed_ms(timer);
+                let elapsed = startup::elapsed(timer);
                 if is_last {
                     startup::print_final_step(test_name, false, elapsed);
                 } else {
@@ -166,12 +161,8 @@ async fn run_test_suite(
     }
 }
 
-async fn run_robustness_suite(
-    tests: &[(
-        &str,
-        fn() -> futures::future::BoxFuture<'static, Result<RobustnessTestResult, String>>,
-    )],
-) {
+// Cleaned up function signature
+async fn run_robustness_suite(tests: &[(&str, RobustnessTestFn)]) {
     let mut issue_tests = Vec::new();
 
     for (i, (test_name, test_fn)) in tests.iter().enumerate() {
@@ -187,7 +178,7 @@ async fn run_robustness_suite(
                 }
             }
             Err(e) => {
-                let elapsed = startup::elapsed_ms(timer);
+                let elapsed = startup::elapsed(timer);
                 if is_last {
                     startup::print_final_step(test_name, false, elapsed);
                 } else {

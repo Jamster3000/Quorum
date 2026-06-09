@@ -1,6 +1,6 @@
 use crate::startup;
 use crate::tests::TestResult;
-use crate::tests::common::{ make_auth_request, get_test_username, cleanup_user };
+use crate::tests::common::{cleanup_user, get_test_username, make_auth_request};
 use serde_json::json;
 
 pub async fn test_signup_email() -> Result<TestResult, String> {
@@ -13,7 +13,7 @@ pub async fn test_signup_email() -> Result<TestResult, String> {
 
     let timer = startup::create_timer();
     make_auth_request("/auth/signup", &payload, 201).await?;
-    let endpoint_time = startup::elapsed_ms(timer);
+    let endpoint_time = timer.elapsed();
 
     let _ = cleanup_user(&username, "TestPassword123!").await;
 
@@ -29,7 +29,7 @@ pub async fn test_signup_username() -> Result<TestResult, String> {
 
     let timer = startup::create_timer();
     make_auth_request("/auth/signup", &payload, 201).await?;
-    let endpoint_time = startup::elapsed_ms(timer);
+    let endpoint_time = timer.elapsed();
 
     let _ = cleanup_user(&username, "TestPassword123!").await;
 
@@ -53,7 +53,7 @@ pub async fn test_login_email() -> Result<TestResult, String> {
 
     let timer = startup::create_timer();
     make_auth_request("/auth/login", &login_payload, 200).await?;
-    let endpoint_time = startup::elapsed_ms(timer);
+    let endpoint_time = timer.elapsed();
 
     let _ = cleanup_user(&username, "TestPassword123!").await;
 
@@ -76,7 +76,7 @@ pub async fn test_login_username() -> Result<TestResult, String> {
 
     let timer = startup::create_timer();
     make_auth_request("/auth/login", &login_payload, 200).await?;
-    let endpoint_time = startup::elapsed_ms(timer);
+    let endpoint_time = timer.elapsed();
 
     let _ = cleanup_user(&username, "TestPassword123!").await;
 
@@ -114,7 +114,7 @@ pub async fn test_delete_user_account_email() -> Result<TestResult, String> {
 
     let timer = startup::create_timer();
     make_auth_request("/auth/delete", &delete_payload, 200).await?;
-    let endpoint_time = startup::elapsed_ms(timer);
+    let endpoint_time = timer.elapsed();
 
     Ok(TestResult { endpoint_time })
 }
@@ -149,7 +149,7 @@ pub async fn test_delete_user_account_username() -> Result<TestResult, String> {
 
     let timer = startup::create_timer();
     make_auth_request("/auth/delete", &delete_payload, 200).await?;
-    let endpoint_time = startup::elapsed_ms(timer);
+    let endpoint_time = timer.elapsed();
 
     Ok(TestResult { endpoint_time })
 }
@@ -181,7 +181,7 @@ pub async fn test_refresh_token() -> Result<TestResult, String> {
 
     let timer = startup::create_timer();
     let refresh_body = make_auth_request("/auth/refresh", &refresh_payload, 200).await?;
-    let endpoint_time = startup::elapsed_ms(timer);
+    let endpoint_time = timer.elapsed();
 
     if refresh_body["tokens"]["access_token"].as_str().is_none() {
         return Err("Failed to get new access token".to_string());
@@ -219,7 +219,7 @@ pub async fn test_logout() -> Result<TestResult, String> {
 
     let timer = startup::create_timer();
     make_auth_request("/auth/logout", &logout_payload, 200).await?;
-    let endpoint_time = startup::elapsed_ms(timer);
+    let endpoint_time = timer.elapsed();
 
     let _ = cleanup_user(&username, "TestPassword123!").await;
 

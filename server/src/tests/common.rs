@@ -1,4 +1,4 @@
-﻿use crate::utility::config::Config;
+use crate::utility::config::Config;
 use serde_json::json;
 
 static CLIENT: std::sync::OnceLock<reqwest::Client> = std::sync::OnceLock::new();

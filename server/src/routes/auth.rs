@@ -27,7 +27,12 @@ async fn verify_user_credentials(
 ) -> Result<User, (StatusCode, String)> {
     auth::verify_user_credentials(db, username_or_email, password)
         .await
-        .map_err(|_| (StatusCode::UNAUTHORIZED, "Invalid username/email or password".to_string()))
+        .map_err(|_| {
+            (
+                StatusCode::UNAUTHORIZED,
+                "Invalid username/email or password".to_string(),
+            )
+        })
 }
 
 /// Extracts the user ID as a string from the User struct
@@ -83,16 +88,17 @@ pub async fn signup(
         Ok(user) => user,
         Err(e) => {
             let message = e.to_string();
-            let status = if message.contains("Invalid password length") 
+            let status = if message.contains("Invalid password length")
                 || message.contains("idx_username")
-                || message.contains("idx_email") {
+                || message.contains("idx_email")
+            {
                 StatusCode::BAD_REQUEST
             } else if message.contains("idx_username") || message.contains("UNIQUE") {
                 StatusCode::CONFLICT
             } else {
                 StatusCode::INTERNAL_SERVER_ERROR
             };
-            
+
             return (
                 status,
                 Json(AuthTokenResponse {
@@ -135,7 +141,8 @@ pub async fn signup(
         }
     };
 
-    let refresh_token = match crate::utility::jwt::generate_refresh_token(&user_id, &user.username) {
+    let refresh_token = match crate::utility::jwt::generate_refresh_token(&user_id, &user.username)
+    {
         Ok(token) => token,
         Err(_) => {
             return (
@@ -152,7 +159,7 @@ pub async fn signup(
 
     let config = crate::utility::config::Config::get();
     let expires_at = chrono::Utc::now().timestamp() + (config.jwt_refresh_days * 86400);
-    if let Err(_) = auth::store_refresh_token(&db, &user_id, &refresh_token, expires_at).await {
+    if auth::store_refresh_token(&db, &user_id, &refresh_token, expires_at).await.is_err() {
         return (
             StatusCode::INTERNAL_SERVER_ERROR,
             Json(AuthTokenResponse {
@@ -300,44 +307,111 @@ pub async fn delete_account(
     State(db): State<DB>,
     Json(payload): Json<DeleteAccountRequest>,
 ) -> (StatusCode, Json<AuthTokenResponse>) {
-    let _user = match auth::verify_user_credentials(&db, &payload.username_or_email, &payload.password).await {
-        Ok(user) => user,
-        Err((status, message)) => {
-            return (status, Json(AuthTokenResponse { success: false, user: None, tokens: None, message }));
-        }
-    };
+    let _user =
+        match auth::verify_user_credentials(&db, &payload.username_or_email, &payload.password)
+            .await
+        {
+            Ok(user) => user,
+            Err((status, message)) => {
+                return (
+                    status,
+                    Json(AuthTokenResponse {
+                        success: false,
+                        user: None,
+                        tokens: None,
+                        message,
+                    }),
+                );
+            }
+        };
 
-    if auth::delete_user_by_id(&db, &payload.user_id).await.is_err() {
-        return (StatusCode::INTERNAL_SERVER_ERROR, Json(AuthTokenResponse { success: false, user: None, tokens: None, message: "Failed to delete account".to_string() }));
+    if auth::delete_user_by_id(&db, &payload.user_id)
+        .await
+        .is_err()
+    {
+        return (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(AuthTokenResponse {
+                success: false,
+                user: None,
+                tokens: None,
+                message: "Failed to delete account".to_string(),
+            }),
+        );
     }
 
-    (StatusCode::OK, Json(AuthTokenResponse { success: true, user: None, tokens: None, message: "Account deleted successfully".to_string() }))
+    (
+        StatusCode::OK,
+        Json(AuthTokenResponse {
+            success: true,
+            user: None,
+            tokens: None,
+            message: "Account deleted successfully".to_string(),
+        }),
+    )
 }
 
 pub async fn get_user_data(
     State(db): State<DB>,
     Json(payload): Json<GetUserDataRequest>,
 ) -> (StatusCode, Json<UserDataResponse>) {
-    let user = match verify_user_credentials(&db, &payload.username_or_email, &payload.password).await {
-        Ok(user) => user,
-        Err((status, message)) => {
-            return (status, Json(UserDataResponse { success: false, data: None, message }));
-        }
-    };
+    let user =
+        match verify_user_credentials(&db, &payload.username_or_email, &payload.password).await {
+            Ok(user) => user,
+            Err((status, message)) => {
+                return (
+                    status,
+                    Json(UserDataResponse {
+                        success: false,
+                        data: None,
+                        message,
+                    }),
+                );
+            }
+        };
 
     let mut user_data = serde_json::Map::new();
 
     for field in &payload.fields {
         match field.as_str() {
-            "id" => { user_data.insert("id".to_string(), serde_json::Value::String(format!("{:?}", user.id.key))); }
-            "username" => { user_data.insert("username".to_string(), serde_json::Value::String(user.username.clone())); }
-            "email" => { if let Some(email) = &user.email { user_data.insert("email".to_string(), serde_json::Value::String(email.clone())); } }
-            "created_at" => { user_data.insert("created_at".to_string(), serde_json::Value::String(user.created_at.to_string())); }
+            "id" => {
+                user_data.insert(
+                    "id".to_string(),
+                    serde_json::Value::String(format!("{:?}", user.id.key)),
+                );
+            }
+            "username" => {
+                user_data.insert(
+                    "username".to_string(),
+                    serde_json::Value::String(user.username.clone()),
+                );
+            }
+            "email" => {
+                if let Some(email) = &user.email {
+                    user_data.insert(
+                        "email".to_string(),
+                        serde_json::Value::String(email.clone()),
+                    );
+                }
+            }
+            "created_at" => {
+                user_data.insert(
+                    "created_at".to_string(),
+                    serde_json::Value::String(user.created_at.to_string()),
+                );
+            }
             _ => {}
         }
     }
 
-    (StatusCode::OK, Json(UserDataResponse { success: true, data: Some(user_data), message: "User data retrieved successfully".to_string() }))
+    (
+        StatusCode::OK,
+        Json(UserDataResponse {
+            success: true,
+            data: Some(user_data),
+            message: "User data retrieved successfully".to_string(),
+        }),
+    )
 }
 
 /// Handles token refresh requests

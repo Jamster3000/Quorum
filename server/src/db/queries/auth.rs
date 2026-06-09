@@ -2,9 +2,9 @@
 //!
 //! This file contains functions for Creating an account (signup), login, token management and deleteing a user account.
 
-use axum::http::StatusCode;
 use crate::db::DB;
 use crate::models::user::User;
+use axum::http::StatusCode;
 use std::error::Error;
 
 /// Creates a new user account in the database
@@ -181,10 +181,15 @@ pub async fn verify_user_credentials(
         .await
         .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, "Database error".to_string()))?;
 
-    let user: Vec<User> = response.take(0)
-        .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, "Database error".to_string()))?;
+    let user: Vec<User> = response.take(0).map_err(|_| {
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            "Database error".to_string(),
+        )
+    })?;
 
-    user.into_iter()
-        .next()
-        .ok_or((StatusCode::UNAUTHORIZED, "Invalid username/email or password".to_string()))
+    user.into_iter().next().ok_or((
+        StatusCode::UNAUTHORIZED,
+        "Invalid username/email or password".to_string(),
+    ))
 }
