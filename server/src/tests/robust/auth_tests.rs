@@ -1,6 +1,6 @@
 use crate::startup;
 use crate::tests::RobustnessTestResult;
-use crate::tests::common::{get_test_username, make_auth_request_raw, cleanup_user};
+use crate::tests::common::{cleanup_user, get_test_username, make_auth_request_raw};
 use serde_json::json;
 
 /// Test signup with very short username (1 character)
