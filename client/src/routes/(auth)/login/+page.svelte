@@ -22,6 +22,7 @@
   let alertType = 'error';
 
   $: fromSignup = $page.url.searchParams.get('created') === '1';
+  $: fromPage = $page.url.searchParams.get('from') || null;
 
   let errors = {
     username_or_email: '',
@@ -86,12 +87,18 @@
   <div class="login-wrap">
 
       {#if fromSignup}
-        <Alert
-          type="success"
-          message="Account created! Please log in."
-          show={true}
-        />
-      {/if}
+      <Alert
+        type="success"
+        message="Account created! Please log in."
+        show={true}
+      />
+    {:else if fromPage}
+      <Alert
+        type="warning"
+        message="Sorry, you need to be logged in to access that page."
+        show={true}
+      />
+    {/if}
 
     <a href="/" class="back-link">
       <IconArrowLeft size={16} />

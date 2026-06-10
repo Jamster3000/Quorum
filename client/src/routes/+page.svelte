@@ -3,6 +3,7 @@
   import Header from '$lib/components/app/Header.svelte';
   import Footer from '$lib/components/app/Footer.svelte';
   import Button from '$lib/components/ui/Button.svelte';
+  import Auth from '$lib/utils/Auth.svelte';
   import {
     IconMessages,
     IconLayoutKanban,
@@ -16,6 +17,7 @@
   } from '@tabler/icons-svelte-runes';
 </script>
 
+<Auth redirectTo="/home" shouldBeLoggedIn={false} />
 <Titlebar />
 <Header />
 
@@ -24,7 +26,6 @@
 </div>
 
 <main class="page">
-
   <section class="hero">
     <div class="eyebrow">Open source & self-hostable</div>
     <h1>Your community,<br><span class="teal">your rules.</span></h1>

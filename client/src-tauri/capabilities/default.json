@@ -12,6 +12,8 @@
     "core:window:allow-close",
     "store:allow-load",
     "store:allow-set",
-    "store:allow-save"
+    "store:allow-save",
+    "store:allow-get",
+    "store:allow-clear"
   ]
 }
