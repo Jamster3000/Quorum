@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { IconEye, IconEyeOff } from '@tabler/icons-svelte';
+  import { IconEye, IconEyeOff } from '@tabler/icons-svelte-runes';
 
   export let label: string = '';
   export let type: string = 'text';

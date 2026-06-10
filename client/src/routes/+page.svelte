@@ -13,7 +13,7 @@
     IconShieldCheck,
     IconServerBolt,
     IconBrandGithub
-  } from '@tabler/icons-svelte';
+  } from '@tabler/icons-svelte-runes';
 </script>
 
 <Titlebar />

@@ -8,12 +8,28 @@ pub struct SignupResponse {
     pub message: String,
 }
 
+#[derive(Serialize)]
+pub struct LoginResponse {
+    pub success: bool,
+    pub message: String,
+    pub access_token: Option<String>,
+    pub refresh_token: Option<String>,
+    pub user_id: Option<String>,
+    pub username: Option<String>,
+}
+
 #[derive(Deserialize)]
 pub struct SignupPayload {
     pub username: String,
     pub email: Option<String>,
     pub password: String,
     pub confirm_password: String,
+}
+
+#[derive(Deserialize)]
+pub struct LoginPayload {
+    pub username_or_email: String,
+    pub password: String,
 }
 
 #[tauri::command]
@@ -90,5 +106,35 @@ pub async fn signup(payload: SignupPayload) -> Result<SignupResponse, String> {
     Ok(SignupResponse {
         success: true,
         message: "Account created successfully.".to_string(),
+    })
+}
+
+#[tauri::command]
+pub async fn login(payload: LoginPayload) -> Result<LoginResponse, String> {
+    let payload = json!({
+        "username_or_email": payload.username_or_email,
+        "password": payload.password,
+    });
+
+    let auth_response = make_auth_request("/auth/login", &payload, 200).await?;
+
+    println!("Server response: {:?}", auth_response);
+
+    //Extract the tokens the user needs from the server response
+    let tokens = auth_response["tokens"].as_object().ok_or("Invalid tokens in response")?;
+    let access_token = tokens["access_token"].as_str().map(|s| s.to_string());
+    let refresh_token = tokens["refresh_token"].as_str().map(|s| s.to_string());
+
+    let user = auth_response["user"].as_object().ok_or("Invalid user in response")?;
+    let user_id = user["id"].as_str().map(|s| s.to_string());
+    let username = user["username"].as_str().map(|s| s.to_string());
+
+    Ok(LoginResponse {
+        success: true,
+        message: auth_response["message"].as_str().unwrap_or("Logged in successfully.").to_string(),
+        access_token,
+        refresh_token,
+        user_id,
+        username,
     })
 }

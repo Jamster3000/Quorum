@@ -44,8 +44,8 @@ pub async fn signup_user(
 ) -> Result<User, Box<dyn Error>> {
     let mut response = db
         .query(
-            "CREATE users SET 
-                username = $username, 
+            "CREATE users SET
+                username = $username,
                 email = $email,
                 password_hash = IF string::len($password) < $MIN_PASSWORD_BYTES OR string::len($password) > $MAX_PASSWORD_BYTES {
                     THROW 'Invalid password length'
@@ -163,7 +163,7 @@ pub async fn store_refresh_token(
 ///         Err(e) => eprintln!("Error revoking refresh token: {}", e),
 ///     }
 /// }
-///```  
+///```
 pub async fn revoke_refresh_token(db: &DB, refresh_token: &str) -> Result<(), Box<dyn Error>> {
     use crate::db::queries::tokens;
     tokens::revoke_refresh_token(db, refresh_token).await

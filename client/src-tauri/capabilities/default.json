@@ -9,6 +9,9 @@
     "core:window:allow-start-dragging",
     "core:window:allow-minimize",
     "core:window:allow-toggle-maximize",
-    "core:window:allow-close"
+    "core:window:allow-close",
+    "store:allow-load",
+    "store:allow-set",
+    "store:allow-save"
   ]
 }

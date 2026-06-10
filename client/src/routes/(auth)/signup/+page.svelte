@@ -7,7 +7,7 @@
   import Input from '$lib/components/ui/Input.svelte';
   import Checkbox from '$lib/components/ui/Checkbox.svelte';
   import Button from '$lib/components/ui/Button.svelte';
-  import { IconHexagonFilled, IconArrowLeft } from '@tabler/icons-svelte';
+  import { IconHexagonFilled, IconArrowLeft } from '@tabler/icons-svelte-runes';
 
   let username = '';
   let email = '';
@@ -52,7 +52,7 @@
         handleSignupFailure(result.message);
       } else {
         handleSignupSuccess(result.message);
-        goto("/login?ac=t");
+        goto("/login?created=1");
       }
     } catch (e) {
       formError = 'Something went wrong. Please try again.';

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { IconHexagonFilled } from '@tabler/icons-svelte';
+  import { IconHexagonFilled } from '@tabler/icons-svelte-runes';
 
   import Nav from '$lib/components/ui/Nav.svelte';
 
