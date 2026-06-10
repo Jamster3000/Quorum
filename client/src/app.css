@@ -6,20 +6,32 @@
     --background-colour: #1e1f22;
     --border-colour: #3a3b3f;
     --text-colour: #f2f3f5;
-
+    --text-muted-colour: #b5bac1;
     /* Semantic Colours */
     --success-colour: #4caf50;
     --warning-colour: #ff9800;
     --error-colour: #f44336;
-
+    /* Fonts */
+    --font-primary: 'Outfit', sans-serif;
+    --font-xsmall: 0.75rem;
+    --font-small: 0.875rem;
+    --font-medium: 1rem;
+    --font-large: 1.25rem;
+    --font-xlarge: 1.5rem;
     /* Misc */
     --titlebar-height: 28px;
+}
+
+@font-face {
+    font-family: 'Outfit';
+    src: url('/fonts/Outfit.ttf') format('truetype');
 }
 
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+    font-family: var(--font-primary);
 }
 
 body {

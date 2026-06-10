@@ -1,6 +1,6 @@
 <script lang="ts">
   import { getCurrentWindow } from '@tauri-apps/api/window';
-  import { IconMinus, IconSquare, IconX, IconHeartHandshake } from '@tabler/icons-svelte';
+  import { IconMinus, IconSquare, IconX, IconHeartHandshake } from '@tabler/icons-svelte-runes';
 
   const appWindow = getCurrentWindow();
 </script>
@@ -39,6 +39,7 @@
   right: 0;
   background: var(--primary-colour);
   color: var(--text-colour);
+  z-index: 100000;
 }
 
 .titlebar-title {
