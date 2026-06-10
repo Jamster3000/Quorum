@@ -1,6 +1,6 @@
 use crate::startup;
 use crate::tests::RobustnessTestResult;
-use crate::tests::common::{get_test_username, make_auth_request_raw};
+use crate::tests::common::{get_test_username, make_auth_request_raw, cleanup_user};
 use serde_json::json;
 
 /// Test signup with very short username (1 character)
@@ -13,6 +13,7 @@ pub async fn test_signup_short_username() -> Result<RobustnessTestResult, String
     let timer = startup::create_timer();
     make_auth_request_raw("/auth/signup", &payload, 500).await?;
     let endpoint_time = timer.elapsed();
+
     Ok(RobustnessTestResult { endpoint_time })
 }
 
@@ -106,6 +107,9 @@ pub async fn test_signup_duplicate_username() -> Result<RobustnessTestResult, St
     let timer = startup::create_timer();
     make_auth_request_raw("/auth/signup", &duplicate_payload, 400).await?;
     let endpoint_time = timer.elapsed();
+
+    let _ = cleanup_user(&username, "TestPassword123!").await;
+
     Ok(RobustnessTestResult { endpoint_time })
 }
 
@@ -127,6 +131,9 @@ pub async fn test_login_wrong_password() -> Result<RobustnessTestResult, String>
     let timer = startup::create_timer();
     make_auth_request_raw("/auth/login", &login_payload, 401).await?;
     let endpoint_time = timer.elapsed();
+
+    let _ = cleanup_user(&username, "CorrectPassword123!").await;
+
     Ok(RobustnessTestResult { endpoint_time })
 }
 
@@ -211,6 +218,9 @@ pub async fn test_delete_wrong_password() -> Result<RobustnessTestResult, String
     let timer = startup::create_timer();
     make_auth_request_raw("/auth/delete", &delete_payload, 401).await?;
     let endpoint_time = timer.elapsed();
+
+    let _ = cleanup_user(&username, "CorrectPassword123!").await;
+
     Ok(RobustnessTestResult { endpoint_time })
 }
 
@@ -233,6 +243,9 @@ pub async fn test_get_user_data_wrong_password() -> Result<RobustnessTestResult,
     let timer = startup::create_timer();
     make_auth_request_raw("/auth/me", &payload, 401).await?;
     let endpoint_time = timer.elapsed();
+
+    let _ = cleanup_user(&username, "CorrectPassword123!").await;
+
     Ok(RobustnessTestResult { endpoint_time })
 }
 
