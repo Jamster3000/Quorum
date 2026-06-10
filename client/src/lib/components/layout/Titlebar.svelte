@@ -70,6 +70,6 @@
 }
 
 .titlebar-controls button.close:hover {
-  background: var(--error-colour);
+  background: var(--alert-error-border);
 }
 </style>

@@ -33,7 +33,6 @@
       padding: 0 2rem;
       height: 64px;
       background: color-mix(in srgb, var(--background-colour) 95%, var(--primary-colour));
-      border-bottom: 1px solid color-mix(in srgb, var(--secondary-colour) 30%, transparent);
       backdrop-filter: blur(12px);
       position: sticky;
       z-index: 10;

@@ -2,6 +2,7 @@
   import { invoke } from '@tauri-apps/api/core';
   import { goto } from '$app/navigation';
   import Titlebar from '$lib/components/layout/Titlebar.svelte';
+  import Alert from '$lib/components/ui/Alert.svelte';
   import Card from '$lib/components/ui/Card.svelte';
   import Input from '$lib/components/ui/Input.svelte';
   import Checkbox from '$lib/components/ui/Checkbox.svelte';
@@ -15,6 +16,9 @@
   let agreedToTerms = false;
   let formError = '';
   let loading = false;
+  let errorMessage = '';
+  let showAlert = false;
+  let alertType = 'error';
 
   let errors = {
     username: '',
@@ -45,8 +49,9 @@
       });
 
       if (!result.success) {
-        formError = result.message;
+        handleSignupFailure(result.message);
       } else {
+        handleSignupSuccess(result.message);
         goto("/login?ac=t");
       }
     } catch (e) {
@@ -54,6 +59,18 @@
     } finally {
       loading = false;
     }
+  }
+
+  function handleSignupFailure(message: string) {
+    errorMessage = message;
+    alertType = 'error';
+    showAlert = true;
+  }
+
+  function handleSignupSuccess(message: string) {
+    errorMessage = message;
+    alertType = 'success';
+    showAlert = true;
   }
 </script>
 
@@ -78,6 +95,12 @@
         {#if errors.form}
           <div class="form-error">{errors.form}</div>
         {/if}
+
+        <Alert
+            type={alertType}
+            message={errorMessage}
+            show={showAlert}
+        />
 
         <Input
           label="Username"

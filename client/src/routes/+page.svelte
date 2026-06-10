@@ -345,9 +345,9 @@
   }
 
   .placeholder-banner {
-    background: color-mix(in srgb, var(--warning-colour) 12%, transparent);
-    border-bottom: 1px solid color-mix(in srgb, var(--warning-colour) 30%, transparent);
-    color: var(--warning-colour);
+    background: color-mix(in srgb, var(--alert-warning-border) 12%, transparent);
+    border-bottom: 1px solid color-mix(in srgb, var(--alert-warning-border) 30%, transparent);
+    color: var(--alert-warning-text);
     font-size: 13px;
     font-weight: 600;
     text-align: center;
