@@ -111,20 +111,44 @@ pub async fn signup(payload: SignupPayload) -> Result<SignupResponse, String> {
 
 #[tauri::command]
 pub async fn login(payload: LoginPayload) -> Result<LoginResponse, String> {
-    let payload = json!({
+    let request_payload = json!({
         "username_or_email": payload.username_or_email,
         "password": payload.password,
     });
 
-    let auth_response = make_auth_request("/auth/login", &payload, 200).await?;
+    // Capture the result of make_auth_request (don't use ? yet)
+    let auth_response = match make_auth_request("/auth/login", &request_payload, 200).await {
+        Ok(response) => {
+            response
+        }
+        Err(e) => {
+            return Ok(LoginResponse {
+                success: false,
+                message: e,
+                access_token: None,
+                refresh_token: None,
+                user_id: None,
+                username: None,
+            });
+        }
+    };
 
-    println!("Server response: {:?}", auth_response);
+    if !auth_response["success"].as_bool().unwrap_or(false) {
+        let error_message = auth_response["message"].as_str().unwrap_or("Invalid username/email or password").to_string();
+        return Ok(LoginResponse {
+            success: false,
+            message: error_message,
+            access_token: None,
+            refresh_token: None,
+            user_id: None,
+            username: None,
+        });
+    }
 
-    //Extract the tokens the user needs from the server response
+    // Extract tokens and user data...
     let tokens = auth_response["tokens"].as_object().ok_or("Invalid tokens in response")?;
     let access_token = tokens["access_token"].as_str().map(|s| s.to_string());
     let refresh_token = tokens["refresh_token"].as_str().map(|s| s.to_string());
-
     let user = auth_response["user"].as_object().ok_or("Invalid user in response")?;
     let user_id = user["id"].as_str().map(|s| s.to_string());
     let username = user["username"].as_str().map(|s| s.to_string());

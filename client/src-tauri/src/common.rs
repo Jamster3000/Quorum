@@ -30,8 +30,8 @@ pub async fn make_auth_request(
     if status != expected_status {
         let error_msg = body["message"].as_str().unwrap_or("Unknown error");
         return Err(format!(
-            "Expected {}, got {} - {}",
-            expected_status, status, error_msg
+            "{}",
+            error_msg
         ));
     }
 

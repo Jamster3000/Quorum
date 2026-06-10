@@ -44,8 +44,6 @@
         }
       });
 
-      console.log(result);
-
       if (!result.success) {
         handleLoginFailure(result.message);
       } else {
