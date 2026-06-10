@@ -119,10 +119,6 @@
 <Footer />
 
 <style>
-  .page {
-    padding-top: 2rem;
-  }
-
   .teal { color: var(--primary-colour); }
 
   .hero {

@@ -38,3 +38,7 @@ body {
     padding-top: var(--titlebar-height);
     background-color: var(--background-colour);
 }
+
+.page {
+    padding-top: 2rem;
+}

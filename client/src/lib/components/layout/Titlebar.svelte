@@ -1,19 +1,19 @@
 <script lang="ts">
   import { getCurrentWindow } from '@tauri-apps/api/window';
-  import { IconMinus, IconSquare, IconX, IconHeartHandshake } from '@tabler/icons-svelte-runes';
+  import { IconMinus, IconSquare, IconX, IconHexagonFilled } from '@tabler/icons-svelte-runes';
 
   const appWindow = getCurrentWindow();
 </script>
 
 <div class="titlebar" data-tauri-drag-region>
   <div class="titlebar-title" data-tauri-drag-region>
-    <IconHeartHandshake size={18} color="var(--text-colour)" />  
+    <IconHexagonFilled size={18} color="var(--text-colour)" />  
     Quorum
   </div>
 
   <div class="titlebar-controls">
     <button class="minimise" type="button" on:click={() => appWindow.minimize()}>
-        <IconMinus size={16} color="var(--text-colour)" />
+        <IconMinus size={12} color="var(--text-colour)" />
     </button>
 
     <button class="maximise" type="button" on:click={() => appWindow.toggleMaximize()}>
