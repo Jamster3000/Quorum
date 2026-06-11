@@ -106,7 +106,7 @@
 <a href=#106 id=106 data-nosnippet>106</a>            jwt_secret: std::env::var(<span class="string">"JWT_SECRET"</span>)<span class="question-mark">?</span>,
 <a href=#107 id=107 data-nosnippet>107</a>            jwt_access_minutes: std::env::var(<span class="string">"JWT_ACCESS_MINUTES"</span>)<span class="question-mark">?</span>.parse()<span class="question-mark">?</span>,
 <a href=#108 id=108 data-nosnippet>108</a>            jwt_refresh_days: std::env::var(<span class="string">"JWT_REFRESH_DAYS"</span>)<span class="question-mark">?</span>.parse()<span class="question-mark">?</span>,
-<a href=#109 id=109 data-nosnippet>109</a>            enable_testing: std::env::var(<span class="string">"ENABLE_TESTS"</span>)
+<a href=#109 id=109 data-nosnippet>109</a>            enable_testing: std::env::var(<span class="string">"ENABLE_TESTING"</span>)
 <a href=#110 id=110 data-nosnippet>110</a>                .unwrap_or_else(|<span class="kw">_</span>| <span class="string">"true"</span>.to_string())
 <a href=#111 id=111 data-nosnippet>111</a>                .parse()<span class="question-mark">?</span>,
 <a href=#112 id=112 data-nosnippet>112</a>            default_per_second: std::env::var(<span class="string">"DEFAULT_PER_SECOND"</span>)
