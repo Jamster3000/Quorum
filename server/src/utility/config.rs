@@ -106,7 +106,7 @@ impl Config {
             jwt_secret: std::env::var("JWT_SECRET")?,
             jwt_access_minutes: std::env::var("JWT_ACCESS_MINUTES")?.parse()?,
             jwt_refresh_days: std::env::var("JWT_REFRESH_DAYS")?.parse()?,
-            enable_testing: std::env::var("ENABLE_TESTS")
+            enable_testing: std::env::var("ENABLE_TESTING")
                 .unwrap_or_else(|_| "true".to_string())
                 .parse()?,
             default_per_second: std::env::var("DEFAULT_PER_SECOND")
