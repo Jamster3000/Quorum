@@ -70,6 +70,12 @@ pub struct AuthTokenResponse {
     pub message: String,
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+pub struct UpdateProfileResponse {
+    pub email: String,
+    pub username: String,
+}
+
 impl User {
     pub fn to_response(&self) -> UserResponse {
         UserResponse {
