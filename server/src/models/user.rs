@@ -70,8 +70,9 @@ pub struct AuthTokenResponse {
     pub message: String,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
-pub struct UpdateProfileResponse {
+#[derive(Debug, Deserialize)]
+pub struct UpdateUserProfileRequest {
+    pub user_id: String,
     pub email: String,
     pub username: String,
 }
