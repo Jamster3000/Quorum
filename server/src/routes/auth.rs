@@ -8,7 +8,7 @@ use crate::db::queries::auth;
 use crate::models::user::User;
 use crate::models::user::{
     AuthTokenResponse, DeleteAccountRequest, GetUserDataRequest, LoginRequest, SignupRequest,
-    TokenResponse, UserDataResponse,
+    TokenResponse, UserDataResponse,UpdateUserProfileRequest,
 };
 use crate::utility::config::Config;
 
