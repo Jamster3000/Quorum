@@ -193,3 +193,21 @@ pub async fn verify_user_credentials(
         "Invalid username/email or password".to_string(),
     ))
 }
+
+pub async fn update_user_profile(
+    db: &DB,
+    user_id: &str,
+    email: &str,
+    username: &str,
+) -> Result<User, (StatusCode, String)> {
+    let mut response = db
+        .query(format!("UPDATE ONLY user:{user_id} SET email = $email, username = $username RETURN AFTER"))
+        .bind(("email", email))
+        .bind(("username", username))
+        .await
+        .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, "Database error".to_string()))?;
+
+    let user: Option<User> = response.take(0).map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, "Failed to parse user".to_string()))?;
+
+    user.ok_or_else(|| (StatusCode::NOT_FOUND, "User not found".to_string()))
+    }
