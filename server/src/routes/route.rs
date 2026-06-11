@@ -53,7 +53,8 @@ pub fn create_router(db: DB) -> Router {
         .route("/auth/delete", post(delete_account))
         .route("/auth/me", post(get_user_data))
         .route("/auth/refresh", post(refresh_token))
-        .route("/auth/logout", post(logout));
+        .route("/auth/logout", post(logout))
+        .route("/auth/updateprofile", post(update_user_profile));
 
     let auth_routes = if Config::get().enable_testing {
         let governor_conf = Arc::new(
