@@ -563,3 +563,45 @@ pub async fn logout(
         }),
     )
 }
+
+
+
+//REMINDER  
+//This is fully Claude generated an used only as a proof of concept currently. Please delete / update it in due time.
+
+pub async fn update_user_profile(
+    State(db): State<DB>,
+    Json(payload): Json<UpdateUserProfileRequest>,
+) -> (StatusCode, Json<AuthTokenResponse>) {
+    let user = match auth::update_user_profile(
+        &db,
+        &payload.user_id,
+        &payload.email,
+        &payload.username,
+    )
+    .await
+    {
+        Ok(user) => user,
+        Err((status, message)) => {
+            return (
+                status,
+                Json(AuthTokenResponse {
+                    success: false,
+                    user: None,
+                    tokens: None,
+                    message,
+                }),
+            );
+        }
+    };
+
+    (
+        StatusCode::OK,
+        Json(AuthTokenResponse {
+            success: true,
+            user: Some(user.to_response()),
+            tokens: None,
+            message: "Profile updated successfully".to_string(),
+        }),
+    )
+}
