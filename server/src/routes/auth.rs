@@ -11,6 +11,8 @@ use crate::models::user::{
     TokenResponse, UpdateUserProfileRequest, UserDataResponse,
 };
 use crate::utility::config::Config;
+use crate::models::server::AuditEvent;
+use crate::db::queries::audit_logs::log_audit_event;
 
 use chrono;
 use serde::Deserialize;
@@ -77,39 +79,47 @@ pub async fn signup(
     State(db): State<DB>,
     Json(payload): Json<SignupRequest>,
 ) -> (StatusCode, Json<AuthTokenResponse>) {
-    let user = match auth::signup_user(
+    let signup_result = auth::signup_user(
         &db,
         &payload.username,
         payload.email.as_deref(),
         &payload.password,
     )
-    .await
-    {
-        Ok(user) => user,
-        Err(e) => {
-            let message = e.to_string();
-            let status = if message.contains("Invalid password length")
-                || message.contains("idx_username")
-                || message.contains("idx_email")
-            {
-                StatusCode::BAD_REQUEST
-            } else if message.contains("idx_username") || message.contains("UNIQUE") {
-                StatusCode::CONFLICT
-            } else {
-                StatusCode::INTERNAL_SERVER_ERROR
-            };
+    .await;
 
-            return (
-                status,
-                Json(AuthTokenResponse {
-                    success: false,
-                    user: None,
-                    tokens: None,
-                    message: format!("Failed to create user: {}", e),
-                }),
-            );
-        }
-    };
+    if let Err(e) = signup_result {
+        let message = e.to_string();
+        let formatted = format!("Failed to create user: {}", message);
+
+        let status = if message.contains("Invalid password length")
+            || message.contains("idx_username")
+            || message.contains("idx_email")
+        {
+            StatusCode::BAD_REQUEST
+        } else if message.contains("idx_username") || message.contains("UNIQUE") {
+            StatusCode::CONFLICT
+        } else {
+            StatusCode::INTERNAL_SERVER_ERROR
+        };
+
+        let _ = log_audit_event(&db, AuditEvent {
+            log_type: "signup_failed".to_string(),
+            action: Some(message.clone()),
+            ..Default::default()
+        }).await;
+
+        return (
+            status,
+            Json(AuthTokenResponse {
+                success: false,
+                user: None,
+                tokens: None,
+                message: formatted,
+            }),
+        );
+    }
+
+    let user = signup_result.unwrap();
 
     let user_id = match extract_user_id(&user) {
         Ok(id) => id,
@@ -141,8 +151,7 @@ pub async fn signup(
         }
     };
 
-    let refresh_token = match crate::utility::jwt::generate_refresh_token(&user_id, &user.username)
-    {
+    let refresh_token = match crate::utility::jwt::generate_refresh_token(&user_id, &user.username) {
         Ok(token) => token,
         Err(_) => {
             return (
@@ -173,6 +182,14 @@ pub async fn signup(
             }),
         );
     }
+
+    let _ = log_audit_event(&db, AuditEvent {
+        log_type: "signup_success".to_string(),
+        target_type_table: Some("users".to_string()),
+        target_type_table_id: Some(user_id.clone()),
+        user_id: Some(user_id.clone()),
+        ..Default::default()
+    }).await;
 
     (
         StatusCode::CREATED,

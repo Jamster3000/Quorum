@@ -198,7 +198,7 @@ DEFINE INDEX IF NOT EXISTS idx_url ON TABLE user_custom_emojis COLUMNS url UNIQU
 -- notification types
 DEFINE TABLE IF NOT EXISTS notification_types SCHEMAFULL;
 
-DEFINE FIELD IF NOT EXISTS type_name ON TABLE notification_types TYPE string 
+DEFINE FIELD IF NOT EXISTS type_name ON TABLE notification_types TYPE string
     ASSERT fn::bytes_within($value, $MIN_DEFAULT_BYTES, $MAX_NOTIFICATION_TYPES_BYTES);
 
 DEFINE INDEX IF NOT EXISTS idx_type_name ON TABLE notification_types COLUMNS type_name UNIQUE;
@@ -227,15 +227,22 @@ DEFINE FIELD IF NOT EXISTS name ON TABLE log_type TYPE string ASSERT fn::bytes_w
 DEFINE INDEX IF NOT EXISTS idx_name ON TABLE log_type COLUMNS name UNIQUE;
 
 
+-- audit action type
+DEFINE TABLE IF NOT EXISTS audit_action_type SCHEMAFULL;
+
+DEFINE FIELD IF NOT EXISTS name ON TABLE audit_action_type TYPE string ASSERT fn::bytes_within($value, $MIN_DEFAULT_BYTES, $MAX_AUDIT_ACTION_BYTES);
+
+DEFINE INDEX IF NOT EXISTS idx_audit_action_type_name ON TABLE audit_action_type COLUMNS name UNIQUE;
+
 -- audit logs
 DEFINE TABLE IF NOT EXISTS audit_logs SCHEMAFULL;
 
-DEFINE FIELD IF NOT EXISTS user_id ON TABLE audit_logs TYPE record<users>;
-DEFINE FIELD IF NOT EXISTS action ON TABLE audit_logs TYPE string ASSERT fn::bytes_within($value, $MIN_DEFAULT_BYTES, $MAX_AUDIT_ACTION_BYTES);
-DEFINE FIELD IF NOT EXISTS target_type_table ON TABLE audit_logs TYPE string ASSERT fn::bytes_within($value, $MIN_DEFAULT_BYTES, $MAX_AUDIT_TARGET_BYTES);
+DEFINE FIELD IF NOT EXISTS user_id ON TABLE audit_logs TYPE option<record<users>>;
+DEFINE FIELD IF NOT EXISTS action_type_id ON TABLE audit_logs TYPE option<record<audit_action_type>>;
+DEFINE FIELD IF NOT EXISTS target_type_table_id ON TABLE audit_logs TYPE option<record>;
 DEFINE FIELD IF NOT EXISTS log_type_id ON TABLE audit_logs TYPE record<log_type>;
-DEFINE FIELD IF NOT EXISTS old_value ON TABLE audit_logs TYPE string ASSERT fn::bytes_within($value, $MIN_DEFAULT_BYTES, $MAX_AUDIT_VALUR_BYTES);
-DEFINE FIELD IF NOT EXISTS new_value ON TABLE audit_logs TYPE string ASSERT fn::bytes_within($value, $MIN_DEFAULT_BYTES, $MAX_AUDIT_VALUR_BYTES);
+DEFINE FIELD IF NOT EXISTS old_value ON TABLE audit_logs TYPE option<string> ASSERT $value = NONE OR fn::bytes_within($value, $MIN_DEFAULT_BYTES, $MAX_AUDIT_VALUE_BYTES);
+DEFINE FIELD IF NOT EXISTS new_value ON TABLE audit_logs TYPE option<string> ASSERT $value = NONE OR fn::bytes_within($value, $MIN_DEFAULT_BYTES, $MAX_AUDIT_VALUE_BYTES);
 DEFINE FIELD IF NOT EXISTS created_at ON TABLE audit_logs TYPE datetime DEFAULT time::now();
 
 DEFINE INDEX IF NOT EXISTS idx_audit_user ON TABLE audit_logs COLUMNS user_id;
@@ -669,8 +676,8 @@ SIGNUP ({
         created_at = time::now()
 })
 SIGNIN (
-    SELECT * FROM users 
-    WHERE email = $email 
+    SELECT * FROM users
+    WHERE email = $email
     AND crypto::argon2::compare(password_hash, $password)
     AND is_banned = false
     AND is_deleted = false

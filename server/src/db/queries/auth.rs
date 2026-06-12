@@ -41,7 +41,7 @@ pub async fn signup_user(
     username: &str,
     email: Option<&str>,
     password: &str,
-) -> Result<User, Box<dyn Error>> {
+) -> Result<User, Box<dyn Error + Send + Sync>> {
     let mut response = db
         .query(
             "CREATE users SET
@@ -91,7 +91,7 @@ pub async fn signup_user(
 ///     }
 /// }
 ///```
-pub async fn delete_user_by_id(db: &DB, user_id: &str) -> Result<(), Box<dyn Error>> {
+pub async fn delete_user_by_id(db: &DB, user_id: &str) -> Result<(), Box<dyn Error + Send + Sync>> {
     use crate::db::queries::tokens;
     tokens::delete_all_user_tokens(db, user_id).await?;
 
@@ -134,7 +134,7 @@ pub async fn store_refresh_token(
     user_id: &str,
     refresh_token: &str,
     expires_at: i64,
-) -> Result<(), Box<dyn Error>> {
+) -> Result<(), Box<dyn Error + Send + Sync>> {
     use crate::db::queries::tokens;
     tokens::store_refresh_token(db, user_id, refresh_token, expires_at).await
 }
@@ -164,7 +164,7 @@ pub async fn store_refresh_token(
 ///     }
 /// }
 ///```
-pub async fn revoke_refresh_token(db: &DB, refresh_token: &str) -> Result<(), Box<dyn Error>> {
+pub async fn revoke_refresh_token(db: &DB, refresh_token: &str) -> Result<(), Box<dyn Error + Send + Sync>> {
     use crate::db::queries::tokens;
     tokens::revoke_refresh_token(db, refresh_token).await
 }

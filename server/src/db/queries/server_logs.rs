@@ -32,7 +32,7 @@ struct EventTypeRecord {
 ///
 /// # Errors
 /// * "Failed to create event type" - If the database query to create a new event type does not return a valid record, indicating that the creation failed.
-async fn get_or_create_event_type(db: &DB, event_name: String) -> Result<RecordId, Box<dyn Error>> {
+async fn get_or_create_event_type(db: &DB, event_name: String) -> Result<RecordId, Box<dyn Error + Send + Sync>> {
     //Check if the event type already exists by trying to get it.
     let mut response = db
         .query("SELECT id FROM server_log_event_types WHERE name = $name")
@@ -68,7 +68,7 @@ async fn get_or_create_event_type(db: &DB, event_name: String) -> Result<RecordI
 ///
 /// # Returns
 /// * `Ok(RecordId)` - The ID of the event type, either retrieved from the cache or obtained from the database.
-/// * `Err(Box<dyn Error>)` - An error if the database query fails or if creating a new event type fails.
+/// * `Err(Box<dyn Error + Send + Sync>)` - An error if the database query fails or if creating a new event type fails.
 ///
 /// # Errors
 /// * "Failed to create event type" - If the database query to create a new event type does not return a valid record, indicating that the creation failed.
@@ -76,7 +76,7 @@ async fn get_cached_event_type(
     db: &DB,
     cache: &OnceLock<RecordId>,
     event_name: &str,
-) -> Result<RecordId, Box<dyn Error>> {
+) -> Result<RecordId, Box<dyn Error + Send + Sync>> {
     if let Some(id) = cache.get() {
         return Ok(id.clone());
     }
@@ -113,7 +113,7 @@ async fn get_cached_event_type(
 ///     }
 /// }
 /// ```
-pub async fn log_startup(db: &DB, duration_ms: i64) -> Result<(), Box<dyn Error>> {
+pub async fn log_startup(db: &DB, duration_ms: i64) -> Result<(), Box<dyn Error + Send + Sync>> {
     let event_type_id = get_cached_event_type(db, &STARTUP_ID, "startup").await?;
 
     db.query("CREATE server_logs SET event_type_id = $event_type_id, duration_ms = $duration_ms")
@@ -151,7 +151,7 @@ pub async fn log_startup(db: &DB, duration_ms: i64) -> Result<(), Box<dyn Error>
 ///     }
 /// }
 /// ```
-pub async fn log_shutdown(db: &DB, duration_ms: i64) -> Result<(), Box<dyn Error>> {
+pub async fn log_shutdown(db: &DB, duration_ms: i64) -> Result<(), Box<dyn Error + Send + Sync>> {
     let event_type_id = get_cached_event_type(db, &SHUTDOWN_ID, "shutdown").await?;
 
     db.query("CREATE server_logs SET event_type_id = $event_type_id, duration_ms = $duration_ms")
@@ -191,7 +191,7 @@ pub async fn log_shutdown(db: &DB, duration_ms: i64) -> Result<(), Box<dyn Error
 ///     }
 /// }
 /// ```
-pub async fn log_error(db: &DB, message: String, error_code: u32) -> Result<(), Box<dyn Error>> {
+pub async fn log_error(db: &DB, message: String, error_code: u32) -> Result<(), Box<dyn Error + Send + Sync>> {
     let event_type_id = get_cached_event_type(db, &ERROR_ID, "error").await?;
 
     db.query(
