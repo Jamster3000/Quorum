@@ -70,14 +70,21 @@
 <a href=#70 id=70 data-nosnippet>70</a>    <span class="kw">pub </span>message: String,
 <a href=#71 id=71 data-nosnippet>71</a>}
 <a href=#72 id=72 data-nosnippet>72</a>
-<a href=#73 id=73 data-nosnippet>73</a><span class="kw">impl </span>User {
-<a href=#74 id=74 data-nosnippet>74</a>    <span class="kw">pub fn </span>to_response(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; UserResponse {
-<a href=#75 id=75 data-nosnippet>75</a>        UserResponse {
-<a href=#76 id=76 data-nosnippet>76</a>            id: <span class="macro">format!</span>(<span class="string">"{:?}"</span>, <span class="self">self</span>.id.key),
-<a href=#77 id=77 data-nosnippet>77</a>            username: <span class="self">self</span>.username.clone(),
-<a href=#78 id=78 data-nosnippet>78</a>            email: <span class="self">self</span>.email.clone(),
-<a href=#79 id=79 data-nosnippet>79</a>            created_at: <span class="self">self</span>.created_at,
-<a href=#80 id=80 data-nosnippet>80</a>        }
-<a href=#81 id=81 data-nosnippet>81</a>    }
-<a href=#82 id=82 data-nosnippet>82</a>}
+<a href=#73 id=73 data-nosnippet>73</a><span class="attr">#[derive(Debug, Deserialize)]
+<a href=#74 id=74 data-nosnippet>74</a></span><span class="kw">pub struct </span>UpdateUserProfileRequest {
+<a href=#75 id=75 data-nosnippet>75</a>    <span class="kw">pub </span>user_id: String,
+<a href=#76 id=76 data-nosnippet>76</a>    <span class="kw">pub </span>email: String,
+<a href=#77 id=77 data-nosnippet>77</a>    <span class="kw">pub </span>username: String,
+<a href=#78 id=78 data-nosnippet>78</a>}
+<a href=#79 id=79 data-nosnippet>79</a>
+<a href=#80 id=80 data-nosnippet>80</a><span class="kw">impl </span>User {
+<a href=#81 id=81 data-nosnippet>81</a>    <span class="kw">pub fn </span>to_response(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; UserResponse {
+<a href=#82 id=82 data-nosnippet>82</a>        UserResponse {
+<a href=#83 id=83 data-nosnippet>83</a>            id: <span class="macro">format!</span>(<span class="string">"{:?}"</span>, <span class="self">self</span>.id.key),
+<a href=#84 id=84 data-nosnippet>84</a>            username: <span class="self">self</span>.username.clone(),
+<a href=#85 id=85 data-nosnippet>85</a>            email: <span class="self">self</span>.email.clone(),
+<a href=#86 id=86 data-nosnippet>86</a>            created_at: <span class="self">self</span>.created_at,
+<a href=#87 id=87 data-nosnippet>87</a>        }
+<a href=#88 id=88 data-nosnippet>88</a>    }
+<a href=#89 id=89 data-nosnippet>89</a>}
 </code></pre></div></section></main></body></html>

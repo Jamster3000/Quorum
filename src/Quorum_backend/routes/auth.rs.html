@@ -8,7 +8,7 @@
 <a href=#8 id=8 data-nosnippet>8</a><span class="kw">use </span><span class="kw">crate</span>::models::user::User;
 <a href=#9 id=9 data-nosnippet>9</a><span class="kw">use </span><span class="kw">crate</span>::models::user::{
 <a href=#10 id=10 data-nosnippet>10</a>    AuthTokenResponse, DeleteAccountRequest, GetUserDataRequest, LoginRequest, SignupRequest,
-<a href=#11 id=11 data-nosnippet>11</a>    TokenResponse, UserDataResponse,
+<a href=#11 id=11 data-nosnippet>11</a>    TokenResponse, UpdateUserProfileRequest, UserDataResponse,
 <a href=#12 id=12 data-nosnippet>12</a>};
 <a href=#13 id=13 data-nosnippet>13</a><span class="kw">use </span><span class="kw">crate</span>::utility::config::Config;
 <a href=#14 id=14 data-nosnippet>14</a>
@@ -563,4 +563,40 @@
 <a href=#563 id=563 data-nosnippet>563</a>        }),
 <a href=#564 id=564 data-nosnippet>564</a>    )
 <a href=#565 id=565 data-nosnippet>565</a>}
+<a href=#566 id=566 data-nosnippet>566</a>
+<a href=#567 id=567 data-nosnippet>567</a><span class="comment">//REMINDER
+<a href=#568 id=568 data-nosnippet>568</a>//This is fully Claude generated an used only as a proof of concept currently. Please delete / update it in due time.
+<a href=#569 id=569 data-nosnippet>569</a>
+<a href=#570 id=570 data-nosnippet>570</a></span><span class="kw">pub async fn </span>update_user_profile(
+<a href=#571 id=571 data-nosnippet>571</a>    State(db): State&lt;DB&gt;,
+<a href=#572 id=572 data-nosnippet>572</a>    Json(payload): Json&lt;UpdateUserProfileRequest&gt;,
+<a href=#573 id=573 data-nosnippet>573</a>) -&gt; (StatusCode, Json&lt;AuthTokenResponse&gt;) {
+<a href=#574 id=574 data-nosnippet>574</a>    <span class="kw">let </span>user =
+<a href=#575 id=575 data-nosnippet>575</a>        <span class="kw">match </span>auth::update_user_profile(<span class="kw-2">&amp;</span>db, <span class="kw-2">&amp;</span>payload.user_id, <span class="kw-2">&amp;</span>payload.email, <span class="kw-2">&amp;</span>payload.username)
+<a href=#576 id=576 data-nosnippet>576</a>            .<span class="kw">await
+<a href=#577 id=577 data-nosnippet>577</a>        </span>{
+<a href=#578 id=578 data-nosnippet>578</a>            <span class="prelude-val">Ok</span>(user) =&gt; user,
+<a href=#579 id=579 data-nosnippet>579</a>            <span class="prelude-val">Err</span>((status, message)) =&gt; {
+<a href=#580 id=580 data-nosnippet>580</a>                <span class="kw">return </span>(
+<a href=#581 id=581 data-nosnippet>581</a>                    status,
+<a href=#582 id=582 data-nosnippet>582</a>                    Json(AuthTokenResponse {
+<a href=#583 id=583 data-nosnippet>583</a>                        success: <span class="bool-val">false</span>,
+<a href=#584 id=584 data-nosnippet>584</a>                        user: <span class="prelude-val">None</span>,
+<a href=#585 id=585 data-nosnippet>585</a>                        tokens: <span class="prelude-val">None</span>,
+<a href=#586 id=586 data-nosnippet>586</a>                        message,
+<a href=#587 id=587 data-nosnippet>587</a>                    }),
+<a href=#588 id=588 data-nosnippet>588</a>                );
+<a href=#589 id=589 data-nosnippet>589</a>            }
+<a href=#590 id=590 data-nosnippet>590</a>        };
+<a href=#591 id=591 data-nosnippet>591</a>
+<a href=#592 id=592 data-nosnippet>592</a>    (
+<a href=#593 id=593 data-nosnippet>593</a>        StatusCode::OK,
+<a href=#594 id=594 data-nosnippet>594</a>        Json(AuthTokenResponse {
+<a href=#595 id=595 data-nosnippet>595</a>            success: <span class="bool-val">true</span>,
+<a href=#596 id=596 data-nosnippet>596</a>            user: <span class="prelude-val">Some</span>(user.to_response()),
+<a href=#597 id=597 data-nosnippet>597</a>            tokens: <span class="prelude-val">None</span>,
+<a href=#598 id=598 data-nosnippet>598</a>            message: <span class="string">"Profile updated successfully"</span>.to_string(),
+<a href=#599 id=599 data-nosnippet>599</a>        }),
+<a href=#600 id=600 data-nosnippet>600</a>    )
+<a href=#601 id=601 data-nosnippet>601</a>}
 </code></pre></div></section></main></body></html>
