@@ -194,6 +194,32 @@ pub async fn verify_user_credentials(
     ))
 }
 
+/// Updates a user's profile information in the database
+///
+/// # Arguments
+/// * `db` - A reference to the database connection
+/// * `user_id` - The ID of the user whose profile is being updated
+/// * `email` - The new email address for the user
+/// * `username` - The new username for the user
+///
+/// # Returns
+/// * `Ok(User)` - The updated user object if the operation was successful
+/// * `Err((StatusCode, String))` - An error if the operation failed, containing an HTTP status code and an error message
+///
+/// # Example
+/// ```rust
+/// use crate::db::DB;
+/// use crate::db::queries::auth;
+/// async fn example_update_user_profile(db: &DB) {
+///     let user_id = "user_id";
+///     let new_email = "test@example.com";
+///     let new_username = "new_username";
+///     match auth::update_user_profile(db, user_id, new_email, new_username).await {
+///         Ok(user) => println!("User profile updated: {:?}", user),
+///         Err((status, message)) => eprintln!("Error updating user profile ({}): {}", status, message),
+///     }
+/// }
+///```
 pub async fn update_user_profile(
     db: &DB,
     user_id: &str,
@@ -201,13 +227,25 @@ pub async fn update_user_profile(
     username: &str,
 ) -> Result<User, (StatusCode, String)> {
     let mut response = db
-        .query(format!("UPDATE ONLY user:{user_id} SET email = $email, username = $username RETURN AFTER"))
+        .query(format!(
+            "UPDATE ONLY user:{user_id} SET email = $email, username = $username RETURN AFTER"
+        ))
         .bind(("email", email))
         .bind(("username", username))
         .await
-        .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, "Database error".to_string()))?;
+        .map_err(|_| {
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "Database error".to_string(),
+            )
+        })?;
 
-    let user: Option<User> = response.take(0).map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, "Failed to parse user".to_string()))?;
+    let user: Option<User> = response.take(0).map_err(|_| {
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            "Failed to parse user".to_string(),
+        )
+    })?;
 
     user.ok_or_else(|| (StatusCode::NOT_FOUND, "User not found".to_string()))
-    }
+}

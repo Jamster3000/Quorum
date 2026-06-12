@@ -8,7 +8,7 @@ use crate::db::queries::auth;
 use crate::models::user::User;
 use crate::models::user::{
     AuthTokenResponse, DeleteAccountRequest, GetUserDataRequest, LoginRequest, SignupRequest,
-    TokenResponse, UserDataResponse,UpdateUserProfileRequest,
+    TokenResponse, UpdateUserProfileRequest, UserDataResponse,
 };
 use crate::utility::config::Config;
 
@@ -564,36 +564,30 @@ pub async fn logout(
     )
 }
 
-
-
-//REMINDER  
+//REMINDER
 //This is fully Claude generated an used only as a proof of concept currently. Please delete / update it in due time.
 
 pub async fn update_user_profile(
     State(db): State<DB>,
     Json(payload): Json<UpdateUserProfileRequest>,
 ) -> (StatusCode, Json<AuthTokenResponse>) {
-    let user = match auth::update_user_profile(
-        &db,
-        &payload.user_id,
-        &payload.email,
-        &payload.username,
-    )
-    .await
-    {
-        Ok(user) => user,
-        Err((status, message)) => {
-            return (
-                status,
-                Json(AuthTokenResponse {
-                    success: false,
-                    user: None,
-                    tokens: None,
-                    message,
-                }),
-            );
-        }
-    };
+    let user =
+        match auth::update_user_profile(&db, &payload.user_id, &payload.email, &payload.username)
+            .await
+        {
+            Ok(user) => user,
+            Err((status, message)) => {
+                return (
+                    status,
+                    Json(AuthTokenResponse {
+                        success: false,
+                        user: None,
+                        tokens: None,
+                        message,
+                    }),
+                );
+            }
+        };
 
     (
         StatusCode::OK,

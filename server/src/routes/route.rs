@@ -10,7 +10,9 @@ use std::sync::Arc;
 use std::time::Duration;
 use tower_governor::{GovernorLayer, governor::GovernorConfigBuilder};
 
-use super::auth::{delete_account, get_user_data, login, logout, refresh_token, signup, update_user_profile};
+use super::auth::{
+    delete_account, get_user_data, login, logout, refresh_token, signup, update_user_profile,
+};
 use super::echo::echo;
 use super::health::health;
 
