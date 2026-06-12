@@ -133,6 +133,8 @@ pub async fn login(payload: LoginPayload) -> Result<LoginResponse, String> {
         }
     };
 
+    println!("Auth response: {:?}", auth_response);
+
     if !auth_response["success"].as_bool().unwrap_or(false) {
         let error_message = auth_response["message"].as_str().unwrap_or("Invalid username/email or password").to_string();
         return Ok(LoginResponse {
@@ -160,5 +162,39 @@ pub async fn login(payload: LoginPayload) -> Result<LoginResponse, String> {
         refresh_token,
         user_id,
         username,
+    })
+}
+
+#[tauri::command]
+pub async fn refresh_token(refresh_token: String) -> Result<LoginResponse, String> {
+    let payload = json!({
+        "refresh_token": refresh_token,
+    });
+
+    let auth_response = make_auth_request("/auth/refresh", &payload, 200).await?;
+
+    if !auth_response["success"].as_bool().unwrap_or(false) {
+        let error_msg = auth_response["message"].as_str().unwrap_or("Failed to refresh token").to_string();
+        return Ok(LoginResponse {
+            success: false,
+            message: error_msg,
+            access_token: None,
+            refresh_token: None,
+            user_id: None,
+            username: None,
+        });
+    }
+
+    let tokens = auth_response["tokens"].as_object().ok_or("Invalid tokens in response")?;
+    let access_token = tokens["access_token"].as_str().map(|s| s.to_string());
+    let new_refresh_token = tokens["refresh_token"].as_str().map(|s| s.to_string());
+
+    Ok(LoginResponse {
+        success: true,
+        message: auth_response["message"].as_str().unwrap_or("Token refreshed successfully.").to_string(),
+        access_token,
+        refresh_token: new_refresh_token,
+        user_id: None,
+        username: None,
     })
 }
