@@ -7,7 +7,7 @@
 
 use std::sync::OnceLock;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Config {
     /// HTTP server port number.
     pub server_port: u16,
@@ -87,45 +87,54 @@ impl Config {
     /// }
     /// ```
     pub fn load() -> Result<(), Box<dyn std::error::Error>> {
-        let server_port: u16 = std::env::var("SERVER_PORT")
-            .unwrap_or_else(|_| "3000".to_string())
-            .parse()?;
+        CONFIG.get_or_init(|| {
+            let server_host = std::env::var("SERVER_HOST").unwrap_or_else(|_| "127.0.0.1".to_string());
+            let server_port: u16 = std::env::var("SERVER_PORT")
+                .unwrap_or_else(|_| "3000".to_string())
+                .parse()
+                .unwrap_or(3000);
 
-        let server_host = std::env::var("SERVER_HOST").unwrap_or_else(|_| "127.0.0.1".to_string());
-
-        let config = Config {
-            server_port,
-            server_host: server_host.clone(),
-            server_url: std::env::var("SERVER_URL")
-                .unwrap_or_else(|_| format!("http://{}:{}", server_host, server_port)),
-            surreal_url: std::env::var("SURREAL_URL")?,
-            surreal_user: std::env::var("SURREAL_USER")?,
-            surreal_pass: std::env::var("SURREAL_PASS")?,
-            surreal_ns: std::env::var("SURREAL_NS")?,
-            surreal_db: std::env::var("SURREAL_DB")?,
-            jwt_secret: std::env::var("JWT_SECRET")?,
-            jwt_access_minutes: std::env::var("JWT_ACCESS_MINUTES")?.parse()?,
-            jwt_refresh_days: std::env::var("JWT_REFRESH_DAYS")?.parse()?,
-            enable_testing: std::env::var("ENABLE_TESTING")
-                .unwrap_or_else(|_| "true".to_string())
-                .parse()?,
-            default_per_second: std::env::var("DEFAULT_PER_SECOND")
-                .unwrap_or_else(|_| "2".to_string())
-                .parse()?,
-            default_burst_size: std::env::var("DEFAULT_BURST_SIZE")
-                .unwrap_or_else(|_| "5".to_string())
-                .parse()?,
-            testing_per_second: std::env::var("TESTING_PER_SECOND")
-                .unwrap_or_else(|_| "10".to_string())
-                .parse()?,
-            testing_burst_size: std::env::var("TESTING_BURST_SIZE")
-                .unwrap_or_else(|_| "50".to_string())
-                .parse()?,
-        };
-
-        CONFIG
-            .set(config)
-            .map_err(|_| "Config already initialized".into())
+            Config {
+                server_port,
+                server_host: server_host.clone(),
+                server_url: format!("http://{}:{}", server_host, server_port),
+                surreal_url: std::env::var("SURREAL_URL").unwrap_or_default(),
+                surreal_user: std::env::var("SURREAL_USER").unwrap_or_default(),
+                surreal_pass: std::env::var("SURREAL_PASS").unwrap_or_default(),
+                surreal_ns: std::env::var("SURREAL_NS").unwrap_or_default(),
+                surreal_db: std::env::var("SURREAL_DB").unwrap_or_default(),
+                jwt_secret: std::env::var("JWT_SECRET").unwrap_or_default(),
+                jwt_access_minutes: std::env::var("JWT_ACCESS_MINUTES")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(60),
+                jwt_refresh_days: std::env::var("JWT_REFRESH_DAYS")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(7),
+                enable_testing: std::env::var("ENABLE_TESTING")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(true),
+                default_per_second: std::env::var("DEFAULT_PER_SECOND")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(2),
+                default_burst_size: std::env::var("DEFAULT_BURST_SIZE")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(5),
+                testing_per_second: std::env::var("TESTING_PER_SECOND")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(10),
+                testing_burst_size: std::env::var("TESTING_BURST_SIZE")
+                    .ok()
+                    .and_then(|s| s.parse().ok())
+                    .unwrap_or(50),
+            }
+        });
+        Ok(())
     }
 
     /// Returns a reference to the global configuration singleton.
