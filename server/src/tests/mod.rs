@@ -54,6 +54,9 @@ async fn run_functional_tests() {
         ("Auth delete user account with username test", || {
             Box::pin(functional::auth_tests::test_delete_user_account_username())
         }),
+        ("Auth update user profile test", || {
+            Box::pin(functional::auth_tests::test_update_user_profile())
+        }),
     ];
 
     run_test_suite(&tests).await;
