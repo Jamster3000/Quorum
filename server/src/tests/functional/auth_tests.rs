@@ -256,3 +256,44 @@ pub async fn test_logout() -> Result<TestResult, String> {
 
     Ok(TestResult { endpoint_time })
 }
+
+pub async fn test_update_user_profile() -> Result<TestResult, String> {
+    let username = get_test_username();
+    let signup_payload = json!({
+        "username": username.clone(),
+        "password": "TestPassword123!"
+    });
+
+    make_auth_request("/auth/signup", &signup_payload, 201).await?;
+
+    let me_payload = json!({
+        "username_or_email": username.clone(),
+        "password": "TestPassword123!",
+        "fields": ["id"]
+    });
+
+    let me_body = make_auth_request("/auth/me", &me_payload, 200).await?;
+    let user_id = me_body["data"]["id"]
+        .as_str()
+        .ok_or("Failed to get user ID")?
+        .to_string();
+
+    let new_username = get_test_username();
+    let update_payload = json!({
+        "user_id": user_id,
+        "email": format!("{}@example.com", new_username),
+        "username": new_username.clone()
+    });
+
+    let timer = startup::create_timer();
+    let update_body = make_auth_request("/auth/update-profile", &update_payload, 200).await?;
+    let endpoint_time = timer.elapsed();
+
+    if update_body["user"]["username"].as_str() != Some(new_username.as_str()) {
+        return Err("Username was not updated correctly".to_string());
+    }
+
+    let _ = cleanup_user(&new_username, "TestPassword123!").await;
+
+    Ok(TestResult { endpoint_time })
+}
