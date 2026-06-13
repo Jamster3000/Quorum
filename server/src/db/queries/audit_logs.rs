@@ -73,7 +73,10 @@ struct TypeRecord {
 ///     }
 /// ).await;
 /// ```
-pub async fn log_audit_event(db: &DB, event: AuditEvent) -> Result<(), Box<dyn Error + Send + Sync>> {
+pub async fn log_audit_event(
+    db: &DB,
+    event: AuditEvent,
+) -> Result<(), Box<dyn Error + Send + Sync>> {
     let log_type_id = get_cached_log_type(db, &event.log_type).await?;
 
     let action_type_id = match &event.action {
@@ -127,7 +130,10 @@ pub async fn log_audit_event(db: &DB, event: AuditEvent) -> Result<(), Box<dyn E
 ///
 /// # Returns
 /// A `RecordId` representing the log type ID associated with the given `log_name`.
-async fn get_cached_log_type(db: &DB, log_name: &str) -> Result<RecordId, Box<dyn Error + Send + Sync>> {
+async fn get_cached_log_type(
+    db: &DB,
+    log_name: &str,
+) -> Result<RecordId, Box<dyn Error + Send + Sync>> {
     let cache = LOG_TYPE_CACHE.get_or_init(|| Mutex::new(HashMap::new()));
 
     if let Some(id) = cache.lock().unwrap().get(log_name).cloned() {
@@ -153,7 +159,10 @@ async fn get_cached_log_type(db: &DB, log_name: &str) -> Result<RecordId, Box<dy
 ///
 /// # Returns
 /// A `RecordId` representing the action type ID associated with the given `action_name`.
-async fn get_cached_action_type(db: &DB, action_name: &str) -> Result<RecordId, Box<dyn Error + Send + Sync>> {
+async fn get_cached_action_type(
+    db: &DB,
+    action_name: &str,
+) -> Result<RecordId, Box<dyn Error + Send + Sync>> {
     let cache = ACTION_TYPE_CACHE.get_or_init(|| Mutex::new(HashMap::new()));
 
     if let Some(id) = cache.lock().unwrap().get(action_name).cloned() {
@@ -180,7 +189,11 @@ async fn get_cached_action_type(db: &DB, action_name: &str) -> Result<RecordId, 
 ///
 /// # Returns
 /// A `RecordId` representing the ID of the existing or newly created type record.
-async fn get_or_create_type(db: &DB, table: &str, name: &str) -> Result<RecordId, Box<dyn Error + Send + Sync>> {
+async fn get_or_create_type(
+    db: &DB,
+    table: &str,
+    name: &str,
+) -> Result<RecordId, Box<dyn Error + Send + Sync>> {
     let query = format!("SELECT id FROM {} WHERE name = $name LIMIT 1", table);
     let response = db.query(&query).bind(("name", name)).await?.check()?;
 

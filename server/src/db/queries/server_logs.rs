@@ -32,7 +32,10 @@ struct EventTypeRecord {
 ///
 /// # Errors
 /// * "Failed to create event type" - If the database query to create a new event type does not return a valid record, indicating that the creation failed.
-async fn get_or_create_event_type(db: &DB, event_name: String) -> Result<RecordId, Box<dyn Error + Send + Sync>> {
+async fn get_or_create_event_type(
+    db: &DB,
+    event_name: String,
+) -> Result<RecordId, Box<dyn Error + Send + Sync>> {
     //Check if the event type already exists by trying to get it.
     let mut response = db
         .query("SELECT id FROM server_log_event_types WHERE name = $name")
@@ -191,7 +194,11 @@ pub async fn log_shutdown(db: &DB, duration_ms: i64) -> Result<(), Box<dyn Error
 ///     }
 /// }
 /// ```
-pub async fn log_error(db: &DB, message: String, error_code: u32) -> Result<(), Box<dyn Error + Send + Sync>> {
+pub async fn log_error(
+    db: &DB,
+    message: String,
+    error_code: u32,
+) -> Result<(), Box<dyn Error + Send + Sync>> {
     let event_type_id = get_cached_event_type(db, &ERROR_ID, "error").await?;
 
     db.query(

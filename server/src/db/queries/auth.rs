@@ -3,6 +3,7 @@
 //! This file contains functions for Creating an account (signup), login, token management and deleteing a user account.
 
 use crate::db::DB;
+use crate::models::user::UpdateUserProfileRequest;
 use crate::models::user::User;
 use axum::http::StatusCode;
 use std::error::Error;
@@ -164,7 +165,10 @@ pub async fn store_refresh_token(
 ///     }
 /// }
 ///```
-pub async fn revoke_refresh_token(db: &DB, refresh_token: &str) -> Result<(), Box<dyn Error + Send + Sync>> {
+pub async fn revoke_refresh_token(
+    db: &DB,
+    refresh_token: &str,
+) -> Result<(), Box<dyn Error + Send + Sync>> {
     use crate::db::queries::tokens;
     tokens::revoke_refresh_token(db, refresh_token).await
 }
@@ -222,16 +226,15 @@ pub async fn verify_user_credentials(
 ///```
 pub async fn update_user_profile(
     db: &DB,
-    user_id: &str,
-    email: &str,
-    username: &str,
+    payload: &UpdateUserProfileRequest,
 ) -> Result<User, (StatusCode, String)> {
     let mut response = db
         .query(format!(
-            "UPDATE ONLY user:{user_id} SET email = $email, username = $username RETURN AFTER"
+            "UPDATE ONLY users:{} SET email = $email, username = $username RETURN AFTER",
+            payload.user_id
         ))
-        .bind(("email", email))
-        .bind(("username", username))
+        .bind(("email", payload.email.clone()))
+        .bind(("username", payload.username.clone()))
         .await
         .map_err(|_| {
             (

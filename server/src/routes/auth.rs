@@ -4,15 +4,15 @@
 use axum::{Json, extract::State, http::StatusCode};
 
 use crate::db::DB;
+use crate::db::queries::audit_logs::log_audit_event;
 use crate::db::queries::auth;
+use crate::models::server::AuditEvent;
 use crate::models::user::User;
 use crate::models::user::{
     AuthTokenResponse, DeleteAccountRequest, GetUserDataRequest, LoginRequest, SignupRequest,
     TokenResponse, UpdateUserProfileRequest, UserDataResponse,
 };
 use crate::utility::config::Config;
-use crate::models::server::AuditEvent;
-use crate::db::queries::audit_logs::log_audit_event;
 
 use chrono;
 use serde::Deserialize;
@@ -103,11 +103,15 @@ pub async fn signup(
             StatusCode::INTERNAL_SERVER_ERROR
         };
 
-        let _ = log_audit_event(&db, AuditEvent {
-            log_type: "signup_failed".to_string(),
-            action: Some(message.clone()),
-            ..Default::default()
-        }).await;
+        let _ = log_audit_event(
+            &db,
+            AuditEvent {
+                log_type: "signup_failed".to_string(),
+                action: Some(message.clone()),
+                ..Default::default()
+            },
+        )
+        .await;
 
         return (
             status,
@@ -152,7 +156,8 @@ pub async fn signup(
         }
     };
 
-    let refresh_token = match crate::utility::jwt::generate_refresh_token(&user_id, &user.username) {
+    let refresh_token = match crate::utility::jwt::generate_refresh_token(&user_id, &user.username)
+    {
         Ok(token) => token,
         Err(_) => {
             return (
@@ -184,13 +189,17 @@ pub async fn signup(
         );
     }
 
-    let _ = log_audit_event(&db, AuditEvent {
-        log_type: "signup_success".to_string(),
-        target_type_table: Some("users".to_string()),
-        target_type_table_id: Some(user_id.clone()),
-        user_id: Some(user_id.clone()),
-        ..Default::default()
-    }).await;
+    let _ = log_audit_event(
+        &db,
+        AuditEvent {
+            log_type: "signup_success".to_string(),
+            target_type_table: Some("users".to_string()),
+            target_type_table_id: Some(user_id.clone()),
+            user_id: Some(user_id.clone()),
+            ..Default::default()
+        },
+    )
+    .await;
 
     (
         StatusCode::CREATED,
@@ -250,11 +259,15 @@ pub async fn login(
     let user_id = match extract_user_id(&user) {
         Ok(id) => id,
         Err(e) => {
-            let _ = log_audit_event(&db, AuditEvent {
-                log_type: "login_failed".to_string(),
-                action: Some(e.clone()),
-                ..Default::default()
-            }).await;
+            let _ = log_audit_event(
+                &db,
+                AuditEvent {
+                    log_type: "login_failed".to_string(),
+                    action: Some(e.clone()),
+                    ..Default::default()
+                },
+            )
+            .await;
 
             return (
                 StatusCode::INTERNAL_SERVER_ERROR,
@@ -315,13 +328,17 @@ pub async fn login(
         );
     }
 
-    let _ = log_audit_event(&db, AuditEvent {
-        log_type: "login_success".to_string(),
-        target_type_table: Some("users".to_string()),
-        target_type_table_id: Some(user_id.clone()),
-        user_id: Some(user_id.clone()),
-        ..Default::default()
-    }).await;
+    let _ = log_audit_event(
+        &db,
+        AuditEvent {
+            log_type: "login_success".to_string(),
+            target_type_table: Some("users".to_string()),
+            target_type_table_id: Some(user_id.clone()),
+            user_id: Some(user_id.clone()),
+            ..Default::default()
+        },
+    )
+    .await;
 
     (
         StatusCode::OK,
@@ -348,13 +365,17 @@ pub async fn delete_account(
         {
             Ok(user) => user,
             Err((status, message)) => {
-                let _ = log_audit_event(&db, AuditEvent {
-                    log_type: "delete_account_failed".to_string(),
-                    action: Some(message.clone()),
-                    target_type_table: Some("users".to_string()),
-                    target_type_table_id: Some(payload.user_id.clone()),
-                    ..Default::default()
-                }).await;
+                let _ = log_audit_event(
+                    &db,
+                    AuditEvent {
+                        log_type: "delete_account_failed".to_string(),
+                        action: Some(message.clone()),
+                        target_type_table: Some("users".to_string()),
+                        target_type_table_id: Some(payload.user_id.clone()),
+                        ..Default::default()
+                    },
+                )
+                .await;
 
                 return (
                     status,
@@ -383,10 +404,14 @@ pub async fn delete_account(
         );
     }
 
-    let _ = log_audit_event(&db, AuditEvent {
-        log_type: "delete_account_success".to_string(),
-        ..Default::default()
-    }).await;
+    let _ = log_audit_event(
+        &db,
+        AuditEvent {
+            log_type: "delete_account_success".to_string(),
+            ..Default::default()
+        },
+    )
+    .await;
 
     (
         StatusCode::OK,
@@ -408,14 +433,18 @@ pub async fn get_user_data(
         match verify_user_credentials(&db, &payload.username_or_email, &payload.password).await {
             Ok(user) => user,
             Err((status, message)) => {
-                let _ = log_audit_event(&db, AuditEvent {
-                    log_type: "get_user_data_failed".to_string(),
-                    action: Some(message.clone()),
-                    target_type_table: Some("users".to_string()),
-                    target_type_table_id: Some(payload.username_or_email.clone()),
-                    user_id: Some(payload.user_id),
-                    ..Default::default()
-                }).await;
+                let _ = log_audit_event(
+                    &db,
+                    AuditEvent {
+                        log_type: "get_user_data_failed".to_string(),
+                        action: Some(message.clone()),
+                        target_type_table: Some("users".to_string()),
+                        target_type_table_id: Some(payload.username_or_email.clone()),
+                        user_id: Some(payload.user_id),
+                        ..Default::default()
+                    },
+                )
+                .await;
 
                 return (
                     status,
@@ -462,13 +491,17 @@ pub async fn get_user_data(
         }
     }
 
-    let _ = log_audit_event(&db, AuditEvent {
-        log_type: "get_user_data_success".to_string(),
-        target_type_table: Some("users".to_string()),
-        target_type_table_id: Some(payload.user_id.clone()),
-        user_id: Some(payload.user_id),
-        ..Default::default()
-    }).await;
+    let _ = log_audit_event(
+        &db,
+        AuditEvent {
+            log_type: "get_user_data_success".to_string(),
+            target_type_table: Some("users".to_string()),
+            target_type_table_id: Some(payload.user_id.clone()),
+            user_id: Some(payload.user_id),
+            ..Default::default()
+        },
+    )
+    .await;
 
     (
         StatusCode::OK,
@@ -523,13 +556,17 @@ pub async fn refresh_token(
         Err(_) => {
             let user_id = payload.user_id.clone();
 
-            let _ = log_audit_event(&db, AuditEvent {
-                log_type: "refresh_token_failed".to_string(),
-                action: Some("Invalid or expired refresh token".to_string()),
-                target_type_table_id: Some(user_id.clone()),
-                user_id: Some(user_id),
-                ..Default::default()
-            }).await;
+            let _ = log_audit_event(
+                &db,
+                AuditEvent {
+                    log_type: "refresh_token_failed".to_string(),
+                    action: Some("Invalid or expired refresh token".to_string()),
+                    target_type_table_id: Some(user_id.clone()),
+                    user_id: Some(user_id),
+                    ..Default::default()
+                },
+            )
+            .await;
 
             return (
                 StatusCode::UNAUTHORIZED,
@@ -560,13 +597,17 @@ pub async fn refresh_token(
             }
         };
 
-    let _ = log_audit_event(&db, AuditEvent {
-        log_type: "refresh_token_success".to_string(),
-        target_type_table: Some("users".to_string()),
-        target_type_table_id: Some(claims.sub.clone()),
-        user_id: Some(claims.sub.clone()),
-        ..Default::default()
-    }).await;
+    let _ = log_audit_event(
+        &db,
+        AuditEvent {
+            log_type: "refresh_token_success".to_string(),
+            target_type_table: Some("users".to_string()),
+            target_type_table_id: Some(claims.sub.clone()),
+            user_id: Some(claims.sub.clone()),
+            ..Default::default()
+        },
+    )
+    .await;
 
     (
         StatusCode::OK,
@@ -610,12 +651,16 @@ pub async fn logout(
     if crate::utility::jwt::verify_token(&payload.refresh_token).is_err() {
         let user_id = payload.user_id.clone();
 
-        let _ = log_audit_event(&db, AuditEvent {
-            log_type: "logout_failed".to_string(),
-            action: Some("Invalid or expired refresh token".to_string()),
-            user_id: Some(user_id),
-            ..Default::default()
-        }).await;
+        let _ = log_audit_event(
+            &db,
+            AuditEvent {
+                log_type: "logout_failed".to_string(),
+                action: Some("Invalid or expired refresh token".to_string()),
+                user_id: Some(user_id),
+                ..Default::default()
+            },
+        )
+        .await;
 
         return (
             StatusCode::UNAUTHORIZED,
@@ -634,12 +679,16 @@ pub async fn logout(
     {
         let user_id = payload.user_id.clone();
 
-        let _ = log_audit_event(&db, AuditEvent {
-            log_type: "logout_failed".to_string(),
-            action: Some("Failed to revoke refresh token".to_string()),
-            user_id: Some(user_id),
-            ..Default::default()
-        }).await;
+        let _ = log_audit_event(
+            &db,
+            AuditEvent {
+                log_type: "logout_failed".to_string(),
+                action: Some("Failed to revoke refresh token".to_string()),
+                user_id: Some(user_id),
+                ..Default::default()
+            },
+        )
+        .await;
 
         return (
             StatusCode::INTERNAL_SERVER_ERROR,
@@ -652,11 +701,15 @@ pub async fn logout(
         );
     }
 
-    let _ = log_audit_event(&db, AuditEvent {
-        log_type: "logout_success".to_string(),
-        user_id: Some(payload.user_id),
-        ..Default::default()
-    }).await;
+    let _ = log_audit_event(
+        &db,
+        AuditEvent {
+            log_type: "logout_success".to_string(),
+            user_id: Some(payload.user_id),
+            ..Default::default()
+        },
+    )
+    .await;
 
     (
         StatusCode::OK,
@@ -673,40 +726,45 @@ pub async fn update_user_profile(
     State(db): State<DB>,
     Json(payload): Json<UpdateUserProfileRequest>,
 ) -> (StatusCode, Json<AuthTokenResponse>) {
-    let user =
-        match auth::update_user_profile(&db, &payload.user_id, &payload.email, &payload.username)
-            .await
-        {
-            Ok(user) => user,
-            Err((status, message)) => {
-                let _ = log_audit_event(&db, AuditEvent {
+    let user = match auth::update_user_profile(&db, &payload).await {
+        Ok(user) => user,
+        Err((status, message)) => {
+            let _ = log_audit_event(
+                &db,
+                AuditEvent {
                     log_type: "update_user_profile_failed".to_string(),
                     action: Some(message.clone()),
                     target_type_table: Some("users".to_string()),
                     target_type_table_id: Some(payload.user_id.clone()),
                     user_id: Some(payload.user_id),
                     ..Default::default()
-                }).await;
+                },
+            )
+            .await;
 
-                return (
-                    status,
-                    Json(AuthTokenResponse {
-                        success: false,
-                        user: None,
-                        tokens: None,
-                        message,
-                    }),
-                );
-            }
-        };
+            return (
+                status,
+                Json(AuthTokenResponse {
+                    success: false,
+                    user: None,
+                    tokens: None,
+                    message,
+                }),
+            );
+        }
+    };
 
-    let _ = log_audit_event(&db, AuditEvent {
-        log_type: "update_user_profile_success".to_string(),
-        target_type_table: Some("users".to_string()),
-        target_type_table_id: Some(payload.user_id.clone()),
-        user_id: Some(payload.user_id),
-        ..Default::default()
-    }).await;
+    let _ = log_audit_event(
+        &db,
+        AuditEvent {
+            log_type: "update_user_profile_success".to_string(),
+            target_type_table: Some("users".to_string()),
+            target_type_table_id: Some(payload.user_id.clone()),
+            user_id: Some(payload.user_id),
+            ..Default::default()
+        },
+    )
+    .await;
 
     (
         StatusCode::OK,

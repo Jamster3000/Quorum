@@ -74,14 +74,18 @@ pub struct AuthTokenResponse {
 #[derive(Debug, Deserialize)]
 pub struct UpdateUserProfileRequest {
     pub user_id: String,
-    pub email: String,
+    pub email: Option<String>,
     pub username: String,
 }
 
 impl User {
     pub fn to_response(&self) -> UserResponse {
         UserResponse {
-            id: format!("{:?}", self.id.key),
+            id: match &self.id.key {
+                surrealdb_types::RecordIdKey::String(s) => s.to_string(),
+                surrealdb_types::RecordIdKey::Number(n) => n.to_string(),
+                _ => format!("{:?}", self.id.key),
+            },
             username: self.username.clone(),
             email: self.email.clone(),
             created_at: self.created_at,

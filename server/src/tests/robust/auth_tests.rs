@@ -172,11 +172,19 @@ pub async fn test_refresh_invalid_token() -> Result<RobustnessTestResult, String
     });
     make_auth_request_raw("/auth/signup", &signup_payload, 201).await?;
 
-    let login_body = make_auth_request_raw("/auth/login", &json!({
-        "username_or_email": username.clone(),
-        "password": "TestPassword123!"
-    }), 200).await?;
-    let user_id = login_body["user"]["id"].as_str().ok_or("Failed to get user ID")?.to_string();
+    let login_body = make_auth_request_raw(
+        "/auth/login",
+        &json!({
+            "username_or_email": username.clone(),
+            "password": "TestPassword123!"
+        }),
+        200,
+    )
+    .await?;
+    let user_id = login_body["user"]["id"]
+        .as_str()
+        .ok_or("Failed to get user ID")?
+        .to_string();
 
     let payload = json!({
         "user_id": user_id,
@@ -200,11 +208,19 @@ pub async fn test_refresh_empty_token() -> Result<RobustnessTestResult, String> 
     });
     make_auth_request_raw("/auth/signup", &signup_payload, 201).await?;
 
-    let login_body = make_auth_request_raw("/auth/login", &json!({
-        "username_or_email": username.clone(),
-        "password": "TestPassword123!"
-    }), 200).await?;
-    let user_id = login_body["user"]["id"].as_str().ok_or("Failed to get user ID")?.to_string();
+    let login_body = make_auth_request_raw(
+        "/auth/login",
+        &json!({
+            "username_or_email": username.clone(),
+            "password": "TestPassword123!"
+        }),
+        200,
+    )
+    .await?;
+    let user_id = login_body["user"]["id"]
+        .as_str()
+        .ok_or("Failed to get user ID")?
+        .to_string();
 
     let payload = json!({
         "user_id": user_id,
@@ -228,11 +244,19 @@ pub async fn test_delete_wrong_password() -> Result<RobustnessTestResult, String
     });
     make_auth_request_raw("/auth/signup", &signup_payload, 201).await?;
 
-    let login_body = make_auth_request_raw("/auth/login", &json!({
-        "username_or_email": username.clone(),
-        "password": "CorrectPassword123!"
-    }), 200).await?;
-    let user_id = login_body["user"]["id"].as_str().ok_or("Failed to get user ID")?.to_string();
+    let login_body = make_auth_request_raw(
+        "/auth/login",
+        &json!({
+            "username_or_email": username.clone(),
+            "password": "CorrectPassword123!"
+        }),
+        200,
+    )
+    .await?;
+    let user_id = login_body["user"]["id"]
+        .as_str()
+        .ok_or("Failed to get user ID")?
+        .to_string();
 
     let delete_payload = json!({
         "username_or_email": username.clone(),
@@ -257,11 +281,19 @@ pub async fn test_get_user_data_wrong_password() -> Result<RobustnessTestResult,
     });
     make_auth_request_raw("/auth/signup", &signup_payload, 201).await?;
 
-    let login_body = make_auth_request_raw("/auth/login", &json!({
-        "username_or_email": username.clone(),
-        "password": "CorrectPassword123!"
-    }), 200).await?;
-    let user_id = login_body["user"]["id"].as_str().ok_or("Failed to get user ID")?.to_string();
+    let login_body = make_auth_request_raw(
+        "/auth/login",
+        &json!({
+            "username_or_email": username.clone(),
+            "password": "CorrectPassword123!"
+        }),
+        200,
+    )
+    .await?;
+    let user_id = login_body["user"]["id"]
+        .as_str()
+        .ok_or("Failed to get user ID")?
+        .to_string();
 
     let payload = json!({
         "username_or_email": username.clone(),
@@ -287,11 +319,19 @@ pub async fn test_logout_invalid_token() -> Result<RobustnessTestResult, String>
     });
     make_auth_request_raw("/auth/signup", &signup_payload, 201).await?;
 
-    let login_body = make_auth_request_raw("/auth/login", &json!({
-        "username_or_email": username.clone(),
-        "password": "TestPassword123!"
-    }), 200).await?;
-    let user_id = login_body["user"]["id"].as_str().ok_or("Failed to get user ID")?.to_string();
+    let login_body = make_auth_request_raw(
+        "/auth/login",
+        &json!({
+            "username_or_email": username.clone(),
+            "password": "TestPassword123!"
+        }),
+        200,
+    )
+    .await?;
+    let user_id = login_body["user"]["id"]
+        .as_str()
+        .ok_or("Failed to get user ID")?
+        .to_string();
 
     let payload = json!({
         "user_id": user_id,
