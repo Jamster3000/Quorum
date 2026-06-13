@@ -278,3 +278,29 @@ pub async fn test_logout_invalid_token() -> Result<RobustnessTestResult, String>
     let _ = cleanup_user(&username, "TestPassword123!", &user_id).await;
     Ok(RobustnessTestResult { endpoint_time })
 }
+
+//Test updating profile username with an empty field
+pub async fn test_update_profile_empty_username() -> Result<RobustnessTestResult, String> {
+    let username = get_test_username();
+
+    make_auth_request_raw("/auth/signup", &json!({
+        "username": username,
+        "password": "TestPassword123!"
+    }), 201).await?;
+
+    let login_body = make_auth_request_raw("/auth/login", &json!({
+        "username_or_email": username,
+        "password": "TestPassword123!"
+    }), 200).await?;
+    let user_id = login_body["user"]["id"].as_str().ok_or("Failed to get user ID")?.to_string();
+
+    let timer = startup::create_timer();
+    make_auth_request_raw("/auth/updateuserprofile", &json!({
+        "user_id": user_id,
+        "username": ""
+    }), 400).await?;
+    let endpoint_time = timer.elapsed();
+
+    let _ = cleanup_user(&username, "TestPassword123!", &user_id).await;
+    Ok(RobustnessTestResult { endpoint_time })
+}
