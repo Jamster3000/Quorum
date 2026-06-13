@@ -111,6 +111,9 @@ async fn run_robust_tests() {
         ("Logout with invalid token", || {
             Box::pin(robust::auth_tests::test_logout_invalid_token())
         }),
+        ("Updating profile username with an empty field", || {
+        Box::pin(robust::auth_tests::test_update_profile_empty_username())
+        }),
     ];
 
     run_robustness_suite(&tests).await;
