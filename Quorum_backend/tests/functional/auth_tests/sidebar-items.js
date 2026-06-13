@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["test_delete_user_account_email","test_delete_user_account_username","test_login_email","test_login_username","test_logout","test_refresh_token","test_signup_email","test_signup_username"]};
+window.SIDEBAR_ITEMS = {"fn":["test_delete_user_account_email","test_delete_user_account_username","test_login_email","test_login_username","test_logout","test_refresh_token","test_signup_email","test_signup_username","test_update_user_profile"]};

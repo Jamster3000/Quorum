@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["get_cached_action_type","get_cached_log_type","get_or_create_type","log_audit_event"],"static":["ACTION_TYPE_CACHE","LOG_TYPE_CACHE"],"struct":["TypeRecord"]};
