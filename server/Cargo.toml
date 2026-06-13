@@ -24,6 +24,7 @@ chrono = "0.4"
 sha2 = "0.11"
 hex = "0.4"
 tower_governor = "0.8.0"
+rpassword = "7"
 
 [profile.dev]
 opt-level = 1

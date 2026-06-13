@@ -1,3 +1,4 @@
+mod cli;
 mod db;
 mod models;
 mod routes;
@@ -7,10 +8,11 @@ mod utility;
 use crate::utility::docker;
 
 use colored::Colorize;
+use reqwest::Client;
 use routes::route::create_router;
 use std::net::SocketAddr;
-use reqwest::Client;
 use std::time::Duration;
+use std::time::Instant;
 
 #[tokio::main]
 async fn main() {
@@ -33,7 +35,11 @@ async fn main() {
         }
     };
 
-    startup::print_step("Loading environment", true, startup::elapsed(startup::create_timer()));
+    startup::print_step(
+        "Loading environment",
+        true,
+        startup::elapsed(startup::create_timer()),
+    );
 
     // Load the config once and reuse it
     let config = utility::config::Config::get();
@@ -103,6 +109,13 @@ async fn main() {
 
     startup::print_ready(config.server_port);
 
+    // Tracks true server uptime from this point forward, used by server:status and server:shutdown.
+    // Intentionally created after all startup steps have completed.
+    let server_start = Instant::now();
+
+    // Shutdown channel — CLI sends true on server:shutdown, main select! receives it
+    let (shutdown_tx, mut shutdown_rx) = tokio::sync::watch::channel(false);
+
     // Start the router
     let app = create_router(_db.clone());
     let host = config
@@ -116,9 +129,18 @@ async fn main() {
         app.into_make_service_with_connect_info::<SocketAddr>(),
     );
 
-    let server_task = tokio::spawn(async move { server.await });
+    let server_task = tokio::spawn(async move {
+        server
+            .with_graceful_shutdown(async move {
+                let _ = shutdown_rx.changed().await;
+            })
+            .await
+    });
 
-    let health_url = format!("http://{}:{}/health", config.server_host, config.server_port);
+    let health_url = format!(
+        "http://{}:{}/health",
+        config.server_host, config.server_port
+    );
     let client = Client::new();
     let mut is_ready = false;
     let max_retries = 20;
@@ -128,7 +150,7 @@ async fn main() {
         match client.get(&health_url).send().await {
             Ok(response) if response.status().is_success() => {
                 is_ready = true;
-                break
+                break;
             }
             Ok(_) => {
                 tokio::time::sleep(retry_delay).await;
@@ -151,15 +173,18 @@ async fn main() {
         tests::run_all_tests().await;
     }
 
-    let shutdown = async {
-            let _ = tokio::signal::ctrl_c().await;
-        };
+    // Start the CLI input loop in a background task
+    cli::spawn_cli(_db.clone(), server_start, shutdown_tx).await;
 
-        tokio::select! {
-            _ = server_task => {},
-            _ = shutdown => {
-                println!("\nShutting down...");
-                let _ = db::queries::server_logs::log_shutdown(&_db, startup::elapsed(timer).as_millis() as i64).await;
-            }
+    let shutdown = async {
+        let _ = tokio::signal::ctrl_c().await;
+    };
+
+    tokio::select! {
+        _ = server_task => {},
+        _ = shutdown => {
+            println!("\nShutting down...");
+            let _ = db::queries::server_logs::log_shutdown(&_db, server_start.elapsed().as_millis() as i64).await;
         }
+    }
 }

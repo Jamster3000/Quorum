@@ -185,17 +185,20 @@ pub async fn verify_user_credentials(
         .await
         .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, "Database error".to_string()))?;
 
-    let user: Vec<User> = response.take(0).map_err(|_| {
+    let user: Option<User> = response.take::<Option<User>>(0).map_err(|_| {
         (
             StatusCode::INTERNAL_SERVER_ERROR,
             "Database error".to_string(),
         )
     })?;
 
-    user.into_iter().next().ok_or((
-        StatusCode::UNAUTHORIZED,
-        "Invalid username/email or password".to_string(),
-    ))
+    match user {
+        Some(u) => Ok(u),
+        None => Err((
+            StatusCode::UNAUTHORIZED,
+            "Invalid username or password".to_string(),
+        )),
+    }
 }
 
 /// Updates a user's profile information in the database
@@ -251,4 +254,27 @@ pub async fn update_user_profile(
     })?;
 
     user.ok_or_else(|| (StatusCode::NOT_FOUND, "User not found".to_string()))
+}
+
+pub async fn make_admin(db: &DB, username: &str) -> Result<(), Box<dyn Error + Send + Sync>> {
+    // Check bootstrap flag first
+    let mut response = db
+        .query("SELECT first_admin_bootstrapped FROM server_config LIMIT 1")
+        .await?;
+
+    let bootstrapped: Option<bool> = response.take("first_admin_bootstrapped")?;
+    if bootstrapped.unwrap_or(false) {
+        return Err("An admin already exists. This command is one time only.".into());
+    }
+
+    // Promote the user
+    db.query("UPDATE users SET is_admin = true WHERE username = $username")
+        .bind(("username", username))
+        .await?;
+
+    // Lock the bootstrap
+    db.query("UPDATE server_config SET first_admin_bootstrapped = true")
+        .await?;
+
+    Ok(())
 }

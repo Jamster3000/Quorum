@@ -1,7 +1,7 @@
+use crate::startup;
 use crate::utility::config::Config;
 use serde_json::json;
 use std::time::Duration;
-use crate::startup;
 
 static CLIENT: std::sync::OnceLock<reqwest::Client> = std::sync::OnceLock::new();
 
@@ -91,11 +91,16 @@ pub fn get_test_username() -> String {
 }
 
 pub async fn cleanup_user(username: &str, password: &str, user_id: &str) -> Result<(), String> {
-    make_auth_request("/auth/delete", &json!({
-        "username_or_email": username,
-        "password": password,
-        "user_id": user_id
-    }), 200).await?;
+    make_auth_request(
+        "/auth/delete",
+        &json!({
+            "username_or_email": username,
+            "password": password,
+            "user_id": user_id
+        }),
+        200,
+    )
+    .await?;
     Ok(())
 }
 
@@ -104,7 +109,11 @@ pub struct TestUserTimings {
     pub login: Duration,
 }
 
-pub async fn create_test_user(password: &str, email: bool, clean_up: bool) -> Result<(String, String, String, TestUserTimings), String> {
+pub async fn create_test_user(
+    password: &str,
+    email: bool,
+    clean_up: bool,
+) -> Result<(String, String, String, TestUserTimings), String> {
     let username = get_test_username();
 
     let signup_timer = startup::create_timer();
@@ -119,10 +128,15 @@ pub async fn create_test_user(password: &str, email: bool, clean_up: bool) -> Re
     let signup_time = signup_timer.elapsed();
 
     let login_timer = startup::create_timer();
-    let login_body = make_auth_request("/auth/login", &json!({
-        "username_or_email": username,
-        "password": password
-    }), 200).await?;
+    let login_body = make_auth_request(
+        "/auth/login",
+        &json!({
+            "username_or_email": username,
+            "password": password
+        }),
+        200,
+    )
+    .await?;
     let login_time = login_timer.elapsed();
 
     let user_id = login_body["user"]["id"]
@@ -134,5 +148,13 @@ pub async fn create_test_user(password: &str, email: bool, clean_up: bool) -> Re
         let _ = cleanup_user(&username, &password, &user_id).await;
     }
 
-    Ok((username, password.to_string(), user_id, TestUserTimings { signup: signup_time, login: login_time }))
+    Ok((
+        username,
+        password.to_string(),
+        user_id,
+        TestUserTimings {
+            signup: signup_time,
+            login: login_time,
+        },
+    ))
 }

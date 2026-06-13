@@ -120,6 +120,13 @@ DEFINE FUNCTION OVERWRITE fn::bytes_within(
 };
 
 
+-- Server config
+DEFINE TABLE IF NOT EXISTS server_config SCHEMAFULL;
+
+DEFINE FIELD IF NOT EXISTS first_admin_bootstrapped ON TABLE server_config TYPE bool DEFAULT false;
+
+INSERT IGNORE INTO server_config { first_admin_bootstrapped: false };
+
 -- User Status
 DEFINE TABLE IF NOT EXISTS user_status SCHEMAFULL;
 
@@ -143,6 +150,7 @@ DEFINE TABLE IF NOT EXISTS users SCHEMAFULL;
 DEFINE FIELD IF NOT EXISTS username ON TABLE users TYPE string ASSERT fn::bytes_within($value, $MIN_USERNAME_BYTES, $MAX_USERNAME_BYTES);
 DEFINE FIELD IF NOT EXISTS email ON TABLE users TYPE option<string> ASSERT fn::bytes_within($value, $MIN_NOTHING_BYTES, $MAX_EMAIL_BYTES);
 DEFINE FIELD IF NOT EXISTS password_hash ON TABLE users TYPE string;
+DEFINE FIELD IF NOT EXISTS is_admin ON TABLE users TYPE bool DEFAULT false;
 DEFINE FIELD IF NOT EXISTS avatar_url ON TABLE users TYPE option<record<media>>;
 DEFINE FIELD IF NOT EXISTS last_ip ON TABLE users TYPE option<string> ASSERT $value == NONE OR fn::bytes_within($value, $MIN_DEFAULT_BYTES, $MAX_IP_BYTES);
 DEFINE FIELD IF NOT EXISTS created_at ON TABLE users TYPE datetime DEFAULT time::now();
