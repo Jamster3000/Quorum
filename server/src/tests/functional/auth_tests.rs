@@ -286,7 +286,7 @@ pub async fn test_update_user_profile() -> Result<TestResult, String> {
     });
 
     let timer = startup::create_timer();
-    let update_body = make_auth_request("/auth/update-profile", &update_payload, 200).await?;
+    let update_body = make_auth_request("/auth/updateuserprofile", &update_payload, 200).await?;
     let endpoint_time = timer.elapsed();
 
     if update_body["user"]["username"].as_str() != Some(new_username.as_str()) {
