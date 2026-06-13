@@ -1,5 +1,7 @@
 use crate::utility::config::Config;
 use serde_json::json;
+use std::time::Duration;
+use crate::startup;
 
 static CLIENT: std::sync::OnceLock<reqwest::Client> = std::sync::OnceLock::new();
 
@@ -113,4 +115,42 @@ pub async fn cleanup_user(username: &str, password: &str) -> Result<(), String> 
 
     make_auth_request("/auth/delete", &delete_payload, 200).await?;
     Ok(())
+}
+
+pub struct TestUserTimings {
+    pub signup: Duration,
+    pub login: Duration,
+}
+
+pub async fn create_test_user(password: &str, email: bool, clean_up: bool) -> Result<(String, String, String, TestUserTimings), String> {
+    let username = get_test_username();
+
+    let signup_timer = startup::create_timer();
+    let mut payload = json!({
+        "username": username,
+        "password": password
+    });
+    if email {
+        payload["email"] = json!(format!("{}@example.com", username));
+    }
+    make_auth_request("/auth/signup", &payload, 201).await?;
+    let signup_time = signup_timer.elapsed();
+
+    let login_timer = startup::create_timer();
+    let login_body = make_auth_request("/auth/login", &json!({
+        "username_or_email": username,
+        "password": password
+    }), 200).await?;
+    let login_time = login_timer.elapsed();
+
+    let user_id = login_body["user"]["id"]
+        .as_str()
+        .ok_or("Failed to get user ID")?
+        .to_string();
+
+    if clean_up {
+        let _ = cleanup_user(&username, &password).await;
+    }
+
+    Ok((username, password.to_string(), user_id, TestUserTimings { signup: signup_time, login: login_time }))
 }
