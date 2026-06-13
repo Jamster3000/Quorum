@@ -726,6 +726,19 @@ pub async fn update_user_profile(
     State(db): State<DB>,
     Json(payload): Json<UpdateUserProfileRequest>,
 ) -> (StatusCode, Json<AuthTokenResponse>) {
+
+if payload.username.trim().is_empty() {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(AuthTokenResponse {
+                success: false,
+                user: None,
+                tokens: None,
+                message: "Username cannot be empty".to_string(),
+            }),
+        );
+    }
+
     let user = match auth::update_user_profile(&db, &payload).await {
         Ok(user) => user,
         Err((status, message)) => {
