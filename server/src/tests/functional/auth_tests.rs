@@ -82,7 +82,7 @@ pub async fn test_refresh_token() -> Result<TestResult, String> {
         return Err("Failed to get new access token".to_string());
     }
 
-    let _ = cleanup_user(&username, &password).await;
+    let _ = cleanup_user(&username, &password, &user_id).await;
     Ok(TestResult { endpoint_time })
 }
 
@@ -106,7 +106,7 @@ pub async fn test_logout() -> Result<TestResult, String> {
     }), 200).await?;
     let endpoint_time = timer.elapsed();
 
-    let _ = cleanup_user(&username, &password).await;
+    let _ = cleanup_user(&username, &password, &user_id).await;
     Ok(TestResult { endpoint_time })
 }
 
@@ -122,6 +122,6 @@ pub async fn test_update_user_profile() -> Result<TestResult, String> {
     }), 200).await?;
     let endpoint_time = timer.elapsed();
 
-    let _ = cleanup_user(&new_username, &password).await;
+    let _ = cleanup_user(&new_username, &password, &user_id).await;
     Ok(TestResult { endpoint_time })
 }

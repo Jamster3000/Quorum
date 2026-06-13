@@ -90,30 +90,12 @@ pub fn get_test_username() -> String {
     format!("t{}_{}", timestamp % 1000000, random)
 }
 
-pub async fn cleanup_user(username: &str, password: &str) -> Result<(), String> {
-    let me_payload = json!({
-        "username_or_email": username,
-        "password": password,
-        "fields": ["id"]
-    });
-
-    let me_body = match make_auth_request("/auth/me", &me_payload, 200).await {
-        Ok(body) => body,
-        Err(_) => return Ok(()),
-    };
-
-    let user_id = me_body["data"]["id"]
-        .as_str()
-        .ok_or("Failed to get user ID")?
-        .to_string();
-
-    let delete_payload = json!({
+pub async fn cleanup_user(username: &str, password: &str, user_id: &str) -> Result<(), String> {
+    make_auth_request("/auth/delete", &json!({
         "username_or_email": username,
         "password": password,
         "user_id": user_id
-    });
-
-    make_auth_request("/auth/delete", &delete_payload, 200).await?;
+    }), 200).await?;
     Ok(())
 }
 
@@ -149,7 +131,7 @@ pub async fn create_test_user(password: &str, email: bool, clean_up: bool) -> Re
         .to_string();
 
     if clean_up {
-        let _ = cleanup_user(&username, &password).await;
+        let _ = cleanup_user(&username, &password, &user_id).await;
     }
 
     Ok((username, password.to_string(), user_id, TestUserTimings { signup: signup_time, login: login_time }))
