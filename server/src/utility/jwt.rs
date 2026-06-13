@@ -150,7 +150,7 @@ pub fn generate_refresh_token(user_id: &str, username: &str) -> Result<String, B
 ///     Err(_) => println!("Invalid or expired token"),
 /// }
 /// ```
-pub fn verify_token(token: &str) -> Result<Claims, Box<dyn Error>> {
+pub fn verify_token(token: &str) -> Result<Claims, Box<dyn Error + Send + Sync>> {
     let config = Config::get();
     let data = decode::<Claims>(
         token,

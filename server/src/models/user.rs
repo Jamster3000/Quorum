@@ -35,6 +35,7 @@ pub struct DeleteAccountRequest {
 
 #[derive(Debug, Deserialize)]
 pub struct GetUserDataRequest {
+    pub user_id: String,
     pub username_or_email: String,
     pub password: String,
     pub fields: Vec<String>,

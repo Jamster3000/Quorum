@@ -165,25 +165,57 @@ pub async fn test_login_empty_username() -> Result<RobustnessTestResult, String>
 
 /// Test refresh token with invalid token format
 pub async fn test_refresh_invalid_token() -> Result<RobustnessTestResult, String> {
+    let username = get_test_username();
+    let signup_payload = json!({
+        "username": username.clone(),
+        "password": "TestPassword123!"
+    });
+    make_auth_request_raw("/auth/signup", &signup_payload, 201).await?;
+
+    let login_body = make_auth_request_raw("/auth/login", &json!({
+        "username_or_email": username.clone(),
+        "password": "TestPassword123!"
+    }), 200).await?;
+    let user_id = login_body["user"]["id"].as_str().ok_or("Failed to get user ID")?.to_string();
+
     let payload = json!({
+        "user_id": user_id,
         "refresh_token": "not-a-valid-jwt-token"
     });
 
     let timer = startup::create_timer();
     make_auth_request_raw("/auth/refresh", &payload, 401).await?;
     let endpoint_time = timer.elapsed();
+
+    let _ = cleanup_user(&username, "TestPassword123!").await;
     Ok(RobustnessTestResult { endpoint_time })
 }
 
 /// Test refresh token with empty token
 pub async fn test_refresh_empty_token() -> Result<RobustnessTestResult, String> {
+    let username = get_test_username();
+    let signup_payload = json!({
+        "username": username.clone(),
+        "password": "TestPassword123!"
+    });
+    make_auth_request_raw("/auth/signup", &signup_payload, 201).await?;
+
+    let login_body = make_auth_request_raw("/auth/login", &json!({
+        "username_or_email": username.clone(),
+        "password": "TestPassword123!"
+    }), 200).await?;
+    let user_id = login_body["user"]["id"].as_str().ok_or("Failed to get user ID")?.to_string();
+
     let payload = json!({
+        "user_id": user_id,
         "refresh_token": ""
     });
 
     let timer = startup::create_timer();
     make_auth_request_raw("/auth/refresh", &payload, 401).await?;
     let endpoint_time = timer.elapsed();
+
+    let _ = cleanup_user(&username, "TestPassword123!").await;
     Ok(RobustnessTestResult { endpoint_time })
 }
 
@@ -194,20 +226,13 @@ pub async fn test_delete_wrong_password() -> Result<RobustnessTestResult, String
         "username": username.clone(),
         "password": "CorrectPassword123!"
     });
-
     make_auth_request_raw("/auth/signup", &signup_payload, 201).await?;
 
-    let me_payload = json!({
+    let login_body = make_auth_request_raw("/auth/login", &json!({
         "username_or_email": username.clone(),
-        "password": "CorrectPassword123!",
-        "fields": ["id"]
-    });
-
-    let me_body = make_auth_request_raw("/auth/me", &me_payload, 200).await?;
-    let user_id = me_body["data"]["id"]
-        .as_str()
-        .ok_or("Failed to get user ID")?
-        .to_string();
+        "password": "CorrectPassword123!"
+    }), 200).await?;
+    let user_id = login_body["user"]["id"].as_str().ok_or("Failed to get user ID")?.to_string();
 
     let delete_payload = json!({
         "username_or_email": username.clone(),
@@ -220,7 +245,6 @@ pub async fn test_delete_wrong_password() -> Result<RobustnessTestResult, String
     let endpoint_time = timer.elapsed();
 
     let _ = cleanup_user(&username, "CorrectPassword123!").await;
-
     Ok(RobustnessTestResult { endpoint_time })
 }
 
@@ -231,12 +255,18 @@ pub async fn test_get_user_data_wrong_password() -> Result<RobustnessTestResult,
         "username": username.clone(),
         "password": "CorrectPassword123!"
     });
-
     make_auth_request_raw("/auth/signup", &signup_payload, 201).await?;
+
+    let login_body = make_auth_request_raw("/auth/login", &json!({
+        "username_or_email": username.clone(),
+        "password": "CorrectPassword123!"
+    }), 200).await?;
+    let user_id = login_body["user"]["id"].as_str().ok_or("Failed to get user ID")?.to_string();
 
     let payload = json!({
         "username_or_email": username.clone(),
         "password": "WrongPassword123!",
+        "user_id": user_id,
         "fields": ["username"]
     });
 
@@ -245,18 +275,33 @@ pub async fn test_get_user_data_wrong_password() -> Result<RobustnessTestResult,
     let endpoint_time = timer.elapsed();
 
     let _ = cleanup_user(&username, "CorrectPassword123!").await;
-
     Ok(RobustnessTestResult { endpoint_time })
 }
 
 /// Test logout with invalid refresh token
 pub async fn test_logout_invalid_token() -> Result<RobustnessTestResult, String> {
+    let username = get_test_username();
+    let signup_payload = json!({
+        "username": username.clone(),
+        "password": "TestPassword123!"
+    });
+    make_auth_request_raw("/auth/signup", &signup_payload, 201).await?;
+
+    let login_body = make_auth_request_raw("/auth/login", &json!({
+        "username_or_email": username.clone(),
+        "password": "TestPassword123!"
+    }), 200).await?;
+    let user_id = login_body["user"]["id"].as_str().ok_or("Failed to get user ID")?.to_string();
+
     let payload = json!({
+        "user_id": user_id,
         "refresh_token": "not-a-valid-token"
     });
 
     let timer = startup::create_timer();
     make_auth_request_raw("/auth/logout", &payload, 401).await?;
     let endpoint_time = timer.elapsed();
+
+    let _ = cleanup_user(&username, "TestPassword123!").await;
     Ok(RobustnessTestResult { endpoint_time })
 }

@@ -93,18 +93,25 @@ pub async fn test_delete_user_account_email() -> Result<TestResult, String> {
 
     make_auth_request("/auth/signup", &signup_payload, 201).await?;
 
+    let login_payload = json!({
+        "username_or_email": username.clone(),
+        "password": "TestPassword123!"
+    });
+
+    let login_body = make_auth_request("/auth/login", &login_payload, 200).await?;
+    let user_id = login_body["user"]["id"]
+        .as_str()
+        .ok_or("Failed to get user ID from login")?
+        .to_string();
+
     let me_payload = json!({
         "username_or_email": username.clone(),
         "password": "TestPassword123!",
+        "user_id": user_id.clone(),
         "fields": ["id"]
     });
 
-    let me_body = make_auth_request("/auth/me", &me_payload, 200).await?;
-
-    let user_id = me_body["data"]["id"]
-        .as_str()
-        .ok_or("Failed to get user ID")?
-        .to_string();
+    make_auth_request("/auth/me", &me_payload, 200).await?;
 
     let delete_payload = json!({
         "username_or_email": username,
@@ -128,9 +135,21 @@ pub async fn test_delete_user_account_username() -> Result<TestResult, String> {
 
     make_auth_request("/auth/signup", &signup_payload, 201).await?;
 
+    let login_payload = json!({
+        "username_or_email": username.clone(),
+        "password": "TestPassword123!"
+    });
+
+    let login_body = make_auth_request("/auth/login", &login_payload, 200).await?;
+    let user_id = login_body["user"]["id"]
+        .as_str()
+        .ok_or("Failed to get user ID from login")?
+        .to_string();
+
     let me_payload = json!({
         "username_or_email": username.clone(),
         "password": "TestPassword123!",
+        "user_id": user_id.clone(),
         "fields": ["id"]
     });
 
@@ -175,8 +194,14 @@ pub async fn test_refresh_token() -> Result<TestResult, String> {
         .ok_or("Failed to get refresh token")?
         .to_string();
 
+    let user_id = login_body["user"]["id"]
+        .as_str()
+        .ok_or("Failed to get user ID")?
+        .to_string();
+
     let refresh_payload = json!({
-        "refresh_token": refresh_token
+        "refresh_token": refresh_token,
+        "user_id": user_id
     });
 
     let timer = startup::create_timer();
@@ -213,8 +238,14 @@ pub async fn test_logout() -> Result<TestResult, String> {
         .ok_or("Failed to get refresh token")?
         .to_string();
 
+    let user_id = login_body["user"]["id"]
+        .as_str()
+        .ok_or("Failed to get user ID")?
+        .to_string();
+
     let logout_payload = json!({
-        "refresh_token": refresh_token
+        "refresh_token": refresh_token,
+        "user_id": user_id
     });
 
     let timer = startup::create_timer();
