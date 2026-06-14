@@ -24,64 +24,50 @@ use super::health::health;
 ///
 /// # Returns
 /// A configured `Router` instance with all routes and their handlers.
-///
-/// # Example
-/// ```rust
-/// let db = DB::new("mongodb://localhost:27017").await.unwrap();
-/// let jwt_config = JwtConfig::new
-///     .with_secret("your_secret_key");
-/// let router = create_router(db, jwt_config);
-/// ```
 pub fn create_router(db: DB) -> Router {
+    Router::new()
+        .route("/", get(|| async { "Axum server is running" }))
+        .route("/health", get(health))
+        .route("/echo", post(echo))
+        .merge(auth_routes())
+        .with_state(db)
+}
+
+/// Builds the auth route group with an appropriate rate limiter.
+///
+/// In testing mode, a more permissive rate limit is applied so the test suite
+/// can run without hitting the default limits.
+fn auth_routes() -> Router<DB> {
+    let config = Config::get();
+
+    let (per_second, burst_size) = if config.enable_testing {
+        (config.testing_per_second, config.testing_burst_size)
+    } else {
+        (config.default_per_second, config.default_burst_size)
+    };
+
     let governor_conf = Arc::new(
         GovernorConfigBuilder::default()
-            .per_second(Config::get().default_per_second)
-            .burst_size(Config::get().default_burst_size)
+            .per_second(per_second)
+            .burst_size(burst_size)
             .finish()
             .unwrap(),
     );
 
+    // Periodically evict expired rate limit entries to keep memory bounded
     let limiter = governor_conf.limiter().clone();
-    std::thread::spawn(move || {
-        loop {
-            std::thread::sleep(Duration::from_secs(60));
-            limiter.retain_recent();
-        }
+    std::thread::spawn(move || loop {
+        std::thread::sleep(Duration::from_secs(60));
+        limiter.retain_recent();
     });
 
-    let auth_routes = Router::new()
+    Router::new()
         .route("/auth/signup", post(signup))
         .route("/auth/login", post(login))
         .route("/auth/delete", post(delete_account))
         .route("/auth/me", post(get_user_data))
         .route("/auth/refresh", post(refresh_token))
         .route("/auth/logout", post(logout))
-        .route("/auth/updateuserprofile", post(update_user_profile));
-
-    let auth_routes = if Config::get().enable_testing {
-        let governor_conf = Arc::new(
-            GovernorConfigBuilder::default()
-                .per_second(Config::get().testing_per_second)
-                .burst_size(Config::get().testing_burst_size)
-                .finish()
-                .unwrap(),
-        );
-        let limiter = governor_conf.limiter().clone();
-        std::thread::spawn(move || {
-            loop {
-                std::thread::sleep(Duration::from_secs(60));
-                limiter.retain_recent();
-            }
-        });
-        auth_routes.layer(GovernorLayer::new(governor_conf))
-    } else {
-        auth_routes
-    };
-
-    Router::new()
-        .route("/", get(|| async { "Axum server is running" }))
-        .route("/health", get(health))
-        .route("/echo", post(echo))
-        .merge(auth_routes)
-        .with_state(db)
+        .route("/auth/updateuserprofile", post(update_user_profile))
+        .layer(GovernorLayer::new(governor_conf))
 }
