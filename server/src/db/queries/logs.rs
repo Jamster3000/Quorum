@@ -17,6 +17,21 @@ pub struct AuditLogEntry {
     pub target: Option<String>,
 }
 
+/// Retrieves server logs from the database.
+///
+/// # Arguments
+/// * `db` - A reference to the database connection.
+/// * `days` - An optional number of days to filter logs. If `None`, retrieves the last 100 logs.
+///
+/// # Returns
+/// * `Ok(Vec<ServerLogEntry>)` - A vector of server log entries if the query is successful.
+/// * `Err(Box<dyn Error + Send + Sync>)` - An error if the query fails.
+///
+/// # Examples
+/// ```rust
+/// let logs = get_server_logs(&db, Some(7)).await.unwrap(); // Get logs from the last 7 days
+/// let recent_logs = get_server_logs(&db, None).await.unwrap(); // Get the last 100 logs
+/// ```
 pub async fn get_server_logs(
     db: &DB,
     days: Option<u32>,
@@ -52,6 +67,21 @@ pub async fn get_server_logs(
     Ok(entries)
 }
 
+/// Retrieves audit logs from the database.
+///
+/// # Arguments
+/// * `db` - A reference to the database connection.
+/// * `days` - An optional number of days to filter logs. If `None`, retrieves the last 100 logs.
+///
+/// # Returns
+/// * `Ok(Vec<AuditLogEntry>)` - A vector of audit log entries if the query is successful.
+/// * `Err(Box<dyn Error + Send + Sync>)` - An error if the query fails.
+///
+/// # Examples
+/// ```rust
+/// let logs = get_audit_logs(&db, Some(7)).await.unwrap(); // Get logs from the last 7 days
+/// let recent_logs = get_audit_logs(&db, None).await.unwrap(); // Get the last 100 logs
+/// ```
 pub async fn get_audit_logs(
     db: &DB,
     days: Option<u32>,

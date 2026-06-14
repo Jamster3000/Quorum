@@ -5,6 +5,22 @@ use std::sync::{Arc, Mutex};
 use std::time::Instant;
 use tokio::sync::watch;
 
+/// Displays server logs
+///
+/// Shows the server logs from the `server_logs` database table.
+/// Has option to show the last X days of logs.
+/// By default, shows 100 of the most recent logs.
+///
+/// # Arguments
+/// * `db` - A reference to the database connection.
+/// * `raw` - The raw input string, which may contain the number of days to filter logs by.
+///
+/// # Example
+/// ```rust
+/// logs(&db, "").await; // Shows the latest 100 logs
+/// logs(&db, "7").await; // Shows logs from the last 7 days
+/// logs(&db, "invalid").await; // Shows usage message
+/// ```
 pub async fn logs(db: &DB, raw: &str) {
     let days: Option<u32> = raw.trim().parse().ok();
 
@@ -50,6 +66,22 @@ pub async fn logs(db: &DB, raw: &str) {
     }
 }
 
+/// Displays server audit logs
+///
+/// Shows the audit logs from the `audit_logs` database table.
+/// Has option to show the last X days of logs.
+/// By default, shows 100 of the most recent logs.
+///
+/// # Arguments
+/// * `db` - A reference to the database connection.
+/// * `raw` - The raw input string, which may contain the number of days to filter logs by.
+///
+/// # Example
+/// ```rust
+/// audit(&db, "").await; // Shows the latest 100 audit logs
+/// audit(&db, "7").await; // Shows audit logs from the last 7 days
+/// audit(&db, "invalid").await; // Shows usage message
+/// ```
 pub async fn audit(db: &DB, raw: &str) {
     let days: Option<u32> = raw.trim().parse().ok();
 
@@ -95,7 +127,17 @@ pub async fn audit(db: &DB, raw: &str) {
     }
 }
 
-
+/// Displays server status
+///
+/// Shows the server uptime, listening address, and testing mode status.
+///
+/// # Arguments
+/// * `server_start` - The instant when the server started, used for uptime calculations.
+///
+/// # Example
+/// ```rust
+/// status(server_start).await; // Displays the server status
+/// ```
 pub async fn status(server_start: Instant) {
     let elapsed = server_start.elapsed();
 
@@ -138,6 +180,18 @@ pub async fn status(server_start: Instant) {
     println!();
 }
 
+/// Handles user signup
+///
+/// Allows anyone with access to the server to be able to signup and create an account.
+/// When this is called it prompts for username, email (optional) and password one by one, where password is typed hidden.
+///
+/// # Arguments
+/// * `db` - A reference to the database connection.
+///
+/// # Example
+/// ```rust
+/// signup(&db).await; // Prompts for username, password, and optional email to create a new user
+/// ```
 pub async fn signup(db: &DB) {
     let username = prompt("  Username: ");
     let password = prompt_password("  Password: ");
@@ -159,6 +213,19 @@ pub async fn signup(db: &DB) {
     }
 }
 
+/// Handles user login
+///
+/// Prompts for username and password, and verifies the credentials against the database.
+/// When this is called it prompts for username and password one by one, where password is typed hidden.
+///
+/// # Arguments
+/// * `db` - A reference to the database connection.
+/// * `session` - A reference to the admin session, used to track login state.
+///
+/// # Example
+/// ```rust
+/// login(&db, &session).await; // Prompts for username and password to log in
+/// ```
 pub async fn login(db: &DB, session: &Arc<Mutex<AdminSession>>) {
     {
         let sess = session.lock().unwrap();
@@ -203,6 +270,17 @@ pub async fn login(db: &DB, session: &Arc<Mutex<AdminSession>>) {
     println!();
 }
 
+/// Handles user logout
+///
+/// Logs out the currently logged-in user, if any.
+///
+/// # Arguments
+/// * `session` - A reference to the admin session, used to track login state.
+///
+/// # Example
+/// ```rust
+/// logout(&session); // Logs out the currently logged-in user
+/// ```
 pub fn logout(session: &Arc<Mutex<AdminSession>>) {
     let mut sess = session.lock().unwrap();
     if !sess.logged_in {
@@ -214,6 +292,19 @@ pub fn logout(session: &Arc<Mutex<AdminSession>>) {
     println!("{}", format!("Logged out: {}.", username).green());
 }
 
+/// Handles server shutdown
+///
+/// Logs the shutdown event to the database and signals the server to shut down gracefully.
+///
+/// # Arguments
+/// * `db` - A reference to the database connection.
+/// * `server_start` - The instant when the server started, used for uptime calculations.
+/// * `shutdown_tx` - A watch channel sender to signal server shutdown.
+///
+/// # Example
+/// ```rust
+/// shutdown(&db, server_start, &shutdown_tx).await; // Logs shutdown and signals server to shut down
+/// ```
 pub async fn shutdown(db: &DB, server_start: Instant, shutdown_tx: &watch::Sender<bool>) {
     println!("{}", "\nShutting down gracefully...".yellow().bold());
 
@@ -224,6 +315,19 @@ pub async fn shutdown(db: &DB, server_start: Instant, shutdown_tx: &watch::Sende
     std::process::exit(0);
 }
 
+/// Handles making a user an admin
+///
+/// This uses a username as reference to mark a user as an admin.
+///
+/// # Arguments
+/// * `db` - A reference to the database connection.
+/// * `username` - The username of the user to be made an admin.
+/// * `session` - A reference to the admin session, used to update the current session if the logged-in user is made an admin.
+///
+/// # Example
+/// ```rust
+/// make_admin(&db, "some_user", &session).await;
+/// ```
 pub async fn make_admin(db: &DB, username: &str, session: &Arc<Mutex<AdminSession>>) {
     match crate::db::queries::auth::make_admin(db, username).await {
         Ok(_) => {
@@ -238,6 +342,14 @@ pub async fn make_admin(db: &DB, username: &str, session: &Arc<Mutex<AdminSessio
     }
 }
 
+/// Handles reloading the server configuration
+///
+/// This reloads the server configuration from the configuration file and applies any changes.
+///
+/// # Example
+/// ```rust
+/// reload(); // Reloads the server configuration
+/// ```
 pub fn reload() {
     match crate::utility::config::Config::reload() {
         Ok(_) => println!("{}", "  Config reloaded successfully.".green()),
@@ -245,6 +357,13 @@ pub fn reload() {
     }
 }
 
+/// Prompts the user for input with a given label and returns the trimmed input as a String.
+///
+/// # Arguments
+/// * `label` - The label to display before the input prompt.
+///
+/// # returns
+/// A String containing the user's input, trimmed of whitespace.
 fn prompt(label: &str) -> String {
     print!("{}", label.white());
     std::io::Write::flush(&mut std::io::stdout()).ok();
@@ -254,6 +373,13 @@ fn prompt(label: &str) -> String {
     input.trim().to_string()
 }
 
+/// Prompts the user for a password with a given label and returns the input as a String.
+///
+/// # Arguments
+/// * `label` - The label to display before the password prompt.
+///
+/// # returns
+/// A String containing the user's password input, or an empty string if reading the password fails.
 fn prompt_password(label: &str) -> String {
     print!("{}", label.white());
     std::io::Write::flush(&mut std::io::stdout()).ok();

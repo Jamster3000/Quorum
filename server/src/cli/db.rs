@@ -1,6 +1,13 @@
 use crate::db::DB;
 use colored::Colorize;
 
+/// Format bytes into a human-readable string
+///
+/// # Arguments
+/// * `bytes` - The number of bytes to format.
+///
+/// # Returns
+/// * `String` - A human-readable string representing the size.
 fn format_size(bytes: usize) -> String {
 	if bytes >= 1_048_576 {
 		format!("{:.2} MB", bytes as f64 / 1_048_576.0)
@@ -11,6 +18,18 @@ fn format_size(bytes: usize) -> String {
 	}
 }
 
+/// Fetch and display database statistics
+///
+/// Fetches statistics about the database, including the number of rows and estimated size for each table, and prints them to the console.
+///
+/// # Arguments
+/// * `db` - A reference to the database connection.
+///
+/// # Example
+/// ```
+/// let db = DB::connect("database_url").await?;
+/// db::stats(&db).await;
+/// ```
 pub async fn stats(db: &DB) {
     println!("{}", "  Fetching database stats...".dimmed());
 
@@ -55,6 +74,19 @@ pub async fn stats(db: &DB) {
     }
 }
 
+/// Fetch and display table data
+///
+/// Fetches data from a specific table in the database and prints it to the console.
+///
+/// # Arguments
+/// * `db` - A reference to the database connection.
+/// * `raw` - The raw command input string.
+///
+/// # Example
+/// ```
+/// let db = DB::connect("database_url").await?;
+/// db::table(&db, "users").await;
+/// ```
 pub async fn table(db: &DB, raw: &str) {
     let parts: Vec<&str> = raw.splitn(2, ", ").collect();
     let table_name = parts[0].trim();

@@ -13,6 +13,33 @@ pub struct DbStats {
     pub total_rows: usize,
 }
 
+pub struct TableRecords {
+    pub records: Vec<serde_json::Value>,
+    pub total: usize,
+    pub page: usize,
+    pub total_pages: usize,
+    pub size_bytes: usize,
+}
+
+const PAGE_SIZE: usize = 20;
+
+/// Retrieves statistics about the database, including table names, record counts, and sizes.
+///
+/// # Arguments
+/// * `db` - A reference to the database connection.
+///
+/// # Returns
+/// * `Ok(DbStats)` - A struct containing statistics about the database if the query is successful.
+/// * `Err(Box<dyn Error + Send + Sync>)` - An error if the query fails.
+///
+/// # Examples
+/// ```rust
+/// let stats = get_stats(&db).await.unwrap();
+/// println!("Total tables: {}", stats.tables.len());
+/// for table in stats.tables {
+///     println!("Table: {}, Count: {}, Size: {} bytes", table.name, table.count, table.size_bytes);
+/// }
+/// ```
 pub async fn get_stats(db: &DB) -> Result<DbStats, Box<dyn Error + Send + Sync>> {
     let mut info_response = db.query("INFO FOR DB").await?;
     let info: Option<serde_json::Value> = info_response.take(0)?;
@@ -47,16 +74,25 @@ pub async fn get_stats(db: &DB) -> Result<DbStats, Box<dyn Error + Send + Sync>>
     Ok(DbStats { tables, total_size_bytes, total_rows })
 }
 
-pub struct TableRecords {
-    pub records: Vec<serde_json::Value>,
-    pub total: usize,
-    pub page: usize,
-    pub total_pages: usize,
-    pub size_bytes: usize,
-}
-
-const PAGE_SIZE: usize = 20;
-
+/// Retrieves records from a specific table in the database, with pagination support.
+///
+/// # Arguments
+/// * `db` - A reference to the database connection.
+/// * `table` - The name of the table to retrieve records from.
+/// * `page` - The page number to retrieve (1-based index).
+///
+/// # Returns
+/// * `Ok(TableRecords)` - A struct containing the records, total count, current page, total pages, and size in bytes if the query is successful.
+/// * `Err(Box<dyn Error + Send + Sync>)` - An error if the query fails or if the table does not exist.
+///
+/// # Examples
+/// ```rust
+/// let table_records = get_table(&db, "users", 1).await.unwrap();
+/// println!("Total records: {}", table_records.total);
+/// for record in table_records.records {
+///     println!("{:?}", record);
+/// }
+/// ```
 pub async fn get_table(
     db: &DB,
     table: &str,

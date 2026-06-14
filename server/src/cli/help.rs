@@ -1,12 +1,12 @@
 use colored::Colorize;
 
 struct CommandEntry {
-    command: &'static str,                           //full command
-    summary: &'static str,                           //one line description
-    description: &'static str,                       //the full command description
-    usage: &'static str,                             //example usage
-    requires_auth: bool,                             //whether login is required first
-    requires_admin: bool,                            //whether admin privileges are required
+    command: &'static str, //full command
+    summary: &'static str, //one line description
+    description: &'static str, //the full command description
+    usage: &'static str, //example usage
+    requires_auth: bool, //whether login is required first
+    requires_admin: bool, //whether admin privileges are required
     params: &'static [(&'static str, &'static str)], //parameter names and what they mean
 }
 

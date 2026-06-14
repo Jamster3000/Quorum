@@ -256,6 +256,28 @@ pub async fn update_user_profile(
     user.ok_or_else(|| (StatusCode::NOT_FOUND, "User not found".to_string()))
 }
 
+/// Promotes a user to admin status in the database
+///
+/// # Arguments
+/// * `db` - A reference to the database connection
+/// * `username` - The username of the user to promote to admin
+///
+/// # Returns
+/// * `Ok(())` - If the user was successfully promoted to admin
+/// * `Err(Box<dyn Error>)` - An error if the operation failed, such as if an admin already exists or if there was a database error
+///
+/// # Examples
+/// ```rust
+/// use crate::db::DB;
+/// use crate::db::queries::auth;
+/// async fn example_make_admin(db: &DB) {
+///     let username = "user_to_promote";
+///     match auth::make_admin(db, username).await {
+///         Ok(()) => println!("User promoted to admin successfully"),
+///         Err(e) => eprintln!("Error promoting user to admin: {}", e),
+///     }
+/// }
+///```
 pub async fn make_admin(db: &DB, username: &str) -> Result<(), Box<dyn Error + Send + Sync>> {
     // Check bootstrap flag first
     let mut response = db

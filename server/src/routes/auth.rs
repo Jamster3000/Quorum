@@ -23,6 +23,16 @@ pub struct RefreshTokenRequest {
     pub refresh_token: String,
 }
 
+/// Verifies user credentials (username/email and password) against the database
+///
+// # Arguments
+/// * `db` - A reference to the database connection
+/// * `username_or_email` - The username or email provided by the user
+/// * `password` - The password provided by the user
+///
+/// # Returns
+/// * `Ok(User)` - The User struct if the credentials are valid
+/// * `Err((StatusCode, String))` - A tuple containing the HTTP status code and an error message if the credentials are invalid
 async fn verify_user_credentials(
     db: &DB,
     username_or_email: &str,
@@ -355,6 +365,23 @@ pub async fn login(
     )
 }
 
+/// Handles user account deletion requests
+///
+/// # Arguments
+/// * `State(db)` - Shared state containing the database connection
+/// * `Json(payload)` - The account deletion request payload containing username/email, password, and user ID
+///
+/// # Returns
+/// * `(StatusCode, Json<AuthTokenResponse>)` - The HTTP status code and JSON response indicating success or failure of the account deletion
+///
+/// # Example
+/// ```rust
+/// let payload = DeleteAccountRequest {
+///     username_or_email: "john_doe",
+///     password: "secret_password",
+///     user_id: "user_id"
+/// };
+/// ```
 pub async fn delete_account(
     State(db): State<DB>,
     Json(payload): Json<DeleteAccountRequest>,
@@ -424,7 +451,24 @@ pub async fn delete_account(
     )
 }
 
-#[axum::debug_handler]
+/// Handles user data retrieval requests
+///
+/// # Arguments
+/// * `State(db)` - Shared state containing the database connection
+/// * `Json(payload)` - The user data retrieval request payload containing username/email, password, and requested fields
+///
+/// # Returns
+/// * `(StatusCode, Json<UserDataResponse>)` - The HTTP status code and JSON response containing the requested user data or an error message
+///
+/// # Example
+/// ```rust
+/// let payload = GetUserDataRequest {
+///     username_or_email: "john_doe",
+///     password: "secret_password",
+///     user_id: "user_id",
+///     fields: vec!["id".to_string(), "username".to_string()],
+/// };
+/// ```
 pub async fn get_user_data(
     State(db): State<DB>,
     Json(payload): Json<GetUserDataRequest>,
@@ -722,6 +766,25 @@ pub async fn logout(
     )
 }
 
+/// Handles user profile update requests
+/// This endpoint allows clients to update their user profile information,
+/// such as username and email. It verifies the provided data, updates the user profile in the database, and logs the operation.
+///
+/// # Arguments
+/// * `State(db)` - Shared state containing the database connection
+/// * `Json(payload)` - The profile update request payload containing the user ID and new profile information
+///
+/// # Returns
+/// * `(StatusCode, Json<AuthTokenResponse>)` - The HTTP status code and JSON response indicating success or failure of the profile update operation
+///
+/// # Example
+/// ```rust
+/// let payload = UpdateUserProfileRequest {
+///     user_id: "user_id".to_string(),
+///     username: Some("new_username".to_string()),
+///     email: Some("new_email@example.com".to_string()),
+/// };
+/// ```
 pub async fn update_user_profile(
     State(db): State<DB>,
     Json(payload): Json<UpdateUserProfileRequest>,

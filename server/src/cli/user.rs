@@ -1,6 +1,20 @@
 use crate::db::DB;
 use colored::Colorize;
 
+/// Deletes a user by ID from the database.
+///
+/// # Arguments
+/// * `db` - A reference to the database connection.
+/// * `raw` - A string slice containing the user ID to delete.
+///
+/// # Example
+/// ```rust
+/// #[tokio::main]
+/// async fn main() {
+///     let db = DB::new("sqlite:memory:").await.unwrap();
+///     delete(&db, "user_id").await;
+/// }
+/// ```
 pub async fn delete(db: &DB, raw: &str) {
 	let id = raw.trim();
 
