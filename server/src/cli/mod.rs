@@ -39,9 +39,12 @@ impl AdminSession {
             && self.last_active.elapsed() < Duration::from_secs(SESSION_TIMEOUT_MINS * 60)
     }
 
-    #[warn(dead_code)]
     pub fn touch(&mut self) {
         self.last_active = Instant::now();
+    }
+
+    pub fn update_is_admin(&mut self, is_admin: bool) {
+        self.is_admin = is_admin;
     }
 
     pub fn login(&mut self, username: String, is_admin: bool) {
@@ -195,11 +198,8 @@ async fn dispatch(
                 server::shutdown(db, server_start, shutdown_tx).await;
             }
             "make-admin" => {
-                if !require_admin(session) {
-                    return;
-                }
                 let username = cmd.raw.splitn(2, ' ').nth(1).unwrap_or("");
-                server::make_admin(db, username).await;
+                server::make_admin(db, username, session).await;
             }
             _ => unknown(&cmd.raw),
         },

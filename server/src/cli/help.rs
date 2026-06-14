@@ -177,6 +177,16 @@ pub fn print_command(command: &str) {
                 }
             );
 
+            println!(
+                "  {:<16} {}",
+                "Admin permissions required:".white(),
+                if e.requires_admin {
+                    "yes".yellow().to_string()
+                } else {
+                    "no".dimmed().to_string()
+                }
+            );
+
             if !e.params.is_empty() {
                 println!("  {}", "Parameters:".white());
                 for (name, desc) in e.params {

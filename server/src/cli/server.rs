@@ -133,9 +133,16 @@ pub async fn shutdown(db: &DB, server_start: Instant, shutdown_tx: &watch::Sende
     std::process::exit(0);
 }
 
-pub async fn make_admin(db: &DB, username: &str) {
+pub async fn make_admin(db: &DB, username: &str, session: &Arc<Mutex<AdminSession>>) {
     match crate::db::queries::auth::make_admin(db, username).await {
-        Ok(_) => println!("{}", format!("  {} is now an admin.", username).green()),
+        Ok(_) => {
+            println!("{}", format!("  {} is now an admin.", username).green());
+
+            let mut sess = session.lock().unwrap();
+            if sess.username.as_deref() == Some(username) {
+                sess.update_is_admin(true);
+            }
+        }
         Err(e) => println!("{}", format!("  Failed: {}", e).red()),
     }
 }
