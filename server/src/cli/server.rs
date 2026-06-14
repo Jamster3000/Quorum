@@ -5,6 +5,97 @@ use std::sync::{Arc, Mutex};
 use std::time::Instant;
 use tokio::sync::watch;
 
+pub async fn logs(db: &DB, raw: &str) {
+    let days: Option<u32> = raw.trim().parse().ok();
+
+    if !raw.trim().is_empty() && days.is_none() {
+        println!("{}", "Usage: server:logs OR server:logs <days>".red());
+        return;
+    }
+
+    match crate::db::queries::logs::get_server_logs(db, days).await {
+        Err(e) => println!("{}", format!("  Failed to get logs: {}", e).red()),
+        Ok(entries) => {
+            println!();
+            println!("{}", "  Server Logs".cyan().bold());
+            if let Some(d) = days {
+                println!("  {}", format!("Last {} days", d).dimmed());
+            } else {
+                println!("  {}", "Latest 100 entries".dimmed());
+            }
+            println!("{}", "  ─────────────────────────────────────────────────────".dimmed());
+
+            if entries.is_empty() {
+                println!("{}", "  No log entries found.".dimmed());
+            } else {
+                for e in &entries {
+                    let mut parts = vec![
+                        e.timestamp.dimmed().to_string(),
+                        e.event_type.cyan().to_string(),
+                    ];
+                    if let Some(ms) = e.duration_ms {
+                        parts.push(format!("{}ms", ms).dimmed().to_string());
+                    }
+                    if let Some(msg) = &e.message {
+                        parts.push(msg.yellow().to_string());
+                    }
+                    if let Some(code) = e.error_code {
+                        parts.push(format!("code:{}", code).red().to_string());
+                    }
+                    println!("  {}", parts.join("  ·  "));
+                }
+            }
+            println!();
+        }
+    }
+}
+
+pub async fn audit(db: &DB, raw: &str) {
+    let days: Option<u32> = raw.trim().parse().ok();
+
+    if !raw.trim().is_empty() && days.is_none() {
+        println!("{}", "Usage: server:audit OR server:audit <days>".red());
+        return;
+    }
+
+    match crate::db::queries::logs::get_audit_logs(db, days).await {
+        Err(e) => println!("{}", format!("  Failed to get audit logs: {}", e).red()),
+        Ok(entries) => {
+            println!();
+            println!("{}", "  Audit Logs".cyan().bold());
+            if let Some(d) = days {
+                println!("  {}", format!("Last {} days", d).dimmed());
+            } else {
+                println!("  {}", "Latest 100 entries".dimmed());
+            }
+            println!("{}", "  ─────────────────────────────────────────────────────".dimmed());
+
+            if entries.is_empty() {
+                println!("{}", "  No audit entries found.".dimmed());
+            } else {
+                for e in &entries {
+                    let mut parts = vec![
+                        e.created_at.dimmed().to_string(),
+                        e.log_type.cyan().to_string(),
+                    ];
+                    if let Some(action) = &e.action {
+                        parts.push(action.white().to_string());
+                    }
+                    if let Some(user) = &e.user_id {
+                        parts.push(format!("user:{}", user).green().to_string());
+                    }
+                    if let Some(target) = &e.target {
+                        parts.push(format!("→ {}", target).dimmed().to_string());
+                    }
+                    println!("  {}", parts.join("  ·  "));
+                }
+            }
+            println!();
+        }
+    }
+}
+
+
 pub async fn status(server_start: Instant) {
     let elapsed = server_start.elapsed();
 
@@ -144,6 +235,13 @@ pub async fn make_admin(db: &DB, username: &str, session: &Arc<Mutex<AdminSessio
             }
         }
         Err(e) => println!("{}", format!("  Failed: {}", e).red()),
+    }
+}
+
+pub fn reload() {
+    match crate::utility::config::Config::reload() {
+        Ok(_) => println!("{}", "  Config reloaded successfully.".green()),
+        Err(e) => println!("{}", format!("  Failed to reload config: {}", e).red()),
     }
 }
 

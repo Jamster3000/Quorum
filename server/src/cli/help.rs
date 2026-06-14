@@ -85,6 +85,66 @@ const COMMANDS: &[CommandEntry] = &[
         requires_admin: false,
         params: &[("username", "The username of the user to promote")],
     },
+    CommandEntry {
+        command: "server:logs",
+        summary: "Displays recent server logs.",
+        description: "Prints logs in order from most recent to oldest, allowing for optional filter for last X days.",
+        usage: "server:logs [days]",
+        requires_auth: false,
+        requires_admin: false,
+        params: &[("days", "Optional number of days to display logs for")],
+    },
+    CommandEntry {
+        command: "server:audit",
+        summary: "Displays recent audit logs.",
+        description: "Prints audit logs in order from most recent to oldest, allowing for optional filter for last X days.",
+        usage: "server:audit [days]",
+        requires_auth: false,
+        requires_admin: false,
+        params: &[("days", "Optional number of days to display audit logs for")],
+    },
+
+    // --db--
+    CommandEntry {
+        command: "db:stats",
+        summary: "Displays database statistics.",
+        description: "Prints the number of rows in each table, total row count, and estimated size of each table and database.",
+        usage: "db:stats",
+        requires_auth: false,
+        requires_admin: false,
+        params: &[],
+    },
+    CommandEntry {
+        command: "db:table",
+        summary: "Displays records from a specific table.",
+        description: "Prints the records from the specified table, with an option to view a specific page of results.",
+        usage: "db:table <name>, <page>",
+        requires_auth: false,
+        requires_admin: false,
+        params: &[("name", "The name of the table to display"), ("page", "The page of results to display")],
+    },
+
+    // --user--
+    CommandEntry {
+        command: "user:delete",
+        summary: "Deletes a user account.",
+        description: "Removes a user account from the database. This action is irreversible.",
+        usage: "user:delete <id>",
+        requires_auth: true,
+        requires_admin: true,
+        params: &[("id", "The ID of the user to delete")],
+    },
+
+    // --test--
+    CommandEntry {
+        command: "test:run",
+        summary: "Runs functional tests on the server.",
+        description: "Executes a suite of functional tests to verify that the server is operating correctly. This is only available if testing mode is enabled.",
+        usage: "test:run",
+        requires_auth: false,
+        requires_admin: false,
+        params: &[],
+    },
 ];
 
 /// Prints a summary of all available commands, grouped by namespace.
@@ -98,7 +158,7 @@ pub fn print_all() {
         "  ─────────────────────────────────────────────────────".dimmed()
     );
 
-    let namespaces = ["help", "server"];
+    let namespaces = ["help", "server", "db", "user", "test"];
 
     for ns in namespaces {
         println!();

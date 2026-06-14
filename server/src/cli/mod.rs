@@ -1,5 +1,8 @@
 pub mod help;
 pub mod server;
+pub mod db;
+pub mod user;
+pub mod test;
 
 use crate::db::DB;
 use colored::Colorize;
@@ -19,6 +22,7 @@ pub struct AdminSession {
 
 struct Command {
     parts: Vec<String>,
+    #[allow(dead_code)]
     params: Vec<String>,
     raw: String,
 }
@@ -37,10 +41,6 @@ impl AdminSession {
     pub fn is_valid(&self) -> bool {
         self.logged_in
             && self.last_active.elapsed() < Duration::from_secs(SESSION_TIMEOUT_MINS * 60)
-    }
-
-    pub fn touch(&mut self) {
-        self.last_active = Instant::now();
     }
 
     pub fn update_is_admin(&mut self, is_admin: bool) {
@@ -201,6 +201,44 @@ async fn dispatch(
                 let username = cmd.raw.splitn(2, ' ').nth(1).unwrap_or("");
                 server::make_admin(db, username, session).await;
             }
+            "logs" => {
+                let params = cmd.raw.splitn(2, ' ').nth(1).unwrap_or("");
+                server::logs(db, params).await;
+            }
+            "audit" => {
+                let params = cmd.raw.splitn(2, ' ').nth(1).unwrap_or("");
+                server::audit(db, params).await;
+            }
+            "reload" => {
+                if !require_admin(session) { return; }
+                server::reload();
+            }
+            _ => unknown(&cmd.raw),
+        }
+
+        // -- Database --
+        [ns, command] if ns == "db" => match command.as_str() {
+            "stats" => db::stats(db).await,
+            "table" => {
+                let params = cmd.raw.splitn(2, ' ').nth(1).unwrap_or("");
+                db::table(db, params).await;
+            }
+            _ => unknown(&cmd.raw),
+        },
+
+        // -- User --
+        [ns, command] if ns == "user" => match command.as_str() {
+            "delete" => {
+                if !require_admin(session) { return; }
+                let id = cmd.raw.splitn(2, ' ').nth(1).unwrap_or("");
+                user::delete(db, id).await;
+            }
+            _ => unknown(&cmd.raw),
+        },
+
+        // -- Test --
+        [ns, command] if ns == "test" => match command.as_str() {
+            "run" => test::run().await,
             _ => unknown(&cmd.raw),
         },
 
