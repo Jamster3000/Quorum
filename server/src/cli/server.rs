@@ -39,7 +39,10 @@ pub async fn logs(db: &DB, raw: &str) {
             } else {
                 println!("  {}", "Latest 100 entries".dimmed());
             }
-            println!("{}", "  ─────────────────────────────────────────────────────".dimmed());
+            println!(
+                "{}",
+                "  ─────────────────────────────────────────────────────".dimmed()
+            );
 
             if entries.is_empty() {
                 println!("{}", "  No log entries found.".dimmed());
@@ -100,7 +103,10 @@ pub async fn audit(db: &DB, raw: &str) {
             } else {
                 println!("  {}", "Latest 100 entries".dimmed());
             }
-            println!("{}", "  ─────────────────────────────────────────────────────".dimmed());
+            println!(
+                "{}",
+                "  ─────────────────────────────────────────────────────".dimmed()
+            );
 
             if entries.is_empty() {
                 println!("{}", "  No audit entries found.".dimmed());

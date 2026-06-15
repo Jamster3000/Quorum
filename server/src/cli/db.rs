@@ -9,13 +9,13 @@ use colored::Colorize;
 /// # Returns
 /// * `String` - A human-readable string representing the size.
 fn format_size(bytes: usize) -> String {
-	if bytes >= 1_048_576 {
-		format!("{:.2} MB", bytes as f64 / 1_048_576.0)
-	} else if bytes >= 1_024 {
-		format!("{:.2} KB", bytes as f64 / 1_024.0)
-	} else {
-		format!("{} B", bytes)
-	}
+    if bytes >= 1_048_576 {
+        format!("{:.2} MB", bytes as f64 / 1_048_576.0)
+    } else if bytes >= 1_024 {
+        format!("{:.2} KB", bytes as f64 / 1_024.0)
+    } else {
+        format!("{} B", bytes)
+    }
 }
 
 /// Fetch and display database statistics
@@ -38,14 +38,20 @@ pub async fn stats(db: &DB) {
         Ok(stats) => {
             println!();
             println!("{}", "  Database Stats".cyan().bold());
-            println!("{}", "  ─────────────────────────────────────────────────────".dimmed());
+            println!(
+                "{}",
+                "  ─────────────────────────────────────────────────────".dimmed()
+            );
             println!(
                 "  {:<38} {:>8}  {:>12}",
                 "Table".white().bold(),
                 "Rows".white().bold(),
                 "Est. Size".white().bold()
             );
-            println!("{}", "  ─────────────────────────────────────────────────────".dimmed());
+            println!(
+                "{}",
+                "  ─────────────────────────────────────────────────────".dimmed()
+            );
 
             for t in &stats.tables {
                 let count_str = if t.count > 0 {
@@ -62,7 +68,10 @@ pub async fn stats(db: &DB) {
                 );
             }
 
-            println!("{}", "  ─────────────────────────────────────────────────────".dimmed());
+            println!(
+                "{}",
+                "  ─────────────────────────────────────────────────────".dimmed()
+            );
             println!(
                 "  {:<38} {:>8}  {:>12}",
                 "Total".white().bold(),
@@ -90,7 +99,8 @@ pub async fn stats(db: &DB) {
 pub async fn table(db: &DB, raw: &str) {
     let parts: Vec<&str> = raw.splitn(2, ", ").collect();
     let table_name = parts[0].trim();
-    let page: usize = parts.get(1)
+    let page: usize = parts
+        .get(1)
         .and_then(|p| p.trim().parse().ok())
         .unwrap_or(1);
 
@@ -114,14 +124,17 @@ pub async fn table(db: &DB, raw: &str) {
                 "  {}",
                 format!("Page {} of {}", result.page, result.total_pages).dimmed()
             );
-            println!("{}", "  ─────────────────────────────────────────────────────".dimmed());
+            println!(
+                "{}",
+                "  ─────────────────────────────────────────────────────".dimmed()
+            );
 
             if result.records.is_empty() {
                 println!("{}", "  No records found.".dimmed());
             } else {
                 for record in &result.records {
-                    let pretty = serde_json::to_string_pretty(record)
-                        .unwrap_or_else(|_| record.to_string());
+                    let pretty =
+                        serde_json::to_string_pretty(record).unwrap_or_else(|_| record.to_string());
                     for line in pretty.lines() {
                         println!("  {}", line.white());
                     }
@@ -129,7 +142,10 @@ pub async fn table(db: &DB, raw: &str) {
                 }
             }
 
-            println!("{}", "  ─────────────────────────────────────────────────────".dimmed());
+            println!(
+                "{}",
+                "  ─────────────────────────────────────────────────────".dimmed()
+            );
             if result.total_pages > 1 {
                 println!(
                     "  {}",

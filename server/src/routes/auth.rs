@@ -789,8 +789,7 @@ pub async fn update_user_profile(
     State(db): State<DB>,
     Json(payload): Json<UpdateUserProfileRequest>,
 ) -> (StatusCode, Json<AuthTokenResponse>) {
-
-if payload.username.trim().is_empty() {
+    if payload.username.trim().is_empty() {
         return (
             StatusCode::BAD_REQUEST,
             Json(AuthTokenResponse {

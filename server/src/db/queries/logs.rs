@@ -44,10 +44,13 @@ pub async fn get_server_logs(
              ORDER BY timestamp DESC",
             d
         ),
-        None => "SELECT timestamp, event_type_id.name AS event_type, duration_ms, message, error_code
+        None => {
+            "SELECT timestamp, event_type_id.name AS event_type, duration_ms, message, error_code
                  FROM server_logs
                  ORDER BY timestamp DESC
-                 LIMIT 100".to_string(),
+                 LIMIT 100"
+                .to_string()
+        }
     };
 
     let mut response = db.query(&query).await?;

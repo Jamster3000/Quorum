@@ -9,8 +9,8 @@
 //! restarting the server. All reads are atomic and lock-free via `arc-swap`.
 
 use arc_swap::ArcSwap;
-use std::sync::OnceLock;
 use std::sync::Arc;
+use std::sync::OnceLock;
 
 #[derive(Debug)]
 pub struct Config {

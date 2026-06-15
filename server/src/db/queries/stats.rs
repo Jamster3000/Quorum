@@ -53,9 +53,7 @@ pub async fn get_stats(db: &DB) -> Result<DbStats, Box<dyn Error + Send + Sync>>
     let mut tables = Vec::new();
 
     for name in &table_names {
-        let mut records_response = db
-            .query(format!("SELECT * FROM {}", name))
-            .await?;
+        let mut records_response = db.query(format!("SELECT * FROM {}", name)).await?;
 
         let records: Vec<serde_json::Value> = records_response.take(0)?;
         let count = records.len();
@@ -63,7 +61,11 @@ pub async fn get_stats(db: &DB) -> Result<DbStats, Box<dyn Error + Send + Sync>>
             .map(|s| s.len())
             .unwrap_or(0);
 
-        tables.push(TableStat { name: name.clone(), count, size_bytes });
+        tables.push(TableStat {
+            name: name.clone(),
+            count,
+            size_bytes,
+        });
     }
 
     tables.sort_by(|a, b| a.name.cmp(&b.name));
@@ -71,7 +73,11 @@ pub async fn get_stats(db: &DB) -> Result<DbStats, Box<dyn Error + Send + Sync>>
     let total_size_bytes = tables.iter().map(|t| t.size_bytes).sum();
     let total_rows = tables.iter().map(|t| t.count).sum();
 
-    Ok(DbStats { tables, total_size_bytes, total_rows })
+    Ok(DbStats {
+        tables,
+        total_size_bytes,
+        total_rows,
+    })
 }
 
 /// Retrieves records from a specific table in the database, with pagination support.
@@ -111,9 +117,7 @@ pub async fn get_table(
         return Err(format!("Table '{}' does not exist.", table).into());
     }
 
-    let mut all_response = db
-        .query(format!("SELECT * FROM {}", table))
-        .await?;
+    let mut all_response = db.query(format!("SELECT * FROM {}", table)).await?;
 
     let all_records: Vec<serde_json::Value> = all_response.take(0)?;
     let total = all_records.len();
@@ -128,5 +132,11 @@ pub async fn get_table(
         .map(|s| s.len())
         .unwrap_or(0);
 
-    Ok(TableRecords { records, total, page, total_pages, size_bytes })
+    Ok(TableRecords {
+        records,
+        total,
+        page,
+        total_pages,
+        size_bytes,
+    })
 }

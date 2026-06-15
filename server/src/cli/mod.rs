@@ -1,8 +1,8 @@
+pub mod db;
 pub mod help;
 pub mod server;
-pub mod db;
-pub mod user;
 pub mod test;
+pub mod user;
 
 use crate::db::DB;
 use colored::Colorize;
@@ -210,11 +210,13 @@ async fn dispatch(
                 server::audit(db, params).await;
             }
             "reload" => {
-                if !require_admin(session) { return; }
+                if !require_admin(session) {
+                    return;
+                }
                 server::reload();
             }
             _ => unknown(&cmd.raw),
-        }
+        },
 
         // -- Database --
         [ns, command] if ns == "db" => match command.as_str() {
@@ -229,7 +231,9 @@ async fn dispatch(
         // -- User --
         [ns, command] if ns == "user" => match command.as_str() {
             "delete" => {
-                if !require_admin(session) { return; }
+                if !require_admin(session) {
+                    return;
+                }
                 let id = cmd.raw.splitn(2, ' ').nth(1).unwrap_or("");
                 user::delete(db, id).await;
             }

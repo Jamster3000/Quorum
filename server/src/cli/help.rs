@@ -1,12 +1,12 @@
 use colored::Colorize;
 
 struct CommandEntry {
-    command: &'static str, //full command
-    summary: &'static str, //one line description
-    description: &'static str, //the full command description
-    usage: &'static str, //example usage
-    requires_auth: bool, //whether login is required first
-    requires_admin: bool, //whether admin privileges are required
+    command: &'static str,                           //full command
+    summary: &'static str,                           //one line description
+    description: &'static str,                       //the full command description
+    usage: &'static str,                             //example usage
+    requires_auth: bool,                             //whether login is required first
+    requires_admin: bool,                            //whether admin privileges are required
     params: &'static [(&'static str, &'static str)], //parameter names and what they mean
 }
 
@@ -103,7 +103,6 @@ const COMMANDS: &[CommandEntry] = &[
         requires_admin: false,
         params: &[("days", "Optional number of days to display audit logs for")],
     },
-
     // --db--
     CommandEntry {
         command: "db:stats",
@@ -121,9 +120,11 @@ const COMMANDS: &[CommandEntry] = &[
         usage: "db:table <name>, <page>",
         requires_auth: false,
         requires_admin: false,
-        params: &[("name", "The name of the table to display"), ("page", "The page of results to display")],
+        params: &[
+            ("name", "The name of the table to display"),
+            ("page", "The page of results to display"),
+        ],
     },
-
     // --user--
     CommandEntry {
         command: "user:delete",
@@ -134,7 +135,6 @@ const COMMANDS: &[CommandEntry] = &[
         requires_admin: true,
         params: &[("id", "The ID of the user to delete")],
     },
-
     // --test--
     CommandEntry {
         command: "test:run",

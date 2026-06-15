@@ -17,10 +17,10 @@ use super::echo::echo;
 use super::health::health;
 
 // Necessary for CORS + Security headers
-use tower_http::cors::{CorsLayer, Any};
-use tower_http::set_header::SetResponseHeaderLayer;
 use http::header::{HeaderName, HeaderValue};
 use tower::ServiceBuilder;
+use tower_http::cors::{Any, CorsLayer};
+use tower_http::set_header::SetResponseHeaderLayer;
 
 /// Creates the router with all the defined routes and their handlers.
 /// Includes request limiting to avoid getting too many requests at once.
@@ -31,25 +31,24 @@ use tower::ServiceBuilder;
 /// # Returns
 /// A configured `Router` instance with all routes and their handlers.
 pub fn create_router(db: DB) -> Router {
-
     let cors = CorsLayer::new()
         .allow_origin(Any) // replace with more specific origin for added safety
         .allow_methods(Any)
         .allow_headers(Any);
 
-        let security_headers = ServiceBuilder::new()
-            .layer(SetResponseHeaderLayer::if_not_present(
-                HeaderName::from_static("x-frame-options"),
-                HeaderValue::from_static("DENY"),
-            ))
-            .layer(SetResponseHeaderLayer::if_not_present(
-                HeaderName::from_static("strict-transport-security"),
-                HeaderValue::from_static("max-age=31536000; includeSubDomains; preload"),
-            ))
-            .layer(SetResponseHeaderLayer::if_not_present(
-                HeaderName::from_static("x-content-type-options"),
-                HeaderValue::from_static("nosniff"),
-            ));
+    let security_headers = ServiceBuilder::new()
+        .layer(SetResponseHeaderLayer::if_not_present(
+            HeaderName::from_static("x-frame-options"),
+            HeaderValue::from_static("DENY"),
+        ))
+        .layer(SetResponseHeaderLayer::if_not_present(
+            HeaderName::from_static("strict-transport-security"),
+            HeaderValue::from_static("max-age=31536000; includeSubDomains; preload"),
+        ))
+        .layer(SetResponseHeaderLayer::if_not_present(
+            HeaderName::from_static("x-content-type-options"),
+            HeaderValue::from_static("nosniff"),
+        ));
 
     Router::new()
         .route("/", get(|| async { "Axum server is running" }))
@@ -84,9 +83,11 @@ fn auth_routes() -> Router<DB> {
 
     // Periodically evict expired rate limit entries to keep memory bounded
     let limiter = governor_conf.limiter().clone();
-    std::thread::spawn(move || loop {
-        std::thread::sleep(Duration::from_secs(60));
-        limiter.retain_recent();
+    std::thread::spawn(move || {
+        loop {
+            std::thread::sleep(Duration::from_secs(60));
+            limiter.retain_recent();
+        }
     });
 
     Router::new()
