@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["PAGE_SIZE"],"fn":["get_stats","get_table"],"struct":["DbStats","TableRecords","TableStat"]};

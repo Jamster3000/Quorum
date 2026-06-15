@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["create_router"]};
+window.SIDEBAR_ITEMS = {"fn":["auth_routes","create_router"]};

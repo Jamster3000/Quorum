@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["cleanup_user","get_client","get_test_username","make_auth_request","make_auth_request_raw"],"static":["CLIENT"]};
+window.SIDEBAR_ITEMS = {"fn":["cleanup_user","create_test_user","get_client","get_test_username","make_auth_request","make_auth_request_raw"],"static":["CLIENT"],"struct":["TestUserTimings"]};
