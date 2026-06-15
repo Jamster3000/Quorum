@@ -36,6 +36,7 @@ pub fn create_router(db: DB) -> Router {
         .allow_methods(Any)
         .allow_headers(Any);
 
+///Basic security headers, WIP add more
     let security_headers = ServiceBuilder::new()
         .layer(SetResponseHeaderLayer::if_not_present(
             HeaderName::from_static("x-frame-options"),
