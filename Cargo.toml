@@ -1,0 +1,10 @@
+[package]
+name = "denspack"
+version = "0.1.0"
+edition = "2024"
+description = "Minimal zstandard frame compression — strips redundant header constants so only essential bytes are stored per message."
+license = "MIT"
+
+[dependencies]
+zstd = "0.13"
+thiserror = "2"
