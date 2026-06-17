@@ -10,6 +10,7 @@ use std::io::{self, Write};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 use tokio::sync::watch;
+use tokio::io::AsyncBufReadExt;
 
 const SESSION_TIMEOUT_MINS: u64 = 20;
 
@@ -126,30 +127,33 @@ pub async fn spawn_cli(db: DB, server_start: Instant, shutdown_tx: watch::Sender
     tokio::spawn(async move {
         tokio::time::sleep(Duration::from_millis(600)).await;
 
+        // Use async stdin instead of blocking std::io::stdin
+        let stdin = tokio::io::stdin();
+        let mut reader = tokio::io::BufReader::new(stdin).lines();
+
         loop {
             print!("{} ", ">".cyan().bold());
             io::stdout().flush().unwrap();
 
-            let mut input = String::new();
-            match io::stdin().read_line(&mut input) {
-                Ok(0) => break, //EOF
-                Ok(_) => {}
+            let line = match reader.next_line().await {
+                Ok(Some(line)) => line,
+                Ok(None) => break, // EOF
                 Err(_) => break,
-            }
+            };
 
             {
                 let mut sess = session.lock().unwrap();
                 if sess.logged_in && !sess.is_valid() {
                     println!(
-						"{}",
-						"Session expired after 20 minutes of inactivity. Please run server:login again."
-						.yellow()
-					);
+                        "{}",
+                        "Session expired after 20 minutes of inactivity. Please run server:login again."
+                        .yellow()
+                    );
                     sess.logout();
                 }
             }
 
-            let cmd = match parse(&input) {
+            let cmd = match parse(&line) {
                 Some(c) => c,
                 None => continue,
             };

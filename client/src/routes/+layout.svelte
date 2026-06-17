@@ -8,11 +8,13 @@
 
   onMount(() => {
       const interval = setInterval(async () => {
-          await isTokenValid();
-          const store = await Store.load('.auth.dat');
-          const accessToken = await store.get('access_token');
-          console.log('Access Token:', accessToken);
-      }, (10 * 60 * 1000)/100); // Check every 10 minutes
+          const tokenValid = await isTokenValid();
+
+          if (tokenValid) {
+              const store = await Store.load('.auth.dat');
+              const accessToken = await store.get('access_token');
+          }
+      }, (10 * 60 * 1000)); // Check every 10 minutes
 
       return () => clearInterval(interval);
   });

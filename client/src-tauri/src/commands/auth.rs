@@ -34,6 +34,7 @@ pub struct LoginPayload {
 
 #[tauri::command]
 pub async fn signup(payload: SignupPayload) -> Result<SignupResponse, String> {
+    println!("testone");
     if payload.username.len() < 1 {
         return Ok(SignupResponse {
             success: false,
@@ -100,6 +101,7 @@ pub async fn signup(payload: SignupPayload) -> Result<SignupResponse, String> {
         }
     }
 
+    println!("Signup payload: {:?}", new_payload);
 
     make_auth_request("/auth/signup", &new_payload, 201).await?;
 
