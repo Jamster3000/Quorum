@@ -104,6 +104,32 @@ pub fn generate_backup_code_array_with_plaintext() -> Vec<String>, Vec<EmailBack
     (plain_codes, backup_code_array)
 }
 
+pub async fn give_user_backup_codes(
+    db: &DB,
+    user_id: &str,
+) -> Result<Vec<String>, (StatusCode, String)> {
+
+    let (plain_codes, backup_code_array) = generate_backup_code_array_with_plaintext();
+    let user_id_thing = Thing::from(("users", user_id));
+    
+    let mut response = db
+        .query("UPDATE ONLY $user_id_thing SET email_backup_codes = $codes RETURN AFTER")
+        .bind(("user_id_thing", user_id_thing))
+        .bind(("codes", backup_code_array))
+        .await
+        .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, "Database error".to_string()))?;
+
+    
+    let _updated: Option<User> = response.take(0).map_err(|_| {
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            "Failed to parse user".to_string(),
+        )
+    })?;
+
+    Ok(plain_codes)
+}
+
 
 /// Deletes a user from the database by their ID
 ///
@@ -284,7 +310,7 @@ pub async fn update_user_profile(
             )
         })?;
 
-    let user: Option<User> = response.take(0).map_err(|_| {
+    let _updated: Option<User> = response.take(0).map_err(|_| {
         (
             StatusCode::INTERNAL_SERVER_ERROR,
             "Failed to parse user".to_string(),
