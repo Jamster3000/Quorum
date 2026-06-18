@@ -1,134 +1,23 @@
-# Quorum
-Quorum is a privacy-focused, open source application - originally built with the intention of being an alternative to discord.
+# Quorum - FHE
+(Full Homomorphic Encryption)
 
-Quorum is a work in progress and has limited use/functionality. Because Quorum is open source, this means others can host the backend on their own computer or server privately, meaning your conversations and data stay on infrastructure you own and trust (More details about this and more as it's developed)
- 
----
-
-## Why Quorum?
-
-Discord harvests and shares user data with third parties, trains AI on your conversations and has been a little too well known for getting hacked or being unsecure. Quorum is built from the ground up with privacy as a non-negotiable — not a setting, not a tier, just how it works.
-
-- **Open source** — read every line of code that handles your data
-- **Self-hostable** — run your own private server for your group
-- **No ads** — ever
-- **No AI training** on any of your data
+> NOTE: AI was used as a **tool** here to help assist with the maths going on here as I am not at such a mathmatical level to create maths this complex.
 
 ---
 
-## Tech Stack
+For Quorum, the goals are privacy and security (amongst some others). Encryption for messages and other valuable user inputted data, was seen as a **must have**.
+For this project, there was two choices to balance.
+1) Don't include encryption (platforms such as discord as an example) don't use encryption. This allows them to moderate and have evidence of what goes on, but this also means it **doesn't respect user's privacy** which is against the goals of the project.
+2) Include encryption (signal) - Keeps user's messages private and safe. Though the downside to this was user's abusing this privacy, being able to say anything they want (e.g., Whatsapp for example has lots of examples of the abuse that goes on because the messages can't be moderated or otherwise seen).
 
-| Layer | Technology |
-|---|---|
-| Desktop app | Tauri 2 + SvelteKit + hand-written CSS |
-| Backend | Rust + Axum |
-| Database | SurrealDB |
-| File storage | MinIO |
-| Infrastructure | Docker |
+Both options above came with a heavy downside that was unpleasing and neither was really up for the task for this project. With a lot of research, [Homomorphic Encryption](https://en.wikipedia.org/wiki/Homomorphic_encryption) came up as a possible solution. 
 
----
+> For anyone that doesn't understand this type of encryption, this is like any other encryption but allows computation on the encryption WITHOUT needing any keys or to decrypt it in anyway.
 
-## Project Structure
+I developed this as a solution that satisfied what I needed for the project, keeping the privacy and security intaked whilst still being able to moderate user's messages.
+The device that runs the moderation/scanning on encrypted text doesn't actually know what the message says and is never passed the key used to encrypt it. It uses maths to compare the banned words patterns with the encryption. The moderation only knows true or false when comparing banned words with the encryption (it only knows good message from bad message).
 
-```
-Quorum/
-├── client/          # Tauri desktop app (Svelte frontend)
-├── docker/          # Docker Compose configuration
-├── schema/          # SurrealQL database schema
-├── server/          # Axum backend (Rust)
-├── wireframes/      # UI design sketches
-└── .env.example     # Environment variable template
-```
-
----
-
-## Requirements
-
-- [Docker Desktop](https://www.docker.com/products/docker-desktop/)
-- [Node.js LTS](https://nodejs.org/)
-- [Rust](https://rustup.rs/)
-
----
-
-## Getting Started
-
-### 1. Clone the repo
-
-```bash
-git clone https://github.com/Jamster3000/Quorum.git
-cd quorum
-```
-
-### 2. Set up environment variables
-
-```bash
-cp .env.example .env
-```
-
-Open `.env` and fill in your values. The defaults work for local development without changes.
-
-### 3. Start the database and file storage
-
-```bash
-cd docker
-docker compose up -d
-```
-
-This starts:
-- SurrealDB on `localhost:8000`
-- MinIO on `localhost:9000` (dashboard at `localhost:9001`)
-
-### 4. Apply the database schema
-> This happens automatically and all tables in initialize.sqrl are created when the server starts up. SKIP this step if you are going to be running the server. This step is more informational on how to view the database.
-
-1. Go to [app.surrealdb.com](https://app.surrealdb.com)
-2. Create a new connection with these details:
-   - **Protocol**: WS
-   - **Host**: `localhost:8000`
-   - **Username**: `root`
-   - **Password**: `root`
-3. Open the query editor
-4. Paste the contents of `schema/initial.surql`
-5. Run the query
-
-> You may create an account with [app.surrealdb.com](https://app.surrealdb.com) if you wish but it is **not essential** or required for running surrealDB queries.
-
-### 5. Start the backend
-
-```bash
-cd server
-cargo run
-```
-> Or use cargo run dev if you're developing
-
-### 6. Start the desktop app
-
-```bash
-cd client
-npm install
-npm run tauri dev
-```
-
----
-
-## Stopping
-
-```bash
-cd docker
-docker compose down
-```
-
-Data is preserved. To wipe everything and start fresh:
-
-```bash
-docker compose down -v
-```
-
----
-
-# Icons 
-Using icons from Tabler Icons, licensed under MIT License via the package `icons-svelte`
-https://tabler.io/icons
+Currently, this only supports specific words, no AI systems or complex algorithms to decide whether a message has one or more flagged banned word in it. This may be improved on in the future if there is a need for something more complex.
 
 
 ## Contributing
