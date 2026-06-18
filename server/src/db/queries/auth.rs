@@ -3,14 +3,13 @@
 //! This file contains functions for Creating an account (signup), login, token management and deleteing a user account.
 
 use crate::db::DB;
+use crate::models::user::EmailBackupCode;
 use crate::models::user::UpdateUserProfileRequest;
 use crate::models::user::User;
 use axum::http::StatusCode;
-use std::error::Error;
-use rand::{Rng, rng};
+use rand::RngExt;
 use rand::distr::Alphanumeric;
-use sha2::{Sha256, Digest};
-use rand::Rng;
+use std::error::Error;
 
 /// Creates a new user account in the database
 ///
@@ -70,10 +69,17 @@ pub async fn signup_user(
         .ok_or("Failed to create user".into())
 }
 
-
 pub fn generate_salt() -> String {
-    let salt_bytes:[u8;16] = rand::rng().random();
+    let salt_bytes: [u8; 16] = rand::rng().random();
     hex::encode(salt_bytes)
+}
+
+fn hash_backup_code(code: &str, salt: &str) -> String {
+    use sha2::{Digest, Sha256};
+    let mut hasher = Sha256::new();
+    hasher.update(code.as_bytes());
+    hasher.update(salt.as_bytes());
+    hex::encode(hasher.finalize())
 }
 
 pub fn generate_backup_code(length: usize) -> String {
@@ -84,8 +90,7 @@ pub fn generate_backup_code(length: usize) -> String {
         .collect()
 }
 
-pub fn generate_backup_code_array_with_plaintext() -> Vec<String>, Vec<EmailBackupCode> {
-    
+pub fn generate_backup_codes_with_plaintext() -> (Vec<String>, Vec<EmailBackupCode>) {
     let mut plain_codes = Vec::with_capacity(10);
     let mut backup_code_array = Vec::with_capacity(10);
 
@@ -95,7 +100,7 @@ pub fn generate_backup_code_array_with_plaintext() -> Vec<String>, Vec<EmailBack
         let hashed_code = hash_backup_code(&code, &salt);
 
         plain_codes.push(code);
-        backup_code_array.push(EmailBackupCode{
+        backup_code_array.push(EmailBackupCode {
             hash: hashed_code,
             salt,
             used: false,
@@ -109,11 +114,11 @@ pub async fn give_user_backup_codes(
     user_id: &str,
 ) -> Result<Vec<String>, (StatusCode, String)> {
     let (plain_codes, backup_code_array) = generate_backup_codes_with_plaintext();
-    let user_id_thing = Thing::from(("users", user_id));
 
     let mut response = db
-        .query("UPDATE ONLY $user_id_thing SET email_backup_codes = $codes WHERE email_backup_codes = NONE OR array::len(email_backup_codes) = 0 RETURN AFTER")
-        .bind(("user_id_thing", user_id_thing))
+        .query(format!(
+            "UPDATE ONLY users:{user_id} SET email_backup_codes = $codes WHERE email_backup_codes = NONE OR array::len(email_backup_codes) = 0 RETURN AFTER"
+        ))
         .bind(("codes", backup_code_array))
         .await
         .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, "Database error".to_string()))?;
@@ -133,7 +138,6 @@ pub async fn give_user_backup_codes(
         )),
     }
 }
-
 
 /// Deletes a user from the database by their ID
 ///
@@ -314,7 +318,7 @@ pub async fn update_user_profile(
             )
         })?;
 
-    let _updated: Option<User> = response.take(0).map_err(|_| {
+    let user: Option<User> = response.take(0).map_err(|_| {
         (
             StatusCode::INTERNAL_SERVER_ERROR,
             "Failed to parse user".to_string(),
@@ -368,7 +372,3 @@ pub async fn make_admin(db: &DB, username: &str) -> Result<(), Box<dyn Error + S
 
     Ok(())
 }
-
-
-
-

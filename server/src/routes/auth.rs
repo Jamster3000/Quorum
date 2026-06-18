@@ -9,8 +9,9 @@ use crate::db::queries::auth;
 use crate::models::server::AuditEvent;
 use crate::models::user::User;
 use crate::models::user::{
-    AuthTokenResponse, DeleteAccountRequest, GetUserDataRequest, LoginRequest, SignupRequest,
-    TokenResponse, UpdateUserProfileRequest, UserDataResponse,
+    AuthTokenResponse, BackupCodesResponse, DeleteAccountRequest, GenerateBackupCodesRequest,
+    GetUserDataRequest, LoginRequest, SignupRequest, TokenResponse, UpdateUserProfileRequest,
+    UserDataResponse,
 };
 use crate::utility::config::Config;
 
@@ -856,7 +857,6 @@ pub async fn generate_backup_codes(
     State(db): State<DB>,
     Json(payload): Json<GenerateBackupCodesRequest>,
 ) -> (StatusCode, Json<BackupCodesResponse>) {
-
     let plain_codes = match auth::give_user_backup_codes(&db, &payload.user_id).await {
         Ok(codes) => codes,
         Err((status, message)) => {
@@ -901,10 +901,7 @@ pub async fn generate_backup_codes(
         Json(BackupCodesResponse {
             success: true,
             backup_codes: Some(plain_codes),
-            message: 
-                "These are the 10 one-use only backup codes for your account. 
-                Please take a moment to write them down, as this will be the last time they will be displayed"
-                .to_string(),
+            message:"These are the 10 one-use only backup codes for your account. Please take a moment to write them down, as this will be the last time they will be displayed".to_string(),
         }),
     )
 }

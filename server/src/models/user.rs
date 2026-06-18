@@ -15,13 +15,6 @@ pub struct User {
     pub email_backup_codes: Option<Vec<EmailBackupCode>>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
-struct EmailBackupCode {
-    hash: String,
-    salt: String,
-    used: bool,
-}
-
 #[derive(Debug, Deserialize)]
 pub struct SignupRequest {
     pub username: String,
@@ -97,6 +90,13 @@ pub struct BackupCodesResponse {
     pub success: bool,
     pub backup_codes: Option<Vec<String>>,
     pub message: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, SurrealValue)]
+pub struct EmailBackupCode {
+    pub hash: String,
+    pub salt: String,
+    pub used: bool,
 }
 
 impl User {
