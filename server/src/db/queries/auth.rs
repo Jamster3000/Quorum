@@ -84,7 +84,7 @@ pub fn generate_backup_code(length: usize) -> String {
         .collect()
 }
 
-pub fn generate_backup_code_array() -> Vec<String>, Vec<EmailBackupCode> {
+pub fn generate_backup_code_array_with_plaintext() -> Vec<String>, Vec<EmailBackupCode> {
     
     let mut plain_codes = Vec::with_capacity(10);
     let mut backup_code_array = Vec::with_capacity(10);
