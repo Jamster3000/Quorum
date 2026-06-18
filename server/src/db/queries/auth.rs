@@ -108,26 +108,30 @@ pub async fn give_user_backup_codes(
     db: &DB,
     user_id: &str,
 ) -> Result<Vec<String>, (StatusCode, String)> {
-
-    let (plain_codes, backup_code_array) = generate_backup_code_array_with_plaintext();
+    let (plain_codes, backup_code_array) = generate_backup_codes_with_plaintext();
     let user_id_thing = Thing::from(("users", user_id));
-    
+
     let mut response = db
-        .query("UPDATE ONLY $user_id_thing SET email_backup_codes = $codes RETURN AFTER")
+        .query("UPDATE ONLY $user_id_thing SET email_backup_codes = $codes WHERE email_backup_codes = NONE OR array::len(email_backup_codes) = 0 RETURN AFTER")
         .bind(("user_id_thing", user_id_thing))
         .bind(("codes", backup_code_array))
         .await
         .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, "Database error".to_string()))?;
 
-    
-    let _updated: Option<User> = response.take(0).map_err(|_| {
+    let updated: Option<User> = response.take(0).map_err(|_| {
         (
             StatusCode::INTERNAL_SERVER_ERROR,
             "Failed to parse user".to_string(),
         )
     })?;
 
-    Ok(plain_codes)
+    match updated {
+        Some(_) => Ok(plain_codes),
+        None => Err((
+            StatusCode::CONFLICT,
+            "Backup codes already exist for this user".to_string(),
+        )),
+    }
 }
 
 

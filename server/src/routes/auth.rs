@@ -851,3 +851,60 @@ pub async fn update_user_profile(
         }),
     )
 }
+
+pub async fn generate_backup_codes(
+    State(db): State<DB>,
+    Json(payload): Json<GenerateBackupCodesRequest>,
+) -> (StatusCode, Json<BackupCodesResponse>) {
+
+    let plain_codes = match auth::give_user_backup_codes(&db, &payload.user_id).await {
+        Ok(codes) => codes,
+        Err((status, message)) => {
+            let _ = log_audit_event(
+                &db,
+                AuditEvent {
+                    log_type: "generate_backup_codes_failed".to_string(),
+                    action: Some(message.clone()),
+                    target_type_table: Some("users".to_string()),
+                    target_type_table_id: Some(payload.user_id.clone()),
+                    user_id: Some(payload.user_id),
+                    ..Default::default()
+                },
+            )
+            .await;
+
+            return (
+                status,
+                Json(BackupCodesResponse {
+                    success: false,
+                    backup_codes: None,
+                    message,
+                }),
+            );
+        }
+    };
+
+    let _ = log_audit_event(
+        &db,
+        AuditEvent {
+            log_type: "generate_backup_codes_success".to_string(),
+            target_type_table: Some("users".to_string()),
+            target_type_table_id: Some(payload.user_id.clone()),
+            user_id: Some(payload.user_id),
+            ..Default::default()
+        },
+    )
+    .await;
+
+    (
+        StatusCode::OK,
+        Json(BackupCodesResponse {
+            success: true,
+            backup_codes: Some(plain_codes),
+            message: 
+                "These are the 10 one-use only backup codes for your account. 
+                Please take a moment to write them down, as this will be the last time they will be displayed"
+                .to_string(),
+        }),
+    )
+}

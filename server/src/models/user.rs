@@ -87,6 +87,18 @@ pub struct UpdateUserProfileRequest {
     pub username: String,
 }
 
+#[derive(Debug, Deserialize)]
+pub struct GenerateBackupCodesRequest {
+    pub user_id: String,
+}
+
+#[derive(Debug, Serialize)]
+pub struct BackupCodesResponse {
+    pub success: bool,
+    pub backup_codes: Option<Vec<String>>,
+    pub message: String,
+}
+
 impl User {
     pub fn to_response(&self) -> UserResponse {
         UserResponse {
