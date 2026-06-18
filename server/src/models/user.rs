@@ -12,6 +12,14 @@ pub struct User {
     pub last_login: Option<Datetime>,
     pub is_banned: bool,
     pub is_deleted: bool,
+    pub email_backup_codes: Option<Vec<EmailBackupCode>>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct EmailBackupCode {
+    hash: String,
+    salt: String,
+    used: bool,
 }
 
 #[derive(Debug, Deserialize)]

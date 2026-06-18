@@ -7,6 +7,10 @@ use crate::models::user::UpdateUserProfileRequest;
 use crate::models::user::User;
 use axum::http::StatusCode;
 use std::error::Error;
+use rand::{Rng, rng};
+use rand::distr::Alphanumeric;
+use sha2::{Sha256, Digest};
+use rand::Rng;
 
 /// Creates a new user account in the database
 ///
@@ -43,8 +47,7 @@ pub async fn signup_user(
     email: Option<&str>,
     password: &str,
 ) -> Result<User, Box<dyn Error + Send + Sync>> {
-    let mut response = db
-        .query(
+    let mut response = db.query(
             "CREATE users SET
                 username = $username,
                 email = $email,
@@ -66,6 +69,41 @@ pub async fn signup_user(
         .next()
         .ok_or("Failed to create user".into())
 }
+
+
+pub fn generate_salt() -> String {
+    let salt_bytes:[u8;16] = rand::rng().random();
+    hex::encode(salt_bytes)
+}
+
+pub fn generate_backup_code(length: usize) -> String {
+    rand::rng()
+        .sample_iter(&Alphanumeric)
+        .take(length)
+        .map(char::from)
+        .collect()
+}
+
+pub fn generate_backup_code_array() -> Vec<String>, Vec<EmailBackupCode> {
+    
+    let mut plain_codes = Vec::with_capacity(10);
+    let mut backup_code_array = Vec::with_capacity(10);
+
+    for _ in 0..10 {
+        let code = generate_backup_code(12);
+        let salt = generate_salt();
+        let hashed_code = hash_backup_code(&code, &salt);
+
+        plain_codes.push(code);
+        backup_code_array.push(EmailBackupCode{
+            hash: hashed_code,
+            salt,
+            used: false,
+        });
+    }
+    (plain_codes, backup_code_array)
+}
+
 
 /// Deletes a user from the database by their ID
 ///
@@ -300,3 +338,7 @@ pub async fn make_admin(db: &DB, username: &str) -> Result<(), Box<dyn Error + S
 
     Ok(())
 }
+
+
+
+
