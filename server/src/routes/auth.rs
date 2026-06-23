@@ -13,6 +13,7 @@ use crate::models::user::{
     GetUserDataRequest, LoginRequest, SignupRequest, TokenResponse, UpdateUserProfileRequest,
     UserDataResponse,
 };
+use crate::utility::auth_common::generate_backup_codes;
 use crate::utility::config::Config;
 
 use chrono;
@@ -91,11 +92,40 @@ pub async fn signup(
     State(db): State<DB>,
     Json(payload): Json<SignupRequest>,
 ) -> (StatusCode, Json<AuthTokenResponse>) {
+    let mut plain_backup_codes = None;
+    let mut hash_salt_backup_codes = None;
+
+    if payload.email.is_none() {
+        println!("Generating backup codes");
+        let backup_codes = Some(generate_backup_codes());
+
+        plain_backup_codes = Some(
+            backup_codes
+                .as_ref()
+                .unwrap()
+                .iter()
+                .filter_map(|code| code.plain.clone())
+                .collect::<Vec<String>>(),
+        );
+        hash_salt_backup_codes = Some(
+            backup_codes
+                .as_ref()
+                .unwrap()
+                .iter()
+                .map(|code| (code.hash.clone(), code.salt.clone()))
+                .collect::<Vec<(String, String)>>(),
+        );
+    }
+
+    //println!("Generated backup codes for user {}: {:?}", payload.username, hash_salt_backup_codes);
+
+
     let signup_result = auth::signup_user(
         &db,
         &payload.username,
         payload.email.as_deref(),
         &payload.password,
+        hash_salt_backup_codes.clone()
     )
     .await;
 
@@ -853,7 +883,7 @@ pub async fn update_user_profile(
     )
 }
 
-pub async fn generate_backup_codes(
+/*pub async fn generate_backup_codes(
     State(db): State<DB>,
     Json(payload): Json<GenerateBackupCodesRequest>,
 ) -> (StatusCode, Json<BackupCodesResponse>) {
@@ -905,3 +935,4 @@ pub async fn generate_backup_codes(
         }),
     )
 }
+*/

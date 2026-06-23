@@ -45,23 +45,37 @@ pub async fn signup_user(
     username: &str,
     email: Option<&str>,
     password: &str,
+    email_backup_codes: Option<Vec<(String, String)>>
 ) -> Result<User, Box<dyn Error + Send + Sync>> {
+    let backup_codes: Option<Vec<_>> = email_backup_codes.map(|codes| {
+        codes.into_iter().map(|(hash, salt)| {
+            serde_json::json!({
+                "hash": hash,
+                "salt": salt
+            })
+        }).collect()
+    });
+
+    println!("Creating user: username={}, email={:?}, password length={}, backup_codes={:?}", username, email, password.len(), backup_codes);
+
     let mut response = db.query(
-            "CREATE users SET
-                username = $username,
-                email = $email,
-                password_hash = IF string::len($password) < $MIN_PASSWORD_BYTES OR string::len($password) > $MAX_PASSWORD_BYTES {
-                    THROW 'Invalid password length'
-                } ELSE IF $email != NONE AND !string::is_email($email) {
-                    THROW 'Invalid email address'
-                } ELSE {
-                    crypto::argon2::generate($password)
-                }",
-        )
-        .bind(("username", username.to_string()))
-        .bind(("email", email.map(|e| e.to_string())))
-        .bind(("password", password.to_string()))
-        .await?;
+        "CREATE users SET
+            username = $username,
+            email = $email,
+            password_hash = IF string::len($password) < $MIN_PASSWORD_BYTES OR string::len($password) > $MAX_PASSWORD_BYTES {
+                THROW 'Invalid password length'
+            } ELSE IF $email != NONE AND !string::is_email($email) {
+                THROW 'Invalid email address'
+            } ELSE {
+                crypto::argon2::generate($password)
+            },
+            email_backup_codes = $email_backup_codes"
+    )
+    .bind(("username", username.to_string()))
+    .bind(("email", email.map(|e| e.to_string())))
+    .bind(("password", password.to_string()))
+    .bind(("email_backup_codes", backup_codes))
+    .await?;
 
     let user: Vec<User> = response.take(0)?;
     user.into_iter()
@@ -90,36 +104,17 @@ pub fn generate_backup_code(length: usize) -> String {
         .collect()
 }
 
-pub fn generate_backup_codes_with_plaintext() -> (Vec<String>, Vec<EmailBackupCode>) {
-    let mut plain_codes = Vec::with_capacity(10);
-    let mut backup_code_array = Vec::with_capacity(10);
-
-    for _ in 0..10 {
-        let code = generate_backup_code(12);
-        let salt = generate_salt();
-        let hashed_code = hash_backup_code(&code, &salt);
-
-        plain_codes.push(code);
-        backup_code_array.push(EmailBackupCode {
-            hash: hashed_code,
-            salt,
-            used: false,
-        });
-    }
-    (plain_codes, backup_code_array)
-}
-
 pub async fn give_user_backup_codes(
     db: &DB,
     user_id: &str,
-) -> Result<Vec<String>, (StatusCode, String)> {
-    let (plain_codes, backup_code_array) = generate_backup_codes_with_plaintext();
+) -> Result<Vec<EmailBackupCode>, (StatusCode, String)> {
+    let backup_code_array = crate::utility::auth_common::generate_backup_codes();
 
     let mut response = db
         .query(format!(
             "UPDATE ONLY users:{user_id} SET email_backup_codes = $codes WHERE email_backup_codes = NONE OR array::len(email_backup_codes) = 0 RETURN AFTER"
         ))
-        .bind(("codes", backup_code_array))
+        .bind(("codes", backup_code_array.clone()))
         .await
         .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, "Database error".to_string()))?;
 
@@ -131,7 +126,7 @@ pub async fn give_user_backup_codes(
     })?;
 
     match updated {
-        Some(_) => Ok(plain_codes),
+        Some(_) => Ok(backup_code_array),
         None => Err((
             StatusCode::CONFLICT,
             "Backup codes already exist for this user".to_string(),

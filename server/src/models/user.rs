@@ -94,9 +94,9 @@ pub struct BackupCodesResponse {
 
 #[derive(Debug, Clone, Serialize, Deserialize, SurrealValue)]
 pub struct EmailBackupCode {
+    pub plain: Option<String>,
     pub hash: String,
     pub salt: String,
-    pub used: bool,
 }
 
 impl User {
