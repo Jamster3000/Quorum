@@ -123,23 +123,21 @@ fn parse(input: &str) -> Option<Command> {
 ///```
 pub async fn spawn_cli(db: DB, server_start: Instant, shutdown_tx: watch::Sender<bool>) {
     let session = Arc::new(Mutex::new(AdminSession::new()));
+    let handle = tokio::runtime::Handle::current();
 
-    tokio::spawn(async move {
-        tokio::time::sleep(Duration::from_millis(600)).await;
-
-        // Use async stdin instead of blocking std::io::stdin
-        let stdin = tokio::io::stdin();
-        let mut reader = tokio::io::BufReader::new(stdin).lines();
+    tokio::task::spawn_blocking(move || {
+        std::thread::sleep(Duration::from_millis(600));
 
         loop {
             print!("{} ", ">".cyan().bold());
             io::stdout().flush().unwrap();
 
-            let line = match reader.next_line().await {
-                Ok(Some(line)) => line,
-                Ok(None) => break, // EOF
+            let mut input = String::new();
+            match io::stdin().read_line(&mut input) {
+                Ok(0) => break, // EOF
+                Ok(_) => {}
                 Err(_) => break,
-            };
+            }
 
             {
                 let mut sess = session.lock().unwrap();
@@ -147,18 +145,19 @@ pub async fn spawn_cli(db: DB, server_start: Instant, shutdown_tx: watch::Sender
                     println!(
                         "{}",
                         "Session expired after 20 minutes of inactivity. Please run server:login again."
-                        .yellow()
+                            .yellow()
                     );
                     sess.logout();
                 }
             }
 
-            let cmd = match parse(&line) {
+            let cmd = match parse(&input) {
                 Some(c) => c,
                 None => continue,
             };
 
-            dispatch(&cmd, &db, server_start, &session, &shutdown_tx).await;
+            //Uses OS thread, where block_on is safe. This is used to ensure server commands work whilst accepting requests
+            handle.block_on(dispatch(&cmd, &db, server_start, &session, &shutdown_tx));
         }
     });
 }
