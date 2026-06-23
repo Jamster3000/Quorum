@@ -56,8 +56,6 @@ pub async fn signup_user(
         }).collect()
     });
 
-    println!("Creating user: username={}, email={:?}, password length={}, backup_codes={:?}", username, email, password.len(), backup_codes);
-
     let mut response = db.query(
         "CREATE users SET
             username = $username,
@@ -81,57 +79,6 @@ pub async fn signup_user(
     user.into_iter()
         .next()
         .ok_or("Failed to create user".into())
-}
-
-pub fn generate_salt() -> String {
-    let salt_bytes: [u8; 16] = rand::rng().random();
-    hex::encode(salt_bytes)
-}
-
-fn hash_backup_code(code: &str, salt: &str) -> String {
-    use sha2::{Digest, Sha256};
-    let mut hasher = Sha256::new();
-    hasher.update(code.as_bytes());
-    hasher.update(salt.as_bytes());
-    hex::encode(hasher.finalize())
-}
-
-pub fn generate_backup_code(length: usize) -> String {
-    rand::rng()
-        .sample_iter(&Alphanumeric)
-        .take(length)
-        .map(char::from)
-        .collect()
-}
-
-pub async fn give_user_backup_codes(
-    db: &DB,
-    user_id: &str,
-) -> Result<Vec<EmailBackupCode>, (StatusCode, String)> {
-    let backup_code_array = crate::utility::auth_common::generate_backup_codes();
-
-    let mut response = db
-        .query(format!(
-            "UPDATE ONLY users:{user_id} SET email_backup_codes = $codes WHERE email_backup_codes = NONE OR array::len(email_backup_codes) = 0 RETURN AFTER"
-        ))
-        .bind(("codes", backup_code_array.clone()))
-        .await
-        .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, "Database error".to_string()))?;
-
-    let updated: Option<User> = response.take(0).map_err(|_| {
-        (
-            StatusCode::INTERNAL_SERVER_ERROR,
-            "Failed to parse user".to_string(),
-        )
-    })?;
-
-    match updated {
-        Some(_) => Ok(backup_code_array),
-        None => Err((
-            StatusCode::CONFLICT,
-            "Backup codes already exist for this user".to_string(),
-        )),
-    }
 }
 
 /// Deletes a user from the database by their ID
