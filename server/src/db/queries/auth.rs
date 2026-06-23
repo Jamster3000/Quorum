@@ -3,12 +3,9 @@
 //! This file contains functions for Creating an account (signup), login, token management and deleteing a user account.
 
 use crate::db::DB;
-use crate::models::user::EmailBackupCode;
 use crate::models::user::UpdateUserProfileRequest;
 use crate::models::user::User;
 use axum::http::StatusCode;
-use rand::RngExt;
-use rand::distr::Alphanumeric;
 use std::error::Error;
 
 /// Creates a new user account in the database

@@ -91,15 +91,13 @@ pub async fn signup(
     State(db): State<DB>,
     Json(payload): Json<SignupRequest>,
 ) -> (StatusCode, Json<AuthTokenResponse>) {
-    let mut plain_backup_codes = None;
+    let mut _plain_backup_codes = None;
     let mut hash_salt_backup_codes = None;
-
-    println!("Signup request received for username: {}", payload.username);
 
     if payload.email.is_none() {
         let backup_codes = Some(generate_backup_codes());
 
-        plain_backup_codes = Some(
+        _plain_backup_codes = Some(
             backup_codes
                 .as_ref()
                 .unwrap()
