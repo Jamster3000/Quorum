@@ -9,9 +9,11 @@ use crate::db::queries::auth;
 use crate::models::server::AuditEvent;
 use crate::models::user::User;
 use crate::models::user::{
-    AuthTokenResponse, DeleteAccountRequest, GetUserDataRequest, LoginRequest, SignupRequest,
-    TokenResponse, UpdateUserProfileRequest, UserDataResponse,
+    AuthTokenResponse, BackupCodesResponse, DeleteAccountRequest, GenerateBackupCodesRequest,
+    GetUserDataRequest, LoginRequest, SignupRequest, TokenResponse, UpdateUserProfileRequest,
+    UserDataResponse,
 };
+use crate::utility::auth_common::generate_backup_codes;
 use crate::utility::config::Config;
 
 use chrono;
@@ -90,11 +92,37 @@ pub async fn signup(
     State(db): State<DB>,
     Json(payload): Json<SignupRequest>,
 ) -> (StatusCode, Json<AuthTokenResponse>) {
+    let mut plain_backup_codes = None;
+    let mut hash_salt_backup_codes = None;
+
+    if payload.email.is_none() {
+        println!("Generating backup codes");
+        let backup_codes = Some(generate_backup_codes());
+
+        plain_backup_codes = Some(
+            backup_codes
+                .as_ref()
+                .unwrap()
+                .iter()
+                .filter_map(|code| code.plain.clone())
+                .collect::<Vec<String>>(),
+        );
+        hash_salt_backup_codes = Some(
+            backup_codes
+                .as_ref()
+                .unwrap()
+                .iter()
+                .map(|code| (code.hash.clone(), code.salt.clone()))
+                .collect::<Vec<(String, String)>>(),
+        );
+    }
+
     let signup_result = auth::signup_user(
         &db,
         &payload.username,
         payload.email.as_deref(),
         &payload.password,
+        hash_salt_backup_codes.clone()
     )
     .await;
 

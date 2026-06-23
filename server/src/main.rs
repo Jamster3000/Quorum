@@ -174,7 +174,7 @@ async fn main() {
     }
 
     // Start the CLI input loop in a background task
-    cli::spawn_cli(_db.clone(), server_start, shutdown_tx).await;
+    //cli::spawn_cli(_db.clone(), server_start, shutdown_tx).await;
 
     let shutdown = async {
         let _ = tokio::signal::ctrl_c().await;

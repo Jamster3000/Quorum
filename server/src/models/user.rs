@@ -12,6 +12,7 @@ pub struct User {
     pub last_login: Option<Datetime>,
     pub is_banned: bool,
     pub is_deleted: bool,
+    pub email_backup_codes: Option<Vec<EmailBackupCode>>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -77,6 +78,13 @@ pub struct UpdateUserProfileRequest {
     pub user_id: String,
     pub email: Option<String>,
     pub username: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, SurrealValue)]
+pub struct EmailBackupCode {
+    pub plain: Option<String>,
+    pub hash: String,
+    pub salt: String,
 }
 
 impl User {

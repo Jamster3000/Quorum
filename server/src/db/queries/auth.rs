@@ -3,9 +3,12 @@
 //! This file contains functions for Creating an account (signup), login, token management and deleteing a user account.
 
 use crate::db::DB;
+use crate::models::user::EmailBackupCode;
 use crate::models::user::UpdateUserProfileRequest;
 use crate::models::user::User;
 use axum::http::StatusCode;
+use rand::RngExt;
+use rand::distr::Alphanumeric;
 use std::error::Error;
 
 /// Creates a new user account in the database
@@ -42,24 +45,35 @@ pub async fn signup_user(
     username: &str,
     email: Option<&str>,
     password: &str,
+    email_backup_codes: Option<Vec<(String, String)>>
 ) -> Result<User, Box<dyn Error + Send + Sync>> {
-    let mut response = db
-        .query(
-            "CREATE users SET
-                username = $username,
-                email = $email,
-                password_hash = IF string::len($password) < $MIN_PASSWORD_BYTES OR string::len($password) > $MAX_PASSWORD_BYTES {
-                    THROW 'Invalid password length'
-                } ELSE IF $email != NONE AND !string::is_email($email) {
-                    THROW 'Invalid email address'
-                } ELSE {
-                    crypto::argon2::generate($password)
-                }",
-        )
-        .bind(("username", username.to_string()))
-        .bind(("email", email.map(|e| e.to_string())))
-        .bind(("password", password.to_string()))
-        .await?;
+    let backup_codes: Option<Vec<_>> = email_backup_codes.map(|codes| {
+        codes.into_iter().map(|(hash, salt)| {
+            serde_json::json!({
+                "hash": hash,
+                "salt": salt
+            })
+        }).collect()
+    });
+
+    let mut response = db.query(
+        "CREATE users SET
+            username = $username,
+            email = $email,
+            password_hash = IF string::len($password) < $MIN_PASSWORD_BYTES OR string::len($password) > $MAX_PASSWORD_BYTES {
+                THROW 'Invalid password length'
+            } ELSE IF $email != NONE AND !string::is_email($email) {
+                THROW 'Invalid email address'
+            } ELSE {
+                crypto::argon2::generate($password)
+            },
+            email_backup_codes = $email_backup_codes"
+    )
+    .bind(("username", username.to_string()))
+    .bind(("email", email.map(|e| e.to_string())))
+    .bind(("password", password.to_string()))
+    .bind(("email_backup_codes", backup_codes))
+    .await?;
 
     let user: Vec<User> = response.take(0)?;
     user.into_iter()
