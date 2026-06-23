@@ -1,10 +1,11 @@
 use crate::models::user::EmailBackupCode;
 use sha2::{Digest, Sha256};
-use rand::distr::Alphanumeric;
-use rand::RngExt;
+use rand::rngs::SysRng;
+use rand::{RngExt, TryRng};
 
 pub fn generate_salt() -> String {
-    let salt_bytes: [u8; 16] = rand::rng().random();
+    let mut salt_bytes = [0u8; 16];
+    SysRng.try_fill_bytes(&mut salt_bytes).expect("OS RNG unavailable");
     hex::encode(salt_bytes)
 }
 
@@ -16,10 +17,14 @@ fn hash_backup_code(code: &str, salt: &str) -> String {
 }
 
 pub fn generate_backup_code(length: usize) -> String {
-    rand::rng()
-        .sample_iter(&Alphanumeric)
-        .take(length)
-        .map(char::from)
+    const CHARSET: &[u8] = b"ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
+    let mut rng = rand::rng();
+
+    (0..length)
+        .map(|_| {
+            let idx = rng.random_range(0..CHARSET.len());
+            CHARSET[idx] as char
+        })
         .collect()
 }
 
@@ -27,7 +32,7 @@ pub fn generate_backup_codes() -> Vec<EmailBackupCode> {
     let mut backup_code_array = Vec::with_capacity(10);
 
     for _ in 0..10 {
-        let code = generate_backup_code(12);
+        let code = generate_backup_code(24);
         let salt = generate_salt();
         let hashed_code = hash_backup_code(&code, &salt);
 
@@ -37,5 +42,6 @@ pub fn generate_backup_codes() -> Vec<EmailBackupCode> {
             salt,
         });
     }
+
     backup_code_array
 }
