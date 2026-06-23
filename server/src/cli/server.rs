@@ -210,12 +210,7 @@ pub async fn signup(db: &DB) {
     {
         Ok(user) => println!(
             "{}",
-            format!(
-                "  Created user: {} ({})",
-                user.username,
-                format!("{:?}", user.id.key)
-            )
-            .green()
+            format!("  Created user: {} ({:?})", user.username, user.id.key).green()
         ),
         Err(e) => println!("{}", format!("  Failed to create user: {}", e).red()),
     }

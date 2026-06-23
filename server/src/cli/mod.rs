@@ -200,15 +200,15 @@ async fn dispatch(
                 server::shutdown(db, server_start, shutdown_tx).await;
             }
             "make-admin" => {
-                let username = cmd.raw.splitn(2, ' ').nth(1).unwrap_or("");
+                let username = cmd.raw.split_once(' ').map(|x| x.1).unwrap_or("");
                 server::make_admin(db, username, session).await;
             }
             "logs" => {
-                let params = cmd.raw.splitn(2, ' ').nth(1).unwrap_or("");
+                let params = cmd.raw.split_once(' ').map(|x| x.1).unwrap_or("");
                 server::logs(db, params).await;
             }
             "audit" => {
-                let params = cmd.raw.splitn(2, ' ').nth(1).unwrap_or("");
+                let params = cmd.raw.split_once(' ').map(|x| x.1).unwrap_or("");
                 server::audit(db, params).await;
             }
             "reload" => {
@@ -224,7 +224,7 @@ async fn dispatch(
         [ns, command] if ns == "db" => match command.as_str() {
             "stats" => db::stats(db).await,
             "table" => {
-                let params = cmd.raw.splitn(2, ' ').nth(1).unwrap_or("");
+                let params = cmd.raw.split_once(' ').map(|x| x.1).unwrap_or("");
                 db::table(db, params).await;
             }
             _ => unknown(&cmd.raw),
@@ -236,7 +236,7 @@ async fn dispatch(
                 if !require_admin(session) {
                     return;
                 }
-                let id = cmd.raw.splitn(2, ' ').nth(1).unwrap_or("");
+                let id = cmd.raw.split_once(' ').map(|x| x.1).unwrap_or("");
                 user::delete(db, id).await;
             }
             _ => unknown(&cmd.raw),

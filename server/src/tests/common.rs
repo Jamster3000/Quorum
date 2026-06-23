@@ -145,7 +145,7 @@ pub async fn create_test_user(
         .to_string();
 
     if clean_up {
-        let _ = cleanup_user(&username, &password, &user_id).await;
+        let _ = cleanup_user(&username, password, &user_id).await;
     }
 
     Ok((
