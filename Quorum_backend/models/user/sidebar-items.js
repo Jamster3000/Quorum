@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["AuthTokenResponse","DeleteAccountRequest","GetUserDataRequest","LoginRequest","SignupRequest","TokenResponse","UpdateUserProfileRequest","User","UserDataResponse","UserResponse"]};
+window.SIDEBAR_ITEMS = {"struct":["AuthTokenResponse","DeleteAccountRequest","EmailBackupCode","GetUserDataRequest","LoginRequest","SignupRequest","TokenResponse","UpdateUserProfileRequest","User","UserDataResponse","UserResponse"]};
