@@ -9,7 +9,7 @@ use crate::db::queries::auth;
 use crate::models::server::AuditEvent;
 use crate::models::user::User;
 use crate::models::user::{
-    AuthTokenResponse, BackupCodesResponse, DeleteAccountRequest, GenerateBackupCodesRequest,
+    AuthTokenResponse, DeleteAccountRequest,
     GetUserDataRequest, LoginRequest, SignupRequest, TokenResponse, UpdateUserProfileRequest,
     UserDataResponse,
 };
@@ -96,7 +96,6 @@ pub async fn signup(
     let mut hash_salt_backup_codes = None;
 
     if payload.email.is_none() {
-        println!("Generating backup codes");
         let backup_codes = Some(generate_backup_codes());
 
         plain_backup_codes = Some(
