@@ -1,11 +1,13 @@
 use crate::models::user::EmailBackupCode;
-use sha2::{Digest, Sha256};
 use rand::rngs::SysRng;
 use rand::{RngExt, TryRng};
+use sha2::{Digest, Sha256};
 
 pub fn generate_salt() -> String {
     let mut salt_bytes = [0u8; 16];
-    SysRng.try_fill_bytes(&mut salt_bytes).expect("OS RNG unavailable");
+    SysRng
+        .try_fill_bytes(&mut salt_bytes)
+        .expect("OS RNG unavailable");
     hex::encode(salt_bytes)
 }
 

@@ -9,8 +9,8 @@ use colored::Colorize;
 use std::io::{self, Write};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
-use tokio::sync::watch;
 use tokio::io::AsyncBufReadExt;
+use tokio::sync::watch;
 
 const SESSION_TIMEOUT_MINS: u64 = 20;
 

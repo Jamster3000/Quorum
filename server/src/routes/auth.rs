@@ -9,9 +9,8 @@ use crate::db::queries::auth;
 use crate::models::server::AuditEvent;
 use crate::models::user::User;
 use crate::models::user::{
-    AuthTokenResponse, DeleteAccountRequest,
-    GetUserDataRequest, LoginRequest, SignupRequest, TokenResponse, UpdateUserProfileRequest,
-    UserDataResponse,
+    AuthTokenResponse, DeleteAccountRequest, GetUserDataRequest, LoginRequest, SignupRequest,
+    TokenResponse, UpdateUserProfileRequest, UserDataResponse,
 };
 use crate::utility::auth_common::generate_backup_codes;
 use crate::utility::config::Config;
@@ -121,7 +120,7 @@ pub async fn signup(
         &payload.username,
         payload.email.as_deref(),
         &payload.password,
-        hash_salt_backup_codes.clone()
+        hash_salt_backup_codes.clone(),
     )
     .await;
 

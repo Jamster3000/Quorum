@@ -205,7 +205,9 @@ pub async fn signup(db: &DB) {
 
     let email = if email.is_empty() { None } else { Some(email) };
 
-    match crate::db::queries::auth::signup_user(db, &username, email.as_deref(), &password, None).await {
+    match crate::db::queries::auth::signup_user(db, &username, email.as_deref(), &password, None)
+        .await
+    {
         Ok(user) => println!(
             "{}",
             format!(

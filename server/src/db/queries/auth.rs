@@ -45,15 +45,18 @@ pub async fn signup_user(
     username: &str,
     email: Option<&str>,
     password: &str,
-    email_backup_codes: Option<Vec<(String, String)>>
+    email_backup_codes: Option<Vec<(String, String)>>,
 ) -> Result<User, Box<dyn Error + Send + Sync>> {
     let backup_codes: Option<Vec<_>> = email_backup_codes.map(|codes| {
-        codes.into_iter().map(|(hash, salt)| {
-            serde_json::json!({
-                "hash": hash,
-                "salt": salt
+        codes
+            .into_iter()
+            .map(|(hash, salt)| {
+                serde_json::json!({
+                    "hash": hash,
+                    "salt": salt
+                })
             })
-        }).collect()
+            .collect()
     });
 
     let mut response = db.query(
