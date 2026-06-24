@@ -2,9 +2,9 @@ mod common;
 mod functional;
 mod robust;
 
-use quorum_core::startup;
 use colored::*;
 use futures::future::BoxFuture;
+use quorum_core::startup;
 use std::time::Duration;
 
 // 1. Define Type Aliases to dramatically simplify the code

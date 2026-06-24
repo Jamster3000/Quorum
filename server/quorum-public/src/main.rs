@@ -13,12 +13,12 @@ use crate::utility::docker;
 use colored::Colorize;
 use quorum_core::cli;
 use quorum_core::db as core_db;
+use quorum_core::startup;
 use reqwest::Client;
 use routes::route::create_router;
 use std::net::SocketAddr;
 use std::time::Duration;
 use std::time::Instant;
-use quorum_core::startup;
 
 #[tokio::main]
 async fn main() {

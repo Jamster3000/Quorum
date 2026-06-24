@@ -13,10 +13,10 @@ use crate::db::schema;
 use crate::utility::docker;
 use quorum_core::cli;
 use quorum_core::db as core_db;
+use quorum_core::startup;
 use routes::route::create_router;
 use std::net::SocketAddr;
 use std::time::Instant;
-use quorum_core::startup;
 
 #[tokio::main]
 async fn main() {
