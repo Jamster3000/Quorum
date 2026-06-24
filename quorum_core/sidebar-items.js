@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":["cli","db","models","routes","startup","utility"]};

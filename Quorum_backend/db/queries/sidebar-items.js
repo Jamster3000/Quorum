@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"mod":["audit_logs","auth","logs","server_logs","stats","tokens"]};

@@ -1,9 +1,9 @@
 (function() {
-    var type_impls = Object.fromEntries([["Quorum_backend",[]]]);
+    var type_impls = Object.fromEntries([["quorum_public",[]]]);
     if (window.register_type_impls) {
         window.register_type_impls(type_impls);
     } else {
         window.pending_type_impls = type_impls;
     }
 })()
-//{"start":55,"fragment_lengths":[21]}
+//{"start":55,"fragment_lengths":[20]}

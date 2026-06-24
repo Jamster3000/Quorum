@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"constant":["SESSION_TIMEOUT_MINS"],"fn":["dispatch","parse","require_admin","spawn_cli","unknown"],"mod":["db","help","server","test","user"],"struct":["AdminSession","Command"]};

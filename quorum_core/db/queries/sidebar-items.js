@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"mod":["audit_logs","logs","server_logs","stats"]};

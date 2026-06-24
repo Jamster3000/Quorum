@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"fn":["main"],"mod":["cli","db","models","routes","startup","tests","utility"]};

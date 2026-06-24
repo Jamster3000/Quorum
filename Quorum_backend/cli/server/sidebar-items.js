@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"fn":["audit","login","logout","logs","make_admin","prompt","prompt_password","reload","shutdown","signup","status"]};
