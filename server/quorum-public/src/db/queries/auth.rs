@@ -43,37 +43,26 @@ pub async fn signup_user(
     username: &str,
     email: Option<&str>,
     password: &str,
-    email_backup_codes: Option<Vec<(String, String)>>,
+    email_backup_codes: Option<Vec<String>>,
 ) -> Result<User, Box<dyn Error + Send + Sync>> {
-    let backup_codes: Option<Vec<_>> = email_backup_codes.map(|codes| {
-        codes
-            .into_iter()
-            .map(|(hash, salt)| {
-                serde_json::json!({
-                    "hash": hash,
-                    "salt": salt
-                })
-            })
-            .collect()
-    });
+    if password.len() < 12 || password.len() > 35 {
+        return Err("Invalid password length".into());
+    }
+
+    let password_hash = crate::utility::auth_common::hash(password)
+        .map_err(|e| format!("Failed to hash password: {}", e))?;
 
     let mut response = db.query(
         "CREATE users SET
             username = $username,
             email = $email,
-            password_hash = IF string::len($password) < $MIN_PASSWORD_BYTES OR string::len($password) > $MAX_PASSWORD_BYTES {
-                THROW 'Invalid password length'
-            } ELSE IF $email != NONE AND !string::is_email($email) {
-                THROW 'Invalid email address'
-            } ELSE {
-                crypto::argon2::generate($password)
-            },
+            password_hash = $password_hash,
             email_backup_codes = $email_backup_codes"
     )
     .bind(("username", username.to_string()))
     .bind(("email", email.map(|e| e.to_string())))
-    .bind(("password", password.to_string()))
-    .bind(("email_backup_codes", backup_codes))
+    .bind(("password_hash", password_hash))
+    .bind(("email_backup_codes", email_backup_codes))
     .await?;
 
     let user: Vec<User> = response.take(0)?;
@@ -215,25 +204,27 @@ pub async fn verify_user_credentials(
     password: &str,
 ) -> Result<User, (StatusCode, String)> {
     let mut response = db
-        .query("SELECT * FROM users WHERE (username = $value OR email = $value) AND crypto::argon2::compare(password_hash, $password) AND is_banned = false AND is_deleted = false LIMIT 1")
+        .query("SELECT * FROM users WHERE (username = $value OR email = $value) AND is_banned = false AND is_deleted = false LIMIT 1")
         .bind(("value", username_or_email.to_string()))
-        .bind(("password", password.to_string()))
         .await
         .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, "Database error".to_string()))?;
 
-    let user: Option<User> = response.take::<Option<User>>(0).map_err(|_| {
-        (
-            StatusCode::INTERNAL_SERVER_ERROR,
-            "Database error".to_string(),
-        )
-    })?;
+    let user: Option<User> = response.take::<Option<User>>(0)
+        .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, "Database error".to_string()))?;
 
     match user {
-        Some(u) => Ok(u),
-        None => Err((
-            StatusCode::UNAUTHORIZED,
-            "Invalid username or password".to_string(),
-        )),
+        Some(u) => {
+            if let Some(ref hash) = u.password_hash {
+                if crate::utility::auth_common::verify(password, hash).unwrap_or(false) {
+                    Ok(u)
+                } else {
+                    Err((StatusCode::UNAUTHORIZED, "Invalid username or password".to_string()))
+                }
+            } else {
+                Err((StatusCode::UNAUTHORIZED, "Invalid username or password".to_string()))
+            }
+        }
+        None => Err((StatusCode::UNAUTHORIZED, "Invalid username or password".to_string())),
     }
 }
 

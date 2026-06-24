@@ -29,10 +29,6 @@ DEFINE PARAM IF NOT EXISTS $MAX_EMAIL_BYTES VALUE 128;
 DEFINE PARAM IF NOT EXISTS $MAX_USER_STATUS_BYTES VALUE 15;
 DEFINE PARAM IF NOT EXISTS $MAX_EMOJI_CODE_BYTES VALUE 20;
 DEFINE PARAM IF NOT EXISTS $MIN_USERNAME_BYTES VALUE 4;
-DEFINE PARAM IF NOT EXISTS $MIN_PASSWORD_HASH_BYTES VALUE 80;
-DEFINE PARAM IF NOT EXISTS $MAX_PASSWORD_HASH_BYTES VALUE 256;
-DEFINE PARAM IF NOT EXISTS $MIN_PASSWORD_BYTES VALUE 8;
-DEFINE PARAM IF NOT EXISTS $MAX_PASSWORD_BYTES VALUE 128;
 
 
 -- =========================================================
@@ -156,9 +152,7 @@ DEFINE FIELD IF NOT EXISTS created_at ON TABLE users TYPE datetime DEFAULT time:
 DEFINE FIELD IF NOT EXISTS last_login ON TABLE users TYPE option<datetime>;
 DEFINE FIELD IF NOT EXISTS account_locked_until ON TABLE users TYPE option<datetime>;
 DEFINE FIELD IF NOT EXISTS two_factor_secret ON TABLE users TYPE option<string>;
-DEFINE FIELD IF NOT EXISTS email_backup_codes ON TABLE users TYPE option<array<object>>;
-DEFINE FIELD IF NOT EXISTS email_backup_codes[*].hash ON TABLE users TYPE option<string>;
-DEFINE FIELD IF NOT EXISTS email_backup_codes[*].salt ON TABLE users TYPE option<string>;
+DEFINE FIELD IF NOT EXISTS email_backup_codes ON TABLE users TYPE option<array<string>>;
 DEFINE FIELD IF NOT EXISTS ban_expiry ON TABLE users TYPE option<datetime>;
 DEFINE FIELD IF NOT EXISTS is_banned ON TABLE users TYPE bool DEFAULT false;
 DEFINE FIELD IF NOT EXISTS is_deleted ON TABLE users TYPE bool DEFAULT false;
@@ -665,29 +659,3 @@ DEFINE FIELD IF NOT EXISTS user_id ON TABLE kanban_task_assignees TYPE record<us
 DEFINE INDEX IF NOT EXISTS idx_kanban_task_assignees_task ON TABLE kanban_task_assignees COLUMNS task_id;
 DEFINE INDEX IF NOT EXISTS idx_kanban_task_assignees_user ON TABLE kanban_task_assignees COLUMNS user_id;
 DEFINE INDEX IF NOT EXISTS idx_kanban_task_assignees_task_user_unique ON TABLE kanban_task_assignees COLUMNS task_id, user_id UNIQUE;
-
-
--- access
-DEFINE ACCESS IF NOT EXISTS user_access ON DATABASE TYPE RECORD
-SIGNUP ({
-    IF string::len($password) < $MIN_PASSWORD_BYTES {
-        THROW "Password too short"
-    } ELSE IF string::len($password) > $MAX_PASSWORD_BYTES {
-        THROW "Password too long"
-    } ELSE IF $email != NONE AND !string::is_email($email) {
-        THROW "Invalid email address"
-    };
-    CREATE users SET
-        email = $email,
-        username = $username,
-        password_hash = crypto::argon2::generate($password),
-        created_at = time::now()
-})
-SIGNIN (
-    SELECT * FROM users
-    WHERE email = $email
-    AND crypto::argon2::compare(password_hash, $password)
-    AND is_banned = false
-    AND is_deleted = false
-)
-DURATION FOR SESSION 1d;

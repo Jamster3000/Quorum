@@ -2,43 +2,12 @@
 //! Specifically functions and code that is/might be commonly used throughout the server, where it doesn't fit in `/db/queries` or `/route`
 
 use crate::models::user::EmailBackupCode;
-use rand::rngs::SysRng;
-use rand::{RngExt, TryRng};
-use sha2::{Digest, Sha256};
-
-/// Generates a random 16 byte salt code to use with hashing backup codes
-///
-/// Uses the system's random for a more safe and secure random number generator
-///
-/// # Returns
-/// A 16 byte array of random bytes
-///
-/// # Example
-/// ```
-/// let salt = generate_salt();
-/// ```
-pub fn generate_salt() -> String {
-    let mut salt_bytes = [0u8; 16];
-    SysRng
-        .try_fill_bytes(&mut salt_bytes)
-        .expect("OS RNG unavailable");
-    hex::encode(salt_bytes)
-}
-
-/// Hashes a backup code using SHA-256 with a provided salt for secure storage in the database.
-///
-/// # Arguments
-/// * `code` - The backup code to be hashed.
-/// * `salt` - The salt to be used in the hashing process.
-///
-/// # Returns
-/// A `String` representing the hexadecimal representation of the hashed backup code.
-fn hash_backup_code(code: &str, salt: &str) -> String {
-    let mut hasher = Sha256::new();
-    hasher.update(code.as_bytes());
-    hasher.update(salt.as_bytes());
-    hex::encode(hasher.finalize())
-}
+use argon2::{
+    password_hash::{PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
+    Argon2, Version, Algorithm, Params
+};
+use rand::RngExt;
+use rand_core::OsRng;
 
 /// Generates the plain text backup codes.
 ///
@@ -80,18 +49,47 @@ pub fn generate_backup_code(length: usize) -> String {
 /// ```
 pub fn generate_backup_codes() -> Vec<EmailBackupCode> {
     let mut backup_code_array = Vec::with_capacity(10);
-
     for _ in 0..10 {
         let code = generate_backup_code(24);
-        let salt = generate_salt();
-        let hashed_code = hash_backup_code(&code, &salt);
-
+        let hashed_code = hash(&code).expect("Failed to hash backup code");
         backup_code_array.push(EmailBackupCode {
             plain: Some(code),
             hash: hashed_code,
-            salt,
         });
     }
-
     backup_code_array
+}
+
+pub fn get_argon2() -> Argon2<'static> {
+    let params = Params::new(
+        262_144, // 256 MiB in KiB
+        3, // time cost
+        2, // parallelism
+        Some(32)
+    ).expect("valid Argon2 params");
+
+    Argon2::new(
+        Algorithm::Argon2id,
+        Version::V0x13,
+        params,
+    )
+}
+
+pub fn hash(plaintext: &str) -> Result<String, String> {
+    let argon2 = get_argon2();
+    let salt = SaltString::generate(&mut OsRng);
+    argon2
+        .hash_password(plaintext.as_bytes(), &salt)
+        .map(|phc| phc.to_string())
+        .map_err(|e| format!("Failed to hash: {}", e))
+}
+
+pub fn verify(plaintext: &str, stored_hash: &str) -> Result<bool, String> {
+    let argon2 = get_argon2();
+    let parsed_hash = PasswordHash::new(stored_hash)
+        .map_err(|e| format!("Failed to parse hash: {}", e))?;
+    argon2
+        .verify_password(plaintext.as_bytes(), &parsed_hash)
+        .map(|_| true)
+        .map_err(|e| format!("Verification failed: {}", e))
 }

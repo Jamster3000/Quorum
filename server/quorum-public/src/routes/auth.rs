@@ -92,7 +92,7 @@ pub async fn signup(
     Json(payload): Json<SignupRequest>,
 ) -> (StatusCode, Json<AuthTokenResponse>) {
     let mut _plain_backup_codes = None;
-    let mut hash_salt_backup_codes = None;
+    let mut hash_backup_codes = None;
 
     if payload.email.is_none() {
         let backup_codes = Some(generate_backup_codes());
@@ -105,13 +105,13 @@ pub async fn signup(
                 .filter_map(|code| code.plain.clone())
                 .collect::<Vec<String>>(),
         );
-        hash_salt_backup_codes = Some(
+        hash_backup_codes = Some(
             backup_codes
                 .as_ref()
                 .unwrap()
                 .iter()
-                .map(|code| (code.hash.clone(), code.salt.clone()))
-                .collect::<Vec<(String, String)>>(),
+                .map(|code| code.hash.clone())
+                .collect::<Vec<String>>(),
         );
     }
 
@@ -120,7 +120,7 @@ pub async fn signup(
         &payload.username,
         payload.email.as_deref(),
         &payload.password,
-        hash_salt_backup_codes.clone(),
+        hash_backup_codes.clone(),
     )
     .await;
 
