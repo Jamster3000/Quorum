@@ -43,14 +43,41 @@ jobs:
         working-directory: server
         run: cargo clippy --all-targets --all-features -- -W warnings
 
-      - name: Generate docs
+      - name: Generate docs for core
         working-directory: server
-        run: cargo doc --no-deps --document-private-items
+        run: cargo doc --no-deps --document-private-items -p quorum-core
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
-      - name: Add root index redirect
+      - name: Generate docs for public
+        working-directory: server
+        run: cargo doc --no-deps --document-private-items -p quorum-public
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+      - name: Generate docs for private
+        working-directory: server
+        run: cargo doc --no-deps --document-private-items -p quorum-private
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+      - name: Create root index page
         run: |
-          echo '<meta http-equiv="refresh" content="0; url=Quorum_backend/index.html">' > server/target/doc/index.html
+          mkdir -p server/target/doc
+          cat > server/target/doc/index.html << 'EOF'
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <title>Quorum Documentation</title>
+            <meta http-equiv="refresh" content="0; url=quorum-core/index.html">
+          </head>
+          <body>
+            <h1>Quorum Documentation</h1>
+            <ul>
+              <li><a href="quorum-core/index.html">Quorum Core</a></li>
+              <li><a href="quorum-public/index.html">Quorum Public</a></li>
+              <li><a href="quorum-private/index.html">Quorum Private</a></li>
+            </ul>
+          </body>
+          </html>
+          EOF
 
       - name: Deploy docs to gh-pages
         uses: peaceiris/actions-gh-pages@v4
