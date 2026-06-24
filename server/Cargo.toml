@@ -6,7 +6,6 @@ members = [
     "quorum-private",
 ]
 
-
 [workspace.package]
 edition = "2024"
 
