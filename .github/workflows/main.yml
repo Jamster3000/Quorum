@@ -48,14 +48,6 @@ jobs:
         run: cargo doc --no-deps --document-private-items --workspace
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
-      - name: Prepare static files for root index
-        run: |
-          mkdir -p server/target/doc
-          # Copy the static.files directory (contains CSS, JS, fonts, etc.)
-          cp -r server/target/doc/static.files server/target/doc/
-          # Copy the crates.js file (used for crate navigation)
-          cp server/target/doc/crates.js server/target/doc/
-
       - name: Create root index page
         run: |
           cat > server/target/doc/index.html << 'EOF'
