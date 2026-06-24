@@ -70,6 +70,27 @@ pub fn print_step(step: &str, success: bool, duration: Duration) {
     thread::sleep(Duration::from_millis(200));
 }
 
+/// Display the final initialization step with status and timing
+///
+/// Similar to `print_step` but uses a different end tree character.
+///
+/// # Arguments
+/// * `step` - A string describing the final initialization step being performed.
+/// * `success` - A boolean indicating whether the step succeeded (true) or failed (false).
+/// * `duration_ms` - The time taken to complete the step, in milliseconds.
+///
+/// # Example
+/// ```rust
+/// let timer = create_timer();
+/// print_final_step("Starting server", true, elapsed_ms(timer));
+/// ```
+pub fn print_final_step(step: &str, success: bool, duration: Duration) {
+    let status = if success { "✓".green() } else { "✗".red() };
+    let timing = format!("({:?})", duration).dimmed();
+    println!("{}{} {} {}", "  └─ ".blue(), step.white(), status, timing);
+    thread::sleep(Duration::from_millis(200));
+}
+
 /// Display the final "Server ready" message with the server URL
 ///
 /// Prints a formatted message indicating that the server is ready, including the URL and port number.

@@ -1,9 +1,10 @@
-/*mod models;
-//mod tests;
-*/
+//! This is the main entry point for the Quorum Private server.
+//!
+//! It sets up the server similar to the public server, tweaked to work with being self hostable by anyone.
+//! Use `cargo run -p quorum-private` to build/run the private version of the server, which combines the `quorum-core` shared code.
+
 mod db;
 mod routes;
-mod startup;
 mod utility;
 
 use colored::Colorize;
@@ -15,6 +16,7 @@ use quorum_core::db as core_db;
 use routes::route::create_router;
 use std::net::SocketAddr;
 use std::time::Instant;
+use quorum_core::startup;
 
 #[tokio::main]
 async fn main() {

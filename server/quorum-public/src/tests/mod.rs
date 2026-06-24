@@ -2,7 +2,7 @@ mod common;
 mod functional;
 mod robust;
 
-use crate::startup;
+use quorum_core::startup;
 use colored::*;
 use futures::future::BoxFuture;
 use std::time::Duration;

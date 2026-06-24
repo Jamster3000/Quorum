@@ -185,6 +185,30 @@ pub async fn revoke_refresh_token(
     tokens::revoke_refresh_token(db, refresh_token).await
 }
 
+/// Get's user's data to allow them to be verified
+///
+/// # Arguments
+/// * `db` - A reference to the database connection
+/// * `username` - The username of the user to retrieve
+/// * `password` - The password of the user to retrieve
+///
+/// # Returns
+/// * `Ok(User)` - The user object if the operation was successful
+/// * `Err(Box<dyn Error>)` - An error if the operation failed, such
+///
+/// # Example
+/// ```rust
+/// use crate::db::DB;
+/// use crate::db::queries::auth;
+/// async fn example_get_user(db: &DB) {
+///     let username = "existing_user";
+///     let password = "user_password";
+///     match auth::get_user(db, username, password).await {
+///         Ok(user) => println!("User retrieved: {:?}", user),
+///         Err(e) => eprintln!("Error retrieving user: {}", e),
+///     }
+/// }
+///```
 pub async fn verify_user_credentials(
     db: &DB,
     username_or_email: &str,

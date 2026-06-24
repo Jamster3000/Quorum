@@ -1,7 +1,10 @@
+//! This is the main entry point for the Quorum Public server.
+//!
+//! To build/run the server use `cargo run -p quorum-public`
+
 mod db;
 mod models;
 mod routes;
-mod startup;
 mod tests;
 mod utility;
 
@@ -15,6 +18,7 @@ use routes::route::create_router;
 use std::net::SocketAddr;
 use std::time::Duration;
 use std::time::Instant;
+use quorum_core::startup;
 
 #[tokio::main]
 async fn main() {

@@ -1,3 +1,5 @@
+//! Main cli file used for getting help with server commands
+
 use colored::Colorize;
 
 struct CommandEntry {
