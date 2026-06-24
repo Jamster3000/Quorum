@@ -49,78 +49,109 @@ jobs:
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
       - name: Create root index page
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
+          mkdir -p server/target/doc
           cat > server/target/doc/index.html << 'EOF'
           <!DOCTYPE html>
-          <html lang="en" data-theme="light">
+          <html lang="en">
           <head>
             <meta charset="utf-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <meta name="viewport" content="width=device-width, initial-scale=1">
             <title>Quorum Documentation</title>
-            <meta name="rustdoc-vars" data-root-path="./" data-static-root-path="./static.files/" data-rustdoc-version="1.96.0">
-            <link rel="stylesheet" href="static.files/normalize-9960930a.css">
-            <link rel="stylesheet" href="static.files/rustdoc-17e0aaed.css">
-            <link rel="stylesheet" id="theme-style" href="static.files/light.css">
-            <link rel="stylesheet" href="static.files/highlight.css">
-            <script src="static.files/storage-41dd4d93.js"></script>
-            <script src="crates.js"></script>
-            <script>
-              // Theme toggle logic (matches rustdoc)
-              if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-                document.documentElement.setAttribute('data-theme', 'dark');
-                document.getElementById('theme-style').setAttribute('href', 'static.files/dark.css');
+            <style>
+              :root {
+                --bg: #1e1f22;
+                --bg-elevated: #26282c;
+                --border: #34363b;
+                --text: #e7e8ea;
+                --text-dim: #9a9da3;
+                --teal: #178070;
+                --violet: #8b7cf8;
               }
-              function toggleTheme() {
-                const currentTheme = document.documentElement.getAttribute('data-theme');
-                const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-                document.documentElement.setAttribute('data-theme', newTheme);
-                document.getElementById('theme-style').setAttribute('href', `static.files/${newTheme}.css`);
-                localStorage.setItem('theme', newTheme);
+              * { box-sizing: border-box; }
+              body {
+                margin: 0;
+                min-height: 100vh;
+                background: var(--bg);
+                color: var(--text);
+                font-family: Outfit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                padding: 4rem 1.5rem;
               }
-              if (localStorage.getItem('theme')) {
-                const savedTheme = localStorage.getItem('theme');
-                document.documentElement.setAttribute('data-theme', savedTheme);
-                document.getElementById('theme-style').setAttribute('href', `static.files/${savedTheme}.css`);
+              header { text-align: center; max-width: 640px; margin-bottom: 3rem; }
+              h1 {
+                font-size: 2.25rem;
+                margin: 0 0 0.75rem;
+                background: linear-gradient(90deg, var(--teal), var(--violet));
+                -webkit-background-clip: text;
+                background-clip: text;
+                color: transparent;
               }
-            </script>
+              header p { color: var(--text-dim); line-height: 1.6; margin: 0; }
+              .grid {
+                display: grid;
+                gap: 1.25rem;
+                grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+                max-width: 960px;
+                width: 100%;
+              }
+              .card {
+                background: var(--bg-elevated);
+                border: 1px solid var(--border);
+                border-radius: 12px;
+                padding: 1.75rem;
+                text-decoration: none;
+                color: var(--text);
+                transition: border-color 0.15s ease, transform 0.15s ease;
+                display: flex;
+                flex-direction: column;
+                gap: 0.5rem;
+              }
+              .card:hover {
+                border-color: var(--teal);
+                transform: translateY(-2px);
+              }
+              .card .crate-name {
+                font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+                font-size: 1.05rem;
+                font-weight: 600;
+                color: var(--teal);
+              }
+              .card p { color: var(--text-dim); font-size: 0.92rem; line-height: 1.55; margin: 0; flex: 1; }
+              .card .view-link { font-size: 0.85rem; color: var(--violet); font-weight: 600; }
+              footer { margin-top: 3rem; color: var(--text-dim); font-size: 0.8rem; text-align: center; }
+              footer a { color: var(--violet); text-decoration: none; }
+              footer a:hover { text-decoration: underline; }
+            </style>
           </head>
           <body>
-            <rustdoc-topbar>
-              <h2><a href="#">Quorum Documentation</a></h2>
-              <div class="settings-menu" slot="settings-menu" tabindex="-1">
-                <a href="settings.html"><span class="label">Settings</span></a>
-              </div>
-              <div class="help-menu" slot="help-menu" tabindex="-1">
-                <a href="help.html"><span class="label">Help</span></a>
-              </div>
-            </rustdoc-topbar>
-            <nav class="sidebar">
-              <div class="sidebar-crate">
-                <h2><a href="quorum_core/index.html">quorum-core</a></h2>
-              </div>
-              <div class="sidebar-crate">
-                <h2><a href="quorum_public/index.html">quorum-public</a></h2>
-              </div>
-              <div class="sidebar-crate">
-                <h2><a href="quorum_private/index.html">quorum-private</a></h2>
-              </div>
-            </nav>
-            <div class="sidebar-resizer"></div>
-            <main>
-              <div class="width-limiter">
-                <section id="main-content" class="content" tabindex="-1">
-                  <div class="main-heading">
-                    <h1>Quorum Documentation</h1>
-                  </div>
-                  <p>Welcome to the Quorum project documentation. This project is split into three crates:</p>
-                  <ul>
-                    <li><strong><a href="quorum_core/index.html">quorum-core</a></strong>: Shared functionality for both public and private servers.</li>
-                    <li><strong><a href="quorum_public/index.html">quorum-public</a></strong>: Public server implementation, including authentication.</li>
-                    <li><strong><a href="quorum_private/index.html">quorum-private</a></strong>: Private self-hosting server implementation.</li>
-                  </ul>
-                </section>
-              </div>
+            <header>
+              <h1>Quorum Documentation</h1>
+              <p>Rustdoc reference for Quorum's workspace — shared core logic plus the public and private server binaries.</p>
+            </header>
+            <main class="grid">
+              <a class="card" href="quorum_core/index.html">
+                <span class="crate-name">quorum-core</span>
+                <p>Shared library: groups, channels, messages, permissions, and JWT verification used by both server binaries.</p>
+                <span class="view-link">View docs &rarr;</span>
+              </a>
+              <a class="card" href="quorum_public/index.html">
+                <span class="crate-name">quorum-public</span>
+                <p>Public server binary. Adds signup/login, account management, JWT signing, and the users table on top of quorum-core.</p>
+                <span class="view-link">View docs &rarr;</span>
+              </a>
+              <a class="card" href="quorum_private/index.html">
+                <span class="crate-name">quorum-private</span>
+                <p>Self-hosted private server binary. Depends only on quorum-core — no signup code or users table exists in this crate.</p>
+                <span class="view-link">View docs &rarr;</span>
+              </a>
             </main>
+            <footer>
+              Generated from <a href="https://github.com/iamster3000/Quorum">github.com/iamster3000/Quorum</a>
+            </footer>
           </body>
           </html>
           EOF
