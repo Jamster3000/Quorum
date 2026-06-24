@@ -1,3 +1,6 @@
+//! Main entry point for the server cli Commands
+//! This is where commands are defined properly, and where command functions are called.
+
 pub mod db;
 pub mod help;
 pub mod server;

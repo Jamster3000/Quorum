@@ -1,3 +1,5 @@
+//! Main file for server related commands
+
 use crate::cli::AdminSession;
 use crate::db::DB;
 use colored::Colorize;

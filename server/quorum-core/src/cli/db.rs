@@ -1,3 +1,5 @@
+//! This file includes direct server commands that interact or are about the surreal database/
+
 use crate::db::DB;
 use colored::Colorize;
 

@@ -1,3 +1,13 @@
+//!  This file inclues query functions for writing different types of logs into the database.
+//!
+//! Currently this file incldues functions to write `server logs` and `audit logs`
+//!
+//! `server logs` are specifically for server only things. This can include start up, shutdown, server specific errors and
+//! other sever specific events. Typically server logs won't include anything user triggered.
+//!
+//! `audit logs` specificly for user triggered events. This is used for basically anything the user does which reaches the server.
+//! This can include API endpoints being called, logins, signups, and other triggered events.
+
 use crate::db::DB;
 use std::error::Error;
 

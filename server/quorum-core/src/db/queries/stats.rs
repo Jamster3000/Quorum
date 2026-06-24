@@ -1,3 +1,8 @@
+//! This file includse query functions for getting stats and information about the database
+//!
+//! This file includes functions to retrieve various statistics and information about the database,
+//! such as the number of records in specific tables, the size of the database, and other relevant metrics. These functions are useful for monitoring and analyzing the performance and usage of the database.
+
 use crate::db::DB;
 use std::error::Error;
 
