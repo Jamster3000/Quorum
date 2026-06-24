@@ -4,14 +4,9 @@ use axum::{
     Router,
     routing::{get, post},
 };
+use http::header::{HeaderName, HeaderValue};
 use quorum_core::db::DB;
 use quorum_core::routes::{echo::echo, health::health};
-use quorum_core::utility::config::Config;
-use std::sync::Arc;
-use std::time::Duration;
-use tower_governor::{GovernorLayer, governor::GovernorConfigBuilder};
-
-use http::header::{HeaderName, HeaderValue};
 use tower::ServiceBuilder;
 use tower_http::cors::{Any, CorsLayer};
 use tower_http::set_header::SetResponseHeaderLayer;

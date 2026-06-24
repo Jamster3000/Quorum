@@ -270,6 +270,8 @@ pub async fn update_user_profile(
 
 /// Promotes a user to admin status in the database
 ///
+/// This function uses `#[allow(dead_code)]` due to rust providing a false positive warning
+/// that this is dead code and not used, despite obvious usage in `cli/server.rs` -> called from `cli/mod.rs`
 /// # Arguments
 /// * `db` - A reference to the database connection
 /// * `username` - The username of the user to promote to admin
@@ -290,6 +292,7 @@ pub async fn update_user_profile(
 ///     }
 /// }
 ///```
+#[allow(dead_code)]
 pub async fn make_admin(db: &DB, username: &str) -> Result<(), Box<dyn Error + Send + Sync>> {
     // Check bootstrap flag first
     let mut response = db

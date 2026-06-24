@@ -14,7 +14,6 @@ use quorum_core::cli;
 use quorum_core::db as core_db;
 use routes::route::create_router;
 use std::net::SocketAddr;
-use std::time::Duration;
 use std::time::Instant;
 
 #[tokio::main]
