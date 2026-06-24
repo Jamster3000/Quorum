@@ -43,19 +43,9 @@ jobs:
         working-directory: server
         run: cargo clippy --all-targets --all-features -- -W warnings
 
-      - name: Generate docs for core
+      - name: Generate docs for all crates
         working-directory: server
-        run: cargo doc --no-deps --document-private-items -p quorum-core
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-
-      - name: Generate docs for public
-        working-directory: server
-        run: cargo doc --no-deps --document-private-items -p quorum-public
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-
-      - name: Generate docs for private
-        working-directory: server
-        run: cargo doc --no-deps --document-private-items -p quorum-private
+        run: cargo doc --no-deps --document-private-items --workspace
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
       - name: Create root index page
@@ -66,14 +56,13 @@ jobs:
           <html>
           <head>
             <title>Quorum Documentation</title>
-            <meta http-equiv="refresh" content="0; url=quorum-core/index.html">
           </head>
           <body>
             <h1>Quorum Documentation</h1>
             <ul>
-              <li><a href="quorum-core/index.html">Quorum Core</a></li>
-              <li><a href="quorum-public/index.html">Quorum Public</a></li>
-              <li><a href="quorum-private/index.html">Quorum Private</a></li>
+              <li><a href="quorum_core/index.html">Quorum Core</a></li>
+              <li><a href="quorum_public/index.html">Quorum Public</a></li>
+              <li><a href="quorum_private/index.html">Quorum Private</a></li>
             </ul>
           </body>
           </html>
