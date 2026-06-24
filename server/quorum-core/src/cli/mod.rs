@@ -181,7 +181,7 @@ async fn dispatch(
         }
         [ns, command] if ns == "help" => {
             help::print_command(command);
-        },
+        }
 
         // -- server --
         [ns, command] if ns == "server" => match command.as_str() {

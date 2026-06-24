@@ -4,9 +4,9 @@
 //! and to validate tokens against the configured JWT secret. All configuration values are loaded
 //! from environment variables and cached in the `Config` singleton.
 
-use quorum_core::utility::config::Config;
 use chrono::{Duration, Utc};
 use jsonwebtoken::{DecodingKey, EncodingKey, Header, Validation, decode, encode};
+use quorum_core::utility::config::Config;
 use serde::{Deserialize, Serialize};
 use std::error::Error;
 

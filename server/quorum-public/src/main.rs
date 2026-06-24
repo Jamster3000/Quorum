@@ -1,20 +1,20 @@
-mod models;
 mod db;
+mod models;
 mod routes;
 mod startup;
 mod tests;
 mod utility;
 
+use crate::db::schema;
+use crate::utility::docker;
 use colored::Colorize;
+use quorum_core::cli;
+use quorum_core::db as core_db;
 use reqwest::Client;
 use routes::route::create_router;
 use std::net::SocketAddr;
 use std::time::Duration;
 use std::time::Instant;
-use quorum_core::cli;
-use quorum_core::db as core_db;
-use crate::utility::docker;
-use crate::db::schema;
 
 #[tokio::main]
 async fn main() {

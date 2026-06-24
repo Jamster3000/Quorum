@@ -2,11 +2,11 @@
 //!
 //! This file contains functions for Creating an account (signup), login, token management and deleteing a user account.
 
-use quorum_core::db::DB;
 use crate::db::queries::tokens;
 use crate::models::user::UpdateUserProfileRequest;
 use crate::models::user::User;
 use axum::http::StatusCode;
+use quorum_core::db::DB;
 use std::error::Error;
 
 /// Creates a new user account in the database

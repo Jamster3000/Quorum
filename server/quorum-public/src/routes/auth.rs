@@ -3,16 +3,16 @@
 
 use axum::{Json, extract::State, http::StatusCode};
 
-use quorum_core::db::DB;
-use quorum_core::db::queries::audit_logs::log_audit_event;
 use crate::db::queries::auth;
-use quorum_core::models::server::AuditEvent;
 use crate::models::user::User;
 use crate::models::user::{
     AuthTokenResponse, DeleteAccountRequest, GetUserDataRequest, LoginRequest, SignupRequest,
     TokenResponse, UpdateUserProfileRequest, UserDataResponse,
 };
 use crate::utility::auth_common::generate_backup_codes;
+use quorum_core::db::DB;
+use quorum_core::db::queries::audit_logs::log_audit_event;
+use quorum_core::models::server::AuditEvent;
 use quorum_core::utility::config::Config;
 
 use chrono;

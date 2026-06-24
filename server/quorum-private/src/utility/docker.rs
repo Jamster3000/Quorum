@@ -24,8 +24,7 @@ use std::process::Command;
 /// });
 /// ```
 pub async fn ensure_containers_running() -> Result<(), Box<dyn Error>> {
-    let docker_dir = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("docker");
+    let docker_dir = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("docker");
 
     if !docker_dir.join("docker-compose.yml").exists() {
         return Err("docker-compose.yml not found in docker directory".into());
