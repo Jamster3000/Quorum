@@ -1,0 +1,25 @@
+[package]
+name = "quorum-private"
+version = "0.1.0"
+edition.workspace = true
+
+[dependencies]
+quorum-core = { path = "../quorum-core" }
+axum = { version = "0.8.8", features = ["macros"] }
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.149"
+tokio = { version = "1.50.0", features = ["full", "signal"] }
+tower = "0.4"
+tower-http = { version = "0.6.8", features = ["cors", "trace", "set-header"] }
+tracing = "0.1.44"
+tracing-subscriber = "0.3.23"
+dotenvy = "0.15"
+surrealdb = { version = "3", features = ["protocol-ws"] }
+colored = "2.1"
+surrealdb-types = "3.0.5"
+jsonwebtoken = "10.3.0"
+chrono = "0.4"
+tower_governor = "0.8.0"
+rpassword = "7"
+arc-swap = "1"
+http = "1.1"
