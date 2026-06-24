@@ -48,22 +48,126 @@ jobs:
         run: cargo doc --no-deps --document-private-items --workspace
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
-      - name: Create root index page
+      - name: Copy Rust doc CSS
         run: |
           mkdir -p server/target/doc
+          cp server/target/doc/quorum_core/rustdoc.css server/target/doc/
+          cp server/target/doc/quorum_core/light.css server/target/doc/
+          cp server/target/doc/quorum_core/dark.css server/target/doc/
+          cp server/target/doc/quorum_core/highlight.css server/target/doc/
+          cp -r server/target/doc/quorum_core/assets server/target/doc/
+
+      - name: Create root index page
+        run: |
           cat > server/target/doc/index.html << 'EOF'
           <!DOCTYPE html>
-          <html>
+          <html lang="en" data-theme="light">
           <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <title>Quorum Documentation</title>
+            <link rel="stylesheet" href="rustdoc.css">
+            <link rel="stylesheet" id="theme-style" href="light.css">
+            <link rel="stylesheet" href="highlight.css">
+            <script>
+              // Match the theme toggle behavior from rustdoc
+              if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                document.getElementById('theme-style').setAttribute('href', 'dark.css');
+              }
+              function toggleTheme() {
+                const currentTheme = document.documentElement.getAttribute('data-theme');
+                const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+                document.documentElement.setAttribute('data-theme', newTheme);
+                document.getElementById('theme-style').setAttribute('href', newTheme + '.css');
+                localStorage.setItem('theme', newTheme);
+              }
+              if (localStorage.getItem('theme')) {
+                const savedTheme = localStorage.getItem('theme');
+                document.documentElement.setAttribute('data-theme', savedTheme);
+                document.getElementById('theme-style').setAttribute('href', savedTheme + '.css');
+              }
+            </script>
+            <style>
+              .sidebar {
+                position: fixed;
+                left: 0;
+                top: 0;
+                width: 250px;
+                height: 100%;
+                background: var(--sidebar-bg);
+                border-right: 1px solid var(--border-color);
+                padding: 20px;
+                overflow-y: auto;
+              }
+              .content {
+                margin-left: 270px;
+                padding: 20px;
+              }
+              header {
+                border-bottom: 1px solid var(--border-color);
+                padding-bottom: 10px;
+                margin-bottom: 20px;
+              }
+              h1 {
+                margin: 0;
+                font-size: 1.8em;
+              }
+              .theme-toggle {
+                float: right;
+                background: var(--code-bg);
+                border: 1px solid var(--border-color);
+                color: var(--text-color);
+                padding: 2px 6px;
+                cursor: pointer;
+              }
+              .crates-list {
+                list-style: none;
+                padding: 0;
+              }
+              .crates-list li {
+                margin-bottom: 10px;
+              }
+              .crates-list a {
+                color: var(--link-color);
+                text-decoration: none;
+              }
+              .crates-list a:hover {
+                text-decoration: underline;
+              }
+              footer {
+                margin-top: 40px;
+                border-top: 1px solid var(--border-color);
+                padding-top: 10px;
+                font-size: 0.9em;
+                color: var(--text-color);
+              }
+            </style>
           </head>
           <body>
-            <h1>Quorum Documentation</h1>
-            <ul>
-              <li><a href="quorum_core/index.html">Quorum Core</a></li>
-              <li><a href="quorum_public/index.html">Quorum Public</a></li>
-              <li><a href="quorum_private/index.html">Quorum Private</a></li>
-            </ul>
+            <div class="sidebar">
+              <h2>Quorum</h2>
+              <ul class="crates-list">
+                <li><a href="quorum_core/index.html">quorum-core</a></li>
+                <li><a href="quorum_public/index.html">quorum-public</a></li>
+                <li><a href="quorum_private/index.html">quorum-private</a></li>
+              </ul>
+            </div>
+            <div class="content">
+              <header>
+                <h1>Quorum Documentation</h1>
+                <span class="theme-toggle" onclick="toggleTheme()">Toggle Theme</span>
+              </header>
+              <p>Welcome to the Quorum project documentation. This project is split into three crates:</p>
+              <ul class="crates-list">
+                <li><strong><a href="quorum_core/index.html">quorum-core</a></strong>: Shared functionality for both public and private servers.</li>
+                <li><strong><a href="quorum_public/index.html">quorum-public</a></strong>: Public server implementation, including authentication.</li>
+                <li><strong><a href="quorum_private/index.html">quorum-private</a></strong>: Private self-hosting server implementation.</li>
+              </ul>
+              <footer>
+                <p>Generated by <a href="https://doc.rust-lang.org/rustdoc/">rustdoc</a></p>
+              </footer>
+            </div>
           </body>
           </html>
           EOF
