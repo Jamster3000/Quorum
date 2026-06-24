@@ -7,11 +7,11 @@ mod models;
 mod routes;
 mod tests;
 mod utility;
+mod cli;
 
 use crate::db::schema;
 use crate::utility::docker;
 use colored::Colorize;
-use quorum_core::cli;
 use quorum_core::db as core_db;
 use quorum_core::startup;
 use reqwest::Client;

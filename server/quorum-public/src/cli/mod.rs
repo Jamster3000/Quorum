@@ -1,13 +1,12 @@
 //! Main entry point for the server cli Commands
 //! This is where commands are defined properly, and where command functions are called.
 
-pub mod db;
 pub mod help;
 pub mod server;
 pub mod test;
 pub mod user;
 
-use crate::db::DB;
+use quorum_core::db::DB;
 use colored::Colorize;
 use std::io::{self, Write};
 use std::sync::{Arc, Mutex};
@@ -175,9 +174,9 @@ pub async fn spawn_cli(db: DB, server_start: Instant, shutdown_tx: watch::Sender
 async fn dispatch(
     cmd: &Command,
     db: &DB,
-    server_start: Instant,
+    _server_start: Instant,
     session: &Arc<Mutex<AdminSession>>,
-    shutdown_tx: &watch::Sender<bool>,
+    _shutdown_tx: &watch::Sender<bool>,
 ) {
     match cmd.parts.as_slice() {
         // -- help --
@@ -186,7 +185,7 @@ async fn dispatch(
         }
         [ns, command] if ns == "help" => {
             help::print_command(command);
-        },
+        }
 
         // -- Server --
         [ns, command] if ns == "server" => match command.as_str() {
@@ -194,11 +193,11 @@ async fn dispatch(
                 server::signup(db).await;
             }
             "login" => server::login(db, session).await,
-            _ => unknown(&cmd.raw),
             "make-admin" => {
                 let username = cmd.raw.split_once(' ').map(|x| x.1).unwrap_or("");
                 server::make_admin(db, username, session).await;
             }
+            _ => unknown(&cmd.raw),
         },
 
         // -- User --

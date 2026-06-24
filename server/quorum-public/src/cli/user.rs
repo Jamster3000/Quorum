@@ -1,4 +1,4 @@
-use crate::db::DB;
+use quorum_core::db::DB;
 use colored::Colorize;
 
 /// Deletes a user by ID from the database.

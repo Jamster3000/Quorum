@@ -1,9 +1,7 @@
 use crate::cli::AdminSession;
-use crate::db::DB;
+use quorum_core::db::DB;
 use colored::Colorize;
 use std::sync::{Arc, Mutex};
-use std::time::Instant;
-use tokio::sync::watch;
 
 /// Handles user signup
 ///
@@ -116,21 +114,6 @@ pub async fn make_admin(db: &DB, username: &str, session: &Arc<Mutex<AdminSessio
             }
         }
         Err(e) => println!("{}", format!("  Failed: {}", e).red()),
-    }
-}
-
-/// Handles reloading the server configuration
-///
-/// This reloads the server configuration from the configuration file and applies any changes.
-///
-/// # Example
-/// ```rust
-/// reload(); // Reloads the server configuration
-/// ```
-pub fn reload() {
-    match crate::utility::config::Config::reload() {
-        Ok(_) => println!("{}", "  Config reloaded successfully.".green()),
-        Err(e) => println!("{}", format!("  Failed to reload config: {}", e).red()),
     }
 }
 
