@@ -48,14 +48,13 @@ jobs:
         run: cargo doc --no-deps --document-private-items --workspace
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
-      - name: Copy Rust doc CSS
+      - name: Prepare static files for root index
         run: |
           mkdir -p server/target/doc
-          cp server/target/doc/quorum_core/rustdoc.css server/target/doc/
-          cp server/target/doc/quorum_core/light.css server/target/doc/
-          cp server/target/doc/quorum_core/dark.css server/target/doc/
-          cp server/target/doc/quorum_core/highlight.css server/target/doc/
-          cp -r server/target/doc/quorum_core/assets server/target/doc/
+          # Copy the static.files directory (contains CSS, JS, fonts, etc.)
+          cp -r server/target/doc/static.files server/target/doc/
+          # Copy the crates.js file (used for crate navigation)
+          cp server/target/doc/crates.js server/target/doc/
 
       - name: Create root index page
         run: |
@@ -66,108 +65,70 @@ jobs:
             <meta charset="utf-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <title>Quorum Documentation</title>
-            <link rel="stylesheet" href="rustdoc.css">
-            <link rel="stylesheet" id="theme-style" href="light.css">
-            <link rel="stylesheet" href="highlight.css">
+            <meta name="rustdoc-vars" data-root-path="./" data-static-root-path="./static.files/" data-rustdoc-version="1.96.0">
+            <link rel="stylesheet" href="static.files/normalize-9960930a.css">
+            <link rel="stylesheet" href="static.files/rustdoc-17e0aaed.css">
+            <link rel="stylesheet" id="theme-style" href="static.files/light.css">
+            <link rel="stylesheet" href="static.files/highlight.css">
+            <script src="static.files/storage-41dd4d93.js"></script>
+            <script src="crates.js"></script>
             <script>
-              // Match the theme toggle behavior from rustdoc
+              // Theme toggle logic (matches rustdoc)
               if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
                 document.documentElement.setAttribute('data-theme', 'dark');
-                document.getElementById('theme-style').setAttribute('href', 'dark.css');
+                document.getElementById('theme-style').setAttribute('href', 'static.files/dark.css');
               }
               function toggleTheme() {
                 const currentTheme = document.documentElement.getAttribute('data-theme');
                 const newTheme = currentTheme === 'light' ? 'dark' : 'light';
                 document.documentElement.setAttribute('data-theme', newTheme);
-                document.getElementById('theme-style').setAttribute('href', newTheme + '.css');
+                document.getElementById('theme-style').setAttribute('href', `static.files/${newTheme}.css`);
                 localStorage.setItem('theme', newTheme);
               }
               if (localStorage.getItem('theme')) {
                 const savedTheme = localStorage.getItem('theme');
                 document.documentElement.setAttribute('data-theme', savedTheme);
-                document.getElementById('theme-style').setAttribute('href', savedTheme + '.css');
+                document.getElementById('theme-style').setAttribute('href', `static.files/${savedTheme}.css`);
               }
             </script>
-            <style>
-              .sidebar {
-                position: fixed;
-                left: 0;
-                top: 0;
-                width: 250px;
-                height: 100%;
-                background: var(--sidebar-bg);
-                border-right: 1px solid var(--border-color);
-                padding: 20px;
-                overflow-y: auto;
-              }
-              .content {
-                margin-left: 270px;
-                padding: 20px;
-              }
-              header {
-                border-bottom: 1px solid var(--border-color);
-                padding-bottom: 10px;
-                margin-bottom: 20px;
-              }
-              h1 {
-                margin: 0;
-                font-size: 1.8em;
-              }
-              .theme-toggle {
-                float: right;
-                background: var(--code-bg);
-                border: 1px solid var(--border-color);
-                color: var(--text-color);
-                padding: 2px 6px;
-                cursor: pointer;
-              }
-              .crates-list {
-                list-style: none;
-                padding: 0;
-              }
-              .crates-list li {
-                margin-bottom: 10px;
-              }
-              .crates-list a {
-                color: var(--link-color);
-                text-decoration: none;
-              }
-              .crates-list a:hover {
-                text-decoration: underline;
-              }
-              footer {
-                margin-top: 40px;
-                border-top: 1px solid var(--border-color);
-                padding-top: 10px;
-                font-size: 0.9em;
-                color: var(--text-color);
-              }
-            </style>
           </head>
           <body>
-            <div class="sidebar">
-              <h2>Quorum</h2>
-              <ul class="crates-list">
-                <li><a href="quorum_core/index.html">quorum-core</a></li>
-                <li><a href="quorum_public/index.html">quorum-public</a></li>
-                <li><a href="quorum_private/index.html">quorum-private</a></li>
-              </ul>
-            </div>
-            <div class="content">
-              <header>
-                <h1>Quorum Documentation</h1>
-                <span class="theme-toggle" onclick="toggleTheme()">Toggle Theme</span>
-              </header>
-              <p>Welcome to the Quorum project documentation. This project is split into three crates:</p>
-              <ul class="crates-list">
-                <li><strong><a href="quorum_core/index.html">quorum-core</a></strong>: Shared functionality for both public and private servers.</li>
-                <li><strong><a href="quorum_public/index.html">quorum-public</a></strong>: Public server implementation, including authentication.</li>
-                <li><strong><a href="quorum_private/index.html">quorum-private</a></strong>: Private self-hosting server implementation.</li>
-              </ul>
-              <footer>
-                <p>Generated by <a href="https://doc.rust-lang.org/rustdoc/">rustdoc</a></p>
-              </footer>
-            </div>
+            <rustdoc-topbar>
+              <h2><a href="#">Quorum Documentation</a></h2>
+              <div class="settings-menu" slot="settings-menu" tabindex="-1">
+                <a href="settings.html"><span class="label">Settings</span></a>
+              </div>
+              <div class="help-menu" slot="help-menu" tabindex="-1">
+                <a href="help.html"><span class="label">Help</span></a>
+              </div>
+            </rustdoc-topbar>
+            <nav class="sidebar">
+              <div class="sidebar-crate">
+                <h2><a href="quorum_core/index.html">quorum-core</a></h2>
+              </div>
+              <div class="sidebar-crate">
+                <h2><a href="quorum_public/index.html">quorum-public</a></h2>
+              </div>
+              <div class="sidebar-crate">
+                <h2><a href="quorum_private/index.html">quorum-private</a></h2>
+              </div>
+            </nav>
+            <div class="sidebar-resizer"></div>
+            <main>
+              <div class="width-limiter">
+                <section id="main-content" class="content" tabindex="-1">
+                  <div class="main-heading">
+                    <h1>Quorum Documentation</h1>
+                  </div>
+                  <p>Welcome to the Quorum project documentation. This project is split into three crates:</p>
+                  <ul>
+                    <li><strong><a href="quorum_core/index.html">quorum-core</a></strong>: Shared functionality for both public and private servers.</li>
+                    <li><strong><a href="quorum_public/index.html">quorum-public</a></strong>: Public server implementation, including authentication.</li>
+                    <li><strong><a href="quorum_private/index.html">quorum-private</a></strong>: Private self-hosting server implementation.</li>
+                  </ul>
+                </section>
+              </div>
+            </main>
           </body>
           </html>
           EOF
