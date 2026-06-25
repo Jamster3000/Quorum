@@ -1,3 +1,10 @@
+//! This file includes everything for server configuration setup and hashing.
+//!
+//! It includes functions for encrypting and decrypting the server configuration
+//! using AES-256-GCM, as well as functions for saving and loading the encrypted configuration
+//! from a file. It also provides a setup process that prompts the user
+//! for necessary configurations and generates secure defaults.
+
 use crate::utility::std::{press_enter_to_continue, typewriter_println};
 use aes_gcm::{
     Aes256Gcm, Nonce,
@@ -42,6 +49,14 @@ pub struct SerializableConfig {
     pub testing_burst_size: u32,
 }
 
+/// Derives a key from the given passphrase and salt using Argon2id.
+///
+/// # Arguments
+/// * `passphrase` - The passphrase to derive the key from.
+/// * `salt` - A 32-byte salt used in the key derivation process.
+///
+/// # Returns
+/// A `Zeroizing<[u8; 32]>` containing the derived key. The
 fn derive_key(passphrase: &str, salt: &[u8; 32]) -> Zeroizing<[u8; 32]> {
     use argon2::{Algorithm, Params, Version};
     let argon2 = argon2::Argon2::new(
@@ -56,6 +71,14 @@ fn derive_key(passphrase: &str, salt: &[u8; 32]) -> Zeroizing<[u8; 32]> {
     key
 }
 
+/// Encrypts the given data using AES-256-GCM with a key derived from the provided passphrase.
+///
+/// # Arguments
+/// * `data` - The plaintext data to encrypt.
+/// * `passphrase` - The passphrase used to derive the encryption key.
+///
+/// # Returns
+/// A `Result` containing the encrypted data as a `Vec<u8>` on success, or an error message as a `String` on failure.
 fn encrypt(data: &[u8], passphrase: &str) -> Result<Vec<u8>, String> {
     let salt = generate_random_bytes();
     let key = derive_key(passphrase, &salt);
@@ -73,6 +96,14 @@ fn encrypt(data: &[u8], passphrase: &str) -> Result<Vec<u8>, String> {
         .map_err(|e| format!("Encryption failed: {}", e))
 }
 
+/// Decrypts the given encrypted data using AES-256-GCM with a key derived from the provided passphrase.
+///
+/// # Arguments
+/// * `encrypted_data` - The encrypted data to decrypt, which should include the salt and nonce.
+/// * `passphrase` - The passphrase used to derive the decryption key.
+///
+/// # Returns
+/// A `Result` containing the decrypted data as a `Vec<u8>` on success, or an error message as a `String` on failure.
 fn decrypt(encrypted_data: &[u8], passphrase: &str) -> Result<Vec<u8>, String> {
     if encrypted_data.len() < 44 {
         return Err("Encrypted data too short".to_string());
@@ -88,6 +119,20 @@ fn decrypt(encrypted_data: &[u8], passphrase: &str) -> Result<Vec<u8>, String> {
         .map_err(|e| format!("Decryption failed: {}", e))
 }
 
+/// Saves the given configuration to an encrypted file using the provided passphrase.
+///
+/// # Arguments
+/// * `config` - The configuration to save.
+/// * `passphrase` - The passphrase used to encrypt the configuration.
+///
+/// # Returns
+/// A `Result` indicating success or failure, with an error message as a `String` on failure.
+///
+/// # Example
+/// ```rust
+/// let config = SerializableConfig { ... };
+/// save_encrypted_config(&config, "my_secure_passphrase").expect("Failed to save encrypted config");
+/// ```
 pub fn save_encrypted_config(config: &SerializableConfig, passphrase: &str) -> Result<(), String> {
     let json = serde_json::to_vec(config).map_err(|e| format!("Serialization failed: {}", e))?;
     let encrypted = encrypt(&json, passphrase)?;
@@ -98,6 +143,18 @@ pub fn save_encrypted_config(config: &SerializableConfig, passphrase: &str) -> R
     Ok(())
 }
 
+/// Loads and decrypts the configuration from the encrypted file using the provided passphrase.
+///
+/// # Arguments
+/// * `passphrase` - The passphrase used to decrypt the configuration.
+///
+/// # Returns
+/// A `Result` containing the decrypted configuration as a `SerializableConfig` on success, or an error message as a `String` on failure.
+///
+/// # Example
+/// ```rust
+/// let config = load_encrypted_config("my_secure_passphrase").expect("Failed to load encrypted config");
+/// ```
 pub fn load_encrypted_config(passphrase: &str) -> Result<SerializableConfig, String> {
     let encrypted =
         fs::read(SECRETS_PATH).map_err(|e| format!("Failed to read secrets.enc: {}", e))?;
@@ -105,14 +162,47 @@ pub fn load_encrypted_config(passphrase: &str) -> Result<SerializableConfig, Str
     serde_json::from_slice(&decrypted).map_err(|e| format!("Failed to deserialize config: {}", e))
 }
 
+/// Checks if the encrypted secrets file exists.
+///
+/// # Returns
+/// `true` if the secrets file exists, `false` otherwise.
+///
+/// # Example
+/// ```rust
+/// if secrets_exist() {
+///     println!("Secrets file exists.");
+/// } else {
+///     println!("Secrets file does not exist.");
+/// }
+/// ```
 pub fn secrets_exist() -> bool {
     Path::new(SECRETS_PATH).exists()
 }
 
+/// Helper function that maps a `dialoguer::Error` to a `String` for easier error handling.
+///
+/// # Arguments
+/// * `e` - The `dialoguer::Error` to map.
+///
+/// # Returns
+/// A `String` containing the error message.
 fn map_dialoguer_error(e: dialoguer::Error) -> String {
     format!("Error: {:?}", e)
 }
 
+/// Runs setup process
+///
+/// This runs the setup process for the Quorum server,
+/// prompting the user for necessary configurations and returning
+/// a `SerializableConfig` object.
+///
+/// # Returns
+/// A `Result` containing the `SerializableConfig` on success, or an error message as a `String` on failure.
+///
+/// # Example
+/// ```rust
+/// let config = run_setup().expect("Failed to run setup");
+/// ```
 pub fn run_setup() -> Result<SerializableConfig, String> {
     typewriter_println(&format!(
         "{}",
@@ -230,6 +320,15 @@ pub fn run_setup() -> Result<SerializableConfig, String> {
     })
 }
 
+/// Prompts the user for a passphrase to encrypt/decrypt the server configuration.
+///
+/// # Returns
+/// A `Result` containing the entered passphrase as a `String` on success, or an error message as a `String` on failure.
+///
+/// # Example
+/// ```rust
+/// let passphrase = prompt_passphrase().expect("Failed to get passphrase");
+/// ```
 pub fn prompt_passphrase() -> Result<String, String> {
     Password::new()
         .with_prompt("Enter server passphrase")

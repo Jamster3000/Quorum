@@ -114,6 +114,16 @@ impl Config {
         })
     }
 
+    /// Loads configuration from environment variables and initializes the global `CONFIG` singleton.
+    ///
+    /// # Returns
+    /// * `Ok(())` if the configuration was loaded successfully.
+    /// * `Err` if there was an error loading the configuration, such as missing or invalid environment variables.
+    ///
+    /// Example
+    /// ```rust
+    /// Config::load().expect("Failed to load configuration");
+    /// ```
     pub fn load() -> Result<(), Box<dyn std::error::Error>> {
         if secrets_exist() {
             println!();
