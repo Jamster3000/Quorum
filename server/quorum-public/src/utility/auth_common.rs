@@ -3,8 +3,8 @@
 
 use crate::models::user::EmailBackupCode;
 use argon2::{
+    Algorithm, Argon2, Params, Version,
     password_hash::{PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
-    Argon2, Version, Algorithm, Params
 };
 use rand::RngExt;
 use rand_core::OsRng;
@@ -63,16 +63,13 @@ pub fn generate_backup_codes() -> Vec<EmailBackupCode> {
 pub fn get_argon2() -> Argon2<'static> {
     let params = Params::new(
         262_144, // 256 MiB in KiB
-        3, // time cost
-        2, // parallelism
-        Some(32)
-    ).expect("valid Argon2 params");
-
-    Argon2::new(
-        Algorithm::Argon2id,
-        Version::V0x13,
-        params,
+        3,       // time cost
+        2,       // parallelism
+        Some(32),
     )
+    .expect("valid Argon2 params");
+
+    Argon2::new(Algorithm::Argon2id, Version::V0x13, params)
 }
 
 pub fn hash(plaintext: &str) -> Result<String, String> {
@@ -86,8 +83,8 @@ pub fn hash(plaintext: &str) -> Result<String, String> {
 
 pub fn verify(plaintext: &str, stored_hash: &str) -> Result<bool, String> {
     let argon2 = get_argon2();
-    let parsed_hash = PasswordHash::new(stored_hash)
-        .map_err(|e| format!("Failed to parse hash: {}", e))?;
+    let parsed_hash =
+        PasswordHash::new(stored_hash).map_err(|e| format!("Failed to parse hash: {}", e))?;
     argon2
         .verify_password(plaintext.as_bytes(), &parsed_hash)
         .map(|_| true)

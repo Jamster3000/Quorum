@@ -6,19 +6,19 @@ pub mod server;
 pub mod test;
 pub mod user;
 
-use quorum_core::db::DB;
 use colored::Colorize;
+use quorum_core::cli::AdminSession;
+use quorum_core::cli::db;
+use quorum_core::cli::server::audit;
+use quorum_core::cli::server::logout;
+use quorum_core::cli::server::logs;
+use quorum_core::cli::server::shutdown;
+use quorum_core::cli::server::status;
+use quorum_core::db::DB;
 use std::io::{self, Write};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 use tokio::sync::watch;
-use quorum_core::cli::server::logout;
-use quorum_core::cli::server::status;
-use quorum_core::cli::server::shutdown;
-use quorum_core::cli::server::logs;
-use quorum_core::cli::server::audit;
-use quorum_core::cli::db;
-use quorum_core::cli::AdminSession;
 
 const SESSION_TIMEOUT_MINS: u64 = 20;
 
@@ -203,7 +203,7 @@ async fn dispatch(
             "make-admin" => {
                 let username = cmd.raw.split_once(' ').map(|x| x.1).unwrap_or("");
                 server::make_admin(db, username, session).await;
-            },
+            }
             "status" => status(server_start).await,
             "logout" => logout(session),
             "shutdown" => {

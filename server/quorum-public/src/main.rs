@@ -2,12 +2,12 @@
 //!
 //! To build/run the server use `cargo run -p quorum-public`
 
+mod cli;
 mod db;
 mod models;
 mod routes;
 mod tests;
 mod utility;
-mod cli;
 
 use crate::db::schema;
 use crate::utility::docker;

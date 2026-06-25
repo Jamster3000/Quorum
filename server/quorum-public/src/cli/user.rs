@@ -1,5 +1,5 @@
-use quorum_core::db::DB;
 use colored::Colorize;
+use quorum_core::db::DB;
 
 /// Deletes a user by ID from the database.
 ///

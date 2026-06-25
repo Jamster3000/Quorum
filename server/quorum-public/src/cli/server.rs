@@ -1,6 +1,6 @@
 use crate::cli::AdminSession;
-use quorum_core::db::DB;
 use colored::Colorize;
+use quorum_core::db::DB;
 use std::sync::{Arc, Mutex};
 
 /// Handles user signup

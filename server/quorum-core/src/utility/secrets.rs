@@ -1,10 +1,12 @@
+use crate::utility::std::{press_enter_to_continue, typewriter_println};
 use aes_gcm::{
-    aead::{Aead, KeyInit, AeadCore},
     Aes256Gcm, Nonce,
+    aead::{Aead, AeadCore, KeyInit},
 };
 use colored::Colorize;
 use dialoguer::{Input, Password};
 use rand_core::OsRng;
+use rand_core::RngCore;
 use serde::{Deserialize, Serialize};
 use std::{
     fs::{self, File},
@@ -12,8 +14,6 @@ use std::{
     path::Path,
 };
 use zeroize::Zeroizing;
-use rand_core::RngCore;
-use crate::utility::std::{press_enter_to_continue, typewriter_println};
 
 fn generate_random_bytes() -> [u8; 32] {
     let mut bytes = [0u8; 32];
@@ -91,13 +91,16 @@ fn decrypt(encrypted_data: &[u8], passphrase: &str) -> Result<Vec<u8>, String> {
 pub fn save_encrypted_config(config: &SerializableConfig, passphrase: &str) -> Result<(), String> {
     let json = serde_json::to_vec(config).map_err(|e| format!("Serialization failed: {}", e))?;
     let encrypted = encrypt(&json, passphrase)?;
-    let mut file = File::create(SECRETS_PATH).map_err(|e| format!("Failed to create secrets.enc: {}", e))?;
-    file.write_all(&encrypted).map_err(|e| format!("Failed to write secrets.enc: {}", e))?;
+    let mut file =
+        File::create(SECRETS_PATH).map_err(|e| format!("Failed to create secrets.enc: {}", e))?;
+    file.write_all(&encrypted)
+        .map_err(|e| format!("Failed to write secrets.enc: {}", e))?;
     Ok(())
 }
 
 pub fn load_encrypted_config(passphrase: &str) -> Result<SerializableConfig, String> {
-    let encrypted = fs::read(SECRETS_PATH).map_err(|e| format!("Failed to read secrets.enc: {}", e))?;
+    let encrypted =
+        fs::read(SECRETS_PATH).map_err(|e| format!("Failed to read secrets.enc: {}", e))?;
     let decrypted = decrypt(&encrypted, passphrase)?;
     serde_json::from_slice(&decrypted).map_err(|e| format!("Failed to deserialize config: {}", e))
 }
@@ -111,31 +114,65 @@ fn map_dialoguer_error(e: dialoguer::Error) -> String {
 }
 
 pub fn run_setup() -> Result<SerializableConfig, String> {
-    typewriter_println(&format!("{}", "\nWelcome to Quorum Server Setup!".cyan().bold())).map_err(|e| e.to_string())?;
+    typewriter_println(&format!(
+        "{}",
+        "\nWelcome to Quorum Server Setup!".cyan().bold()
+    ))
+    .map_err(|e| e.to_string())?;
     println!();
 
     press_enter_to_continue(true, true);
 
     println!();
-    typewriter_println(&format!("{}", "To ensure maximum security on your server, it will:".cyan())).map_err(|e| e.to_string())?;
-    typewriter_println("    • Auto-generate most server configurations with secure defaults").map_err(|e| e.to_string())?;
-    typewriter_println("    • Encrypt and store them in a protected file").map_err(|e| e.to_string())?;
-    typewriter_println("    • Only prompt you for configurations that are required for you to enter").map_err(|e| e.to_string())?;
+    typewriter_println(&format!(
+        "{}",
+        "To ensure maximum security on your server, it will:".cyan()
+    ))
+    .map_err(|e| e.to_string())?;
+    typewriter_println("    • Auto-generate most server configurations with secure defaults")
+        .map_err(|e| e.to_string())?;
+    typewriter_println("    • Encrypt and store them in a protected file")
+        .map_err(|e| e.to_string())?;
+    typewriter_println(
+        "    • Only prompt you for configurations that are required for you to enter",
+    )
+    .map_err(|e| e.to_string())?;
     println!();
 
     press_enter_to_continue(true, true);
 
     println!();
-    typewriter_println(&format!("{}", "This ensures that even if someone gains access to your server,".dimmed())).map_err(|e| e.to_string())?;
-    typewriter_println(&format!("{}", "they cannot access your sensitive configuration data without the passphrase,".dimmed())).map_err(|e| e.to_string())?;
-    typewriter_println(&format!("{}", "which only you should know.".dimmed())).map_err(|e| e.to_string())?;
+    typewriter_println(&format!(
+        "{}",
+        "This ensures that even if someone gains access to your server,".dimmed()
+    ))
+    .map_err(|e| e.to_string())?;
+    typewriter_println(&format!(
+        "{}",
+        "they cannot access your sensitive configuration data without the passphrase,".dimmed()
+    ))
+    .map_err(|e| e.to_string())?;
+    typewriter_println(&format!("{}", "which only you should know.".dimmed()))
+        .map_err(|e| e.to_string())?;
     println!();
 
     press_enter_to_continue(true, true);
 
     println!();
-    typewriter_println(&format!("{}", "Please enter a username and password that the server uses".dimmed().bold())).map_err(|e| e.to_string())?;
-    typewriter_println(&format!("{}", "to unlock the SurrealDB database. This is different to a Quorum account.".dimmed().bold())).map_err(|e| e.to_string())?;
+    typewriter_println(&format!(
+        "{}",
+        "Please enter a username and password that the server uses"
+            .dimmed()
+            .bold()
+    ))
+    .map_err(|e| e.to_string())?;
+    typewriter_println(&format!(
+        "{}",
+        "to unlock the SurrealDB database. This is different to a Quorum account."
+            .dimmed()
+            .bold()
+    ))
+    .map_err(|e| e.to_string())?;
     println!();
 
     let surreal_username = Input::<String>::new()
@@ -150,15 +187,28 @@ pub fn run_setup() -> Result<SerializableConfig, String> {
         .map_err(map_dialoguer_error)?;
 
     println!();
-    typewriter_println(&format!("{}", "Configurations Complete!".cyan())).map_err(|e| e.to_string())?;
+    typewriter_println(&format!("{}", "Configurations Complete!".cyan()))
+        .map_err(|e| e.to_string())?;
     println!();
 
     press_enter_to_continue(true, true);
 
     println!();
-    typewriter_println(&format!("{}", "A passphrase will be used to encrypt your server configuration.".dimmed())).map_err(|e| e.to_string())?;
-    typewriter_println(&format!("{}", "This passphrase will be required every time you start the server.".dimmed())).map_err(|e| e.to_string())?;
-    typewriter_println(&format!("{}", "Only you should know it - it acts as the key to unlock your server.".dimmed())).map_err(|e| e.to_string())?;
+    typewriter_println(&format!(
+        "{}",
+        "A passphrase will be used to encrypt your server configuration.".dimmed()
+    ))
+    .map_err(|e| e.to_string())?;
+    typewriter_println(&format!(
+        "{}",
+        "This passphrase will be required every time you start the server.".dimmed()
+    ))
+    .map_err(|e| e.to_string())?;
+    typewriter_println(&format!(
+        "{}",
+        "Only you should know it - it acts as the key to unlock your server.".dimmed()
+    ))
+    .map_err(|e| e.to_string())?;
     println!();
 
     Ok(SerializableConfig {

@@ -52,18 +52,19 @@ pub async fn signup_user(
     let password_hash = crate::utility::auth_common::hash(password)
         .map_err(|e| format!("Failed to hash password: {}", e))?;
 
-    let mut response = db.query(
-        "CREATE users SET
+    let mut response = db
+        .query(
+            "CREATE users SET
             username = $username,
             email = $email,
             password_hash = $password_hash,
-            email_backup_codes = $email_backup_codes"
-    )
-    .bind(("username", username.to_string()))
-    .bind(("email", email.map(|e| e.to_string())))
-    .bind(("password_hash", password_hash))
-    .bind(("email_backup_codes", email_backup_codes))
-    .await?;
+            email_backup_codes = $email_backup_codes",
+        )
+        .bind(("username", username.to_string()))
+        .bind(("email", email.map(|e| e.to_string())))
+        .bind(("password_hash", password_hash))
+        .bind(("email_backup_codes", email_backup_codes))
+        .await?;
 
     let user: Vec<User> = response.take(0)?;
     user.into_iter()
@@ -209,8 +210,12 @@ pub async fn verify_user_credentials(
         .await
         .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, "Database error".to_string()))?;
 
-    let user: Option<User> = response.take::<Option<User>>(0)
-        .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, "Database error".to_string()))?;
+    let user: Option<User> = response.take::<Option<User>>(0).map_err(|_| {
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            "Database error".to_string(),
+        )
+    })?;
 
     match user {
         Some(u) => {
@@ -218,13 +223,22 @@ pub async fn verify_user_credentials(
                 if crate::utility::auth_common::verify(password, hash).unwrap_or(false) {
                     Ok(u)
                 } else {
-                    Err((StatusCode::UNAUTHORIZED, "Invalid username or password".to_string()))
+                    Err((
+                        StatusCode::UNAUTHORIZED,
+                        "Invalid username or password".to_string(),
+                    ))
                 }
             } else {
-                Err((StatusCode::UNAUTHORIZED, "Invalid username or password".to_string()))
+                Err((
+                    StatusCode::UNAUTHORIZED,
+                    "Invalid username or password".to_string(),
+                ))
             }
         }
-        None => Err((StatusCode::UNAUTHORIZED, "Invalid username or password".to_string())),
+        None => Err((
+            StatusCode::UNAUTHORIZED,
+            "Invalid username or password".to_string(),
+        )),
     }
 }
 

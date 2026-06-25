@@ -30,9 +30,15 @@ pub async fn ensure_containers_running() -> Result<(), Box<dyn Error>> {
         return Err("docker-compose.yml not found in docker directory".into());
     }
 
-    let surreal_username = quorum_core::utility::config::Config::get().surreal_user.clone();
-    let surreal_pass = quorum_core::utility::config::Config::get().surreal_pass.clone();
-    let surreal_url = quorum_core::utility::config::Config::get().surreal_url.clone();
+    let surreal_username = quorum_core::utility::config::Config::get()
+        .surreal_user
+        .clone();
+    let surreal_pass = quorum_core::utility::config::Config::get()
+        .surreal_pass
+        .clone();
+    let surreal_url = quorum_core::utility::config::Config::get()
+        .surreal_url
+        .clone();
 
     let output = Command::new("docker")
         .args(["compose", "up", "-d"])

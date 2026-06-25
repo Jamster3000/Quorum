@@ -8,12 +8,14 @@
 //! Unlike a `OnceLock`, the config can be reloaded at runtime via `Config::reload()` without
 //! restarting the server. All reads are atomic and lock-free via `arc-swap`.
 
+use crate::utility::secrets::{
+    load_encrypted_config, prompt_passphrase, run_setup, save_encrypted_config, secrets_exist,
+};
+use crate::utility::std::{press_enter_to_continue, typewriter_println};
 use arc_swap::ArcSwap;
+use colored::Colorize;
 use std::sync::Arc;
 use std::sync::OnceLock;
-use crate::utility::std::{typewriter_println, press_enter_to_continue};
-use colored::Colorize;
-use crate::utility::secrets::{load_encrypted_config, run_setup, save_encrypted_config, prompt_passphrase, secrets_exist};
 
 #[derive(Debug)]
 pub struct Config {
@@ -71,7 +73,10 @@ static CONFIG: OnceLock<ArcSwap<Config>> = OnceLock::new();
 
 impl Config {
     /// Parses all environment variables into a `Config` instance.
-    fn build(jwt_secret: String, surreal_pass: String) -> Result<Config, Box<dyn std::error::Error>> {
+    fn build(
+        jwt_secret: String,
+        surreal_pass: String,
+    ) -> Result<Config, Box<dyn std::error::Error>> {
         let server_port: u16 = std::env::var("SERVER_PORT")
             .unwrap_or_else(|_| "3000".to_string())
             .parse()?;
@@ -112,7 +117,11 @@ impl Config {
     pub fn load() -> Result<(), Box<dyn std::error::Error>> {
         if secrets_exist() {
             println!();
-            typewriter_println(&format!("{}", "Enter passphrase to unlock the server...".cyan().bold())).map_err(|e| e.to_string())?;
+            typewriter_println(&format!(
+                "{}",
+                "Enter passphrase to unlock the server...".cyan().bold()
+            ))
+            .map_err(|e| e.to_string())?;
 
             let passphrase = prompt_passphrase()?;
             let serializable_config = load_encrypted_config(&passphrase)?;
@@ -122,8 +131,7 @@ impl Config {
                 server_host: serializable_config.server_host.clone(),
                 server_url: format!(
                     "http://{}:{}",
-                    serializable_config.server_host,
-                    serializable_config.server_port
+                    serializable_config.server_host, serializable_config.server_port
                 ),
                 surreal_url: serializable_config.surreal_url,
                 surreal_user: serializable_config.surreal_user,
@@ -139,14 +147,19 @@ impl Config {
                 testing_per_second: serializable_config.testing_per_second,
                 testing_burst_size: serializable_config.testing_burst_size,
             };
-            CONFIG.set(ArcSwap::from_pointee(config))
+            CONFIG
+                .set(ArcSwap::from_pointee(config))
                 .map_err(|_| "Config already initialized".into())
         } else {
             let serializable_config = run_setup()?;
             let passphrase = prompt_passphrase()?;
 
             println!();
-            typewriter_println(&format!("{}", "Passphrase setup successfully!".cyan().bold())).map_err(|e| e.to_string())?;
+            typewriter_println(&format!(
+                "{}",
+                "Passphrase setup successfully!".cyan().bold()
+            ))
+            .map_err(|e| e.to_string())?;
 
             press_enter_to_continue(true, true);
 
@@ -154,7 +167,6 @@ impl Config {
             Self::load()
         }
     }
-
 
     /// Reloads configuration from environment variables without restarting the server.
     /// All subsequent `Config::get()` calls will see the new values atomically.
