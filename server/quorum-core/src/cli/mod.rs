@@ -30,7 +30,7 @@ struct Command {
 
 /// Represents the state of an admin session in the CLI.
 impl AdminSession {
-    fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             logged_in: false,
             is_admin: false,

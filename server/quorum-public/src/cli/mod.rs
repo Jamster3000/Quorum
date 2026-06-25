@@ -12,15 +12,22 @@ use std::io::{self, Write};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 use tokio::sync::watch;
+use quorum_core::cli::server::logout;
+use quorum_core::cli::server::status;
+use quorum_core::cli::server::shutdown;
+use quorum_core::cli::server::logs;
+use quorum_core::cli::server::audit;
+use quorum_core::cli::db;
+use quorum_core::cli::AdminSession;
 
 const SESSION_TIMEOUT_MINS: u64 = 20;
 
-pub struct AdminSession {
+/*pub struct AdminSession {
     pub logged_in: bool,
     pub last_active: Instant,
     pub username: Option<String>,
     pub is_admin: bool,
-}
+}*/
 
 struct Command {
     parts: Vec<String>,
@@ -30,7 +37,7 @@ struct Command {
 }
 
 /// Represents the state of an admin session in the CLI.
-impl AdminSession {
+/*impl AdminSession {
     fn new() -> Self {
         Self {
             logged_in: false,
@@ -60,7 +67,7 @@ impl AdminSession {
         self.logged_in = false;
         self.username = None;
     }
-}
+}*/
 
 /// Parses a command string into a Command struct.
 ///
@@ -174,9 +181,9 @@ pub async fn spawn_cli(db: DB, server_start: Instant, shutdown_tx: watch::Sender
 async fn dispatch(
     cmd: &Command,
     db: &DB,
-    _server_start: Instant,
+    server_start: Instant,
     session: &Arc<Mutex<AdminSession>>,
-    _shutdown_tx: &watch::Sender<bool>,
+    shutdown_tx: &watch::Sender<bool>,
 ) {
     match cmd.parts.as_slice() {
         // -- help --
@@ -196,6 +203,22 @@ async fn dispatch(
             "make-admin" => {
                 let username = cmd.raw.split_once(' ').map(|x| x.1).unwrap_or("");
                 server::make_admin(db, username, session).await;
+            },
+            "status" => status(server_start).await,
+            "logout" => logout(session),
+            "shutdown" => {
+                if !require_admin(session) {
+                    return;
+                }
+                shutdown(db, server_start, shutdown_tx).await;
+            }
+            "logs" => {
+                let params = cmd.raw.split_once(' ').map(|x| x.1).unwrap_or("");
+                logs(db, params).await;
+            }
+            "audit" => {
+                let params = cmd.raw.split_once(' ').map(|x| x.1).unwrap_or("");
+                audit(db, params).await;
             }
             _ => unknown(&cmd.raw),
         },
@@ -215,6 +238,16 @@ async fn dispatch(
         // -- Test --
         [ns, command] if ns == "test" => match command.as_str() {
             "run" => test::run().await,
+            _ => unknown(&cmd.raw),
+        },
+
+        // -- Database --
+        [ns, command] if ns == "db" => match command.as_str() {
+            "stats" => db::stats(db).await,
+            "table" => {
+                let params = cmd.raw.split_once(' ').map(|x| x.1).unwrap_or("");
+                db::table(db, params).await;
+            }
             _ => unknown(&cmd.raw),
         },
 

@@ -13,6 +13,25 @@ struct CommandEntry {
 }
 
 const COMMANDS: &[CommandEntry] = &[
+    // --help--
+    CommandEntry {
+        command: "help",
+        summary: "Lists all available commands.",
+        description: "Prints a summary of every available command, grouped by namespace.",
+        usage: "help",
+        requires_auth: false,
+        requires_admin: false,
+        params: &[],
+    },
+    CommandEntry {
+        command: "help <command>",
+        summary: "Shows detailed help for a specific command.",
+        description: "Prints the full description, usage, parameters, and auth requirement for the given command.",
+        usage: "help server:status",
+        requires_auth: false,
+        requires_admin: false,
+        params: &[("command", "The command to look up, e.g. server:status")],
+    },
     // --server--
     CommandEntry {
         command: "server:signup",
@@ -41,6 +60,83 @@ const COMMANDS: &[CommandEntry] = &[
         requires_admin: false,
         params: &[("username", "The username of the user to promote")],
     },
+    CommandEntry {
+        command: "server:status",
+        summary: "Shows uptime and basic server info.",
+        description: "Prints how long the server has been running, what address it is listening on, and whether testing mode is active.",
+        usage: "server:status",
+        requires_auth: false,
+        requires_admin: false,
+        params: &[],
+    },
+    CommandEntry {
+        command: "server:logout",
+        summary: "Ends the current operator session.",
+        description: "Clears the authenticated session immediately. Any subsequent write commands will require logging in again.",
+        usage: "server:logout",
+        requires_auth: true,
+        requires_admin: false,
+        params: &[],
+    },
+    CommandEntry {
+        command: "server:shutdown",
+        summary: "Gracefully shuts the server down.",
+        description: "Signals the server to stop accepting new requests, waits for in-flight requests to complete, flushes logs, and exits cleanly.",
+        usage: "server:shutdown",
+        requires_auth: true,
+        requires_admin: true,
+        params: &[],
+    },
+    CommandEntry {
+        command: "server:logs",
+        summary: "Displays recent server logs.",
+        description: "Prints logs in order from most recent to oldest, allowing for optional filter for last X days.",
+        usage: "server:logs [days]",
+        requires_auth: false,
+        requires_admin: false,
+        params: &[("days", "Optional number of days to display logs for")],
+    },
+    CommandEntry {
+        command: "server:audit",
+        summary: "Displays recent audit logs.",
+        description: "Prints audit logs in order from most recent to oldest, allowing for optional filter for last X days.",
+        usage: "server:audit [days]",
+        requires_auth: false,
+        requires_admin: false,
+        params: &[("days", "Optional number of days to display audit logs for")],
+    },
+    // --db--
+    CommandEntry {
+        command: "db:stats",
+        summary: "Displays database statistics.",
+        description: "Prints the number of rows in each table, total row count, and estimated size of each table and database.",
+        usage: "db:stats",
+        requires_auth: false,
+        requires_admin: false,
+        params: &[],
+    },
+    CommandEntry {
+        command: "db:table",
+        summary: "Displays records from a specific table.",
+        description: "Prints the records from the specified table, with an option to view a specific page of results.",
+        usage: "db:table <name>, <page>",
+        requires_auth: false,
+        requires_admin: false,
+        params: &[
+            ("name", "The name of the table to display"),
+            ("page", "The page of results to display"),
+        ],
+    },
+    // --user--
+    CommandEntry {
+        command: "user:delete",
+        summary: "Deletes a user account.",
+        description: "Removes a user account from the database. This action is irreversible.",
+        usage: "user:delete <id>",
+        requires_auth: true,
+        requires_admin: true,
+        params: &[("id", "The ID of the user to delete")],
+    },
     // --test--
     CommandEntry {
         command: "test:run",
@@ -64,7 +160,7 @@ pub fn print_all() {
         "  ─────────────────────────────────────────────────────".dimmed()
     );
 
-    let namespaces = ["server", "test"];
+    let namespaces = ["help", "server", "db", "user", "test"];
 
     for ns in namespaces {
         println!();
