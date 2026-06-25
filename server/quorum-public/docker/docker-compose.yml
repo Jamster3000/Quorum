@@ -2,7 +2,7 @@ services:
   surrealdb:
     image: surrealdb/surrealdb:v3.1.5
     user: root
-    command: start --user ${SURREAL_ROOT_USER} --pass ${SURREAL_ROOT_PASS} --bind ${SURREAL_BIND} surrealkv:///data/quorum.db
+    command: start --user ${SURREAL_ROOT_USER} --pass ${SURREAL_ROOT_PASS} --bind 0.0.0.0:8000 surrealkv:///data/quorum.db
     ports:
       - "8000:8000"
     volumes:
@@ -10,7 +10,6 @@ services:
     environment:
       - SURREAL_ROOT_USER=${SURREAL_ROOT_USER}
       - SURREAL_ROOT_PASS=${SURREAL_ROOT_PASS}
-      - SURREAL_BIND=${SURREAL_BIND}
 
   minio:
     image: minio/minio:latest
