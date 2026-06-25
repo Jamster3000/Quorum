@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["login","make_admin","prompt","prompt_password","signup"]};

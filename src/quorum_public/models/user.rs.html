@@ -12,7 +12,7 @@
 <a href=#12 id=12 data-nosnippet>12</a>    <span class="kw">pub </span>last_login: <span class="prelude-ty">Option</span>&lt;Datetime&gt;,
 <a href=#13 id=13 data-nosnippet>13</a>    <span class="kw">pub </span>is_banned: bool,
 <a href=#14 id=14 data-nosnippet>14</a>    <span class="kw">pub </span>is_deleted: bool,
-<a href=#15 id=15 data-nosnippet>15</a>    <span class="kw">pub </span>email_backup_codes: <span class="prelude-ty">Option</span>&lt;Vec&lt;EmailBackupCode&gt;&gt;,
+<a href=#15 id=15 data-nosnippet>15</a>    <span class="kw">pub </span>email_backup_codes: <span class="prelude-ty">Option</span>&lt;Vec&lt;String&gt;&gt;,
 <a href=#16 id=16 data-nosnippet>16</a>}
 <a href=#17 id=17 data-nosnippet>17</a>
 <a href=#18 id=18 data-nosnippet>18</a><span class="attr">#[derive(Debug, Deserialize)]
@@ -84,21 +84,20 @@
 <a href=#84 id=84 data-nosnippet>84</a></span><span class="kw">pub struct </span>EmailBackupCode {
 <a href=#85 id=85 data-nosnippet>85</a>    <span class="kw">pub </span>plain: <span class="prelude-ty">Option</span>&lt;String&gt;,
 <a href=#86 id=86 data-nosnippet>86</a>    <span class="kw">pub </span>hash: String,
-<a href=#87 id=87 data-nosnippet>87</a>    <span class="kw">pub </span>salt: String,
-<a href=#88 id=88 data-nosnippet>88</a>}
-<a href=#89 id=89 data-nosnippet>89</a>
-<a href=#90 id=90 data-nosnippet>90</a><span class="kw">impl </span>User {
-<a href=#91 id=91 data-nosnippet>91</a>    <span class="kw">pub fn </span>to_response(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; UserResponse {
-<a href=#92 id=92 data-nosnippet>92</a>        UserResponse {
-<a href=#93 id=93 data-nosnippet>93</a>            id: <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.id.key {
-<a href=#94 id=94 data-nosnippet>94</a>                surrealdb_types::RecordIdKey::String(s) =&gt; s.to_string(),
-<a href=#95 id=95 data-nosnippet>95</a>                surrealdb_types::RecordIdKey::Number(n) =&gt; n.to_string(),
-<a href=#96 id=96 data-nosnippet>96</a>                <span class="kw">_ </span>=&gt; <span class="macro">format!</span>(<span class="string">"{:?}"</span>, <span class="self">self</span>.id.key),
-<a href=#97 id=97 data-nosnippet>97</a>            },
-<a href=#98 id=98 data-nosnippet>98</a>            username: <span class="self">self</span>.username.clone(),
-<a href=#99 id=99 data-nosnippet>99</a>            email: <span class="self">self</span>.email.clone(),
-<a href=#100 id=100 data-nosnippet>100</a>            created_at: <span class="self">self</span>.created_at,
-<a href=#101 id=101 data-nosnippet>101</a>        }
-<a href=#102 id=102 data-nosnippet>102</a>    }
-<a href=#103 id=103 data-nosnippet>103</a>}
+<a href=#87 id=87 data-nosnippet>87</a>}
+<a href=#88 id=88 data-nosnippet>88</a>
+<a href=#89 id=89 data-nosnippet>89</a><span class="kw">impl </span>User {
+<a href=#90 id=90 data-nosnippet>90</a>    <span class="kw">pub fn </span>to_response(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; UserResponse {
+<a href=#91 id=91 data-nosnippet>91</a>        UserResponse {
+<a href=#92 id=92 data-nosnippet>92</a>            id: <span class="kw">match </span><span class="kw-2">&amp;</span><span class="self">self</span>.id.key {
+<a href=#93 id=93 data-nosnippet>93</a>                surrealdb_types::RecordIdKey::String(s) =&gt; s.to_string(),
+<a href=#94 id=94 data-nosnippet>94</a>                surrealdb_types::RecordIdKey::Number(n) =&gt; n.to_string(),
+<a href=#95 id=95 data-nosnippet>95</a>                <span class="kw">_ </span>=&gt; <span class="macro">format!</span>(<span class="string">"{:?}"</span>, <span class="self">self</span>.id.key),
+<a href=#96 id=96 data-nosnippet>96</a>            },
+<a href=#97 id=97 data-nosnippet>97</a>            username: <span class="self">self</span>.username.clone(),
+<a href=#98 id=98 data-nosnippet>98</a>            email: <span class="self">self</span>.email.clone(),
+<a href=#99 id=99 data-nosnippet>99</a>            created_at: <span class="self">self</span>.created_at,
+<a href=#100 id=100 data-nosnippet>100</a>        }
+<a href=#101 id=101 data-nosnippet>101</a>    }
+<a href=#102 id=102 data-nosnippet>102</a>}
 </code></pre></div></section></main></body></html>
