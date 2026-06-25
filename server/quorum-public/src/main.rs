@@ -22,15 +22,12 @@ use std::time::Instant;
 
 #[tokio::main]
 async fn main() {
-    dotenvy::dotenv().ok();
-
     // Clear the terminal and move the cursor to top left corner
     print!("\x1B[2J\x1B[1;1H");
 
     startup::print_banner();
     startup::print_initializing();
 
-    // Load configs from .env (only once)
     let timer = startup::create_timer();
     match quorum_core::utility::config::Config::load() {
         Ok(_) => startup::print_step("Loading config", true, startup::elapsed(timer)),

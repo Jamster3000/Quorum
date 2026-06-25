@@ -11,6 +11,9 @@
 use arc_swap::ArcSwap;
 use std::sync::Arc;
 use std::sync::OnceLock;
+use crate::utility::std::{typewriter_println, press_enter_to_continue};
+use colored::Colorize;
+use crate::utility::secrets::{load_encrypted_config, run_setup, save_encrypted_config, prompt_passphrase, secrets_exist};
 
 #[derive(Debug)]
 pub struct Config {
@@ -68,7 +71,7 @@ static CONFIG: OnceLock<ArcSwap<Config>> = OnceLock::new();
 
 impl Config {
     /// Parses all environment variables into a `Config` instance.
-    fn from_env() -> Result<Config, Box<dyn std::error::Error>> {
+    fn build(jwt_secret: String, surreal_pass: String) -> Result<Config, Box<dyn std::error::Error>> {
         let server_port: u16 = std::env::var("SERVER_PORT")
             .unwrap_or_else(|_| "3000".to_string())
             .parse()?;
@@ -82,10 +85,10 @@ impl Config {
                 .unwrap_or_else(|_| format!("http://{}:{}", server_host, server_port)),
             surreal_url: std::env::var("SURREAL_URL")?,
             surreal_user: std::env::var("SURREAL_USER")?,
-            surreal_pass: std::env::var("SURREAL_PASS")?,
+            surreal_pass,
             surreal_ns: std::env::var("SURREAL_NS")?,
             surreal_db: std::env::var("SURREAL_DB")?,
-            jwt_secret: std::env::var("JWT_SECRET")?,
+            jwt_secret,
             jwt_access_minutes: std::env::var("JWT_ACCESS_MINUTES")?.parse()?,
             jwt_refresh_days: std::env::var("JWT_REFRESH_DAYS")?.parse()?,
             enable_testing: std::env::var("ENABLE_TESTING")
@@ -106,19 +109,52 @@ impl Config {
         })
     }
 
-    /// Loads configuration from environment variables and initializes the global config singleton.
-    /// Must be called once during application startup before any `Config::get()` calls.
-    ///
-    /// # Errors
-    /// * Missing required variables: `SURREAL_URL`, `SURREAL_USER`, `SURREAL_PASS`, `SURREAL_NS`, `SURREAL_DB`, `JWT_SECRET`, `JWT_ACCESS_MINUTES`, `JWT_REFRESH_DAYS`
-    /// * Invalid values: Numeric fields cannot be parsed as their expected types
-    /// * Already initialized: `Config::load()` was called more than once
     pub fn load() -> Result<(), Box<dyn std::error::Error>> {
-        let config = Self::from_env()?;
-        CONFIG
-            .set(ArcSwap::from_pointee(config))
-            .map_err(|_| "Config already initialized".into())
+        if secrets_exist() {
+            println!();
+            typewriter_println(&format!("{}", "Enter passphrase to unlock the server...".cyan().bold())).map_err(|e| e.to_string())?;
+
+            let passphrase = prompt_passphrase()?;
+            let serializable_config = load_encrypted_config(&passphrase)?;
+
+            let config = Config {
+                server_port: serializable_config.server_port,
+                server_host: serializable_config.server_host.clone(),
+                server_url: format!(
+                    "http://{}:{}",
+                    serializable_config.server_host,
+                    serializable_config.server_port
+                ),
+                surreal_url: serializable_config.surreal_url,
+                surreal_user: serializable_config.surreal_user,
+                surreal_pass: serializable_config.surreal_pass,
+                surreal_ns: serializable_config.surreal_ns,
+                surreal_db: serializable_config.surreal_db,
+                jwt_secret: serializable_config.jwt_secret,
+                jwt_access_minutes: serializable_config.jwt_access_minutes,
+                jwt_refresh_days: serializable_config.jwt_refresh_days,
+                enable_testing: serializable_config.enable_testing,
+                default_per_second: serializable_config.default_per_second,
+                default_burst_size: serializable_config.default_burst_size,
+                testing_per_second: serializable_config.testing_per_second,
+                testing_burst_size: serializable_config.testing_burst_size,
+            };
+            CONFIG.set(ArcSwap::from_pointee(config))
+                .map_err(|_| "Config already initialized".into())
+        } else {
+            let serializable_config = run_setup()?;
+            let passphrase = prompt_passphrase()?;
+
+            println!();
+            typewriter_println(&format!("{}", "Passphrase setup successfully!".cyan().bold())).map_err(|e| e.to_string())?;
+
+            press_enter_to_continue(true, true);
+
+            save_encrypted_config(&serializable_config, &passphrase)?;
+            Self::load()
+        }
     }
+
 
     /// Reloads configuration from environment variables without restarting the server.
     /// All subsequent `Config::get()` calls will see the new values atomically.
@@ -127,7 +163,12 @@ impl Config {
     /// * Same as `Config::load()` — missing or invalid environment variables
     /// * Panics if called before `Config::load()`
     pub fn reload() -> Result<(), Box<dyn std::error::Error>> {
-        let config = Self::from_env()?;
+        let current = Self::get();
+        let jwt_secret = current.jwt_secret.clone();
+        let surreal_pass = current.surreal_pass.clone();
+        drop(current);
+
+        let config = Self::build(jwt_secret, surreal_pass)?;
         CONFIG
             .get()
             .expect("Config not initialized. Call Config::load() first.")
