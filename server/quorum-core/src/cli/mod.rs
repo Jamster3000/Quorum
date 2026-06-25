@@ -28,15 +28,21 @@ struct Command {
     raw: String,
 }
 
-/// Represents the state of an admin session in the CLI.
-impl AdminSession {
-    pub fn new() -> Self {
+impl Default for AdminSession {
+    fn default() -> Self {
         Self {
             logged_in: false,
             is_admin: false,
             last_active: Instant::now(),
             username: None,
         }
+    }
+}
+
+/// Represents the state of an admin session in the CLI.
+impl AdminSession {
+    pub fn new() -> Self {
+        Self::default()
     }
 
     pub fn is_valid(&self) -> bool {
