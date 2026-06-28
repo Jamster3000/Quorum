@@ -6,6 +6,7 @@ use argon2::{
     Algorithm, Argon2, Params, Version,
     password_hash::{PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
 };
+use email_address::*;
 use rand::RngExt;
 use rand_core::OsRng;
 
@@ -89,4 +90,8 @@ pub fn verify(plaintext: &str, stored_hash: &str) -> Result<bool, String> {
         .verify_password(plaintext.as_bytes(), &parsed_hash)
         .map(|_| true)
         .map_err(|e| format!("Verification failed: {}", e))
+}
+
+pub fn check_email_address(email: &str) -> bool {
+    EmailAddress::is_valid(email)
 }

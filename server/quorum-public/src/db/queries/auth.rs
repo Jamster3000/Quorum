@@ -5,6 +5,7 @@
 use crate::db::queries::tokens;
 use crate::models::user::UpdateUserProfileRequest;
 use crate::models::user::User;
+use crate::utility::auth_common::check_email_address;
 use axum::http::StatusCode;
 use quorum_core::db::DB;
 use std::error::Error;
@@ -47,6 +48,12 @@ pub async fn signup_user(
 ) -> Result<User, Box<dyn Error + Send + Sync>> {
     if password.len() < 12 || password.len() > 35 {
         return Err("Invalid password length".into());
+    }
+
+    if let Some(email) = email {
+        if !check_email_address(email) {
+            return Err("Invalid email address".into());
+        }
     }
 
     let password_hash = crate::utility::auth_common::hash(password)
