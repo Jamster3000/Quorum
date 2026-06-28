@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["generate_backup_code","generate_backup_codes","get_argon2","hash","verify"]};
+window.SIDEBAR_ITEMS = {"fn":["check_email_address","generate_backup_code","generate_backup_codes","get_argon2","hash","verify"]};
