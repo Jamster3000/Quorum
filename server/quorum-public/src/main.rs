@@ -132,7 +132,7 @@ async fn main() {
         app.into_make_service_with_connect_info::<SocketAddr>(),
     );
 
-    let server_task = tokio::spawn(async move {
+    let mut server_task = tokio::spawn(async move {
         server
             .with_graceful_shutdown(async move {
                 let _ = shutdown_rx.changed().await;
@@ -179,15 +179,43 @@ async fn main() {
     // Start the CLI input loop in a background task
     cli::spawn_cli(_db.clone(), server_start, shutdown_tx).await;
 
-    let shutdown = async {
-        let _ = tokio::signal::ctrl_c().await;
-    };
+    #[cfg(not(debug_assertions))]
+    {
+        loop {
+            tokio::select! {
+                result = &mut server_task => {
+                    break;
+            }
 
-    tokio::select! {
-        _ = server_task => {},
-        _ = shutdown => {
-            println!("\nShutting down...");
-            let _ = quorum_core::db::queries::server_logs::log_shutdown(&_db, server_start.elapsed().as_millis() as i64).await;
+               result = tokio::signal::ctrl_c() => {
+                    match result {
+                        Ok(()) => {
+                            println!(
+                                "\nYou cannot shut down the server with Ctrl+C \
+                                in release mode. Use server:shutdown."
+                            );
+                        },
+                        Err(_) => {
+                            println!("{}", "Failed to listen for Ctrl+C".red());
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    #[cfg(debug_assertions)]
+    {
+        let shutdown = async {
+            let _ = tokio::signal::ctrl_c().await;
+        };
+
+        tokio::select! {
+            _ = &mut server_task => {},
+            _ = shutdown => {
+                println!("\nShutting down...");
+                let _ = quorum_core::db::queries::server_logs::log_shutdown(&_db, server_start.elapsed().as_millis() as i64).await;
+            }
         }
     }
 }
