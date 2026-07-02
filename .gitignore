@@ -59,3 +59,5 @@ src-tauri/.env
 /client/src-tauri/gen/schemas/acl-manifests.json
 /client/src-tauri/gen/schemas/desktop-schema.json
 /client/src-tauri/gen/schemas/windows-schema.json
+/server/data/db
+*.enc
