@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":["auth_common","docker","jwt"]};
+window.SIDEBAR_ITEMS = {"mod":["auth_common","jwt"]};

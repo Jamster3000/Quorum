@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["login","make_admin","prompt","prompt_password","signup"]};
+window.SIDEBAR_ITEMS = {"fn":["confirm_and_delete","login","make_admin","perform_reset","prompt","prompt_password","signup"]};

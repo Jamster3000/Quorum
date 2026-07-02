@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["delete_all_user_tokens","hash_token","revoke_refresh_token","store_refresh_token"]};
+window.SIDEBAR_ITEMS = {"fn":["delete_all_user_tokens","hash_token","revoke_refresh_token","store_refresh_token","validate_refresh_token"]};
