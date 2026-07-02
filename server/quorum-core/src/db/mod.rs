@@ -24,11 +24,7 @@ pub async fn init() -> Result<DB, Box<dyn Error>> {
         .use_db(&config.surreal_db)
         .await
         .map_err(|e| -> Box<dyn Error> {
-            format!(
-                "Failed to select namespace/database\nError: {}",
-                e
-            )
-            .into()
+            format!("Failed to select namespace/database\nError: {}", e).into()
         })?;
 
     Ok(db)

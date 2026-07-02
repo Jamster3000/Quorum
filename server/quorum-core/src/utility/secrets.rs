@@ -11,7 +11,7 @@ use aes_gcm::{
     aead::{Aead, AeadCore, KeyInit},
 };
 use colored::Colorize;
-use dialoguer::{Password};
+use dialoguer::Password;
 use rand_core::OsRng;
 use rand_core::RngCore;
 use serde::{Deserialize, Serialize};

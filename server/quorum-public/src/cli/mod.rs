@@ -6,11 +6,11 @@ pub mod server;
 pub mod test;
 pub mod user;
 
+use crate::cli::server::confirm_and_delete;
 use colored::Colorize;
 use quorum_core::cli::AdminSession;
 use quorum_core::cli::db;
 use quorum_core::cli::server::{audit, logout, logs, shutdown, status};
-use crate::cli::server::confirm_and_delete;
 use quorum_core::db::DB;
 use std::io::{self, Write};
 use std::sync::{Arc, Mutex};

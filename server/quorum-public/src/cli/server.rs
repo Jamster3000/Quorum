@@ -1,10 +1,10 @@
 use crate::cli::AdminSession;
 use colored::Colorize;
-use quorum_core::db::DB;
-use std::sync::{Arc, Mutex};
-use quorum_core::utility::std::typewriter_println;
 use dialoguer::Input;
+use quorum_core::db::DB;
 use quorum_core::utility::secrets::prompt_passphrase;
+use quorum_core::utility::std::typewriter_println;
+use std::sync::{Arc, Mutex};
 
 /// Handles user signup
 ///
@@ -159,7 +159,9 @@ pub async fn confirm_and_delete(shutdown_tx: &tokio::sync::watch::Sender<bool>) 
     println!();
     let _ = typewriter_println(&format!(
         "{}",
-        "Enter passphrase to confirm database deletion...".cyan().bold()
+        "Enter passphrase to confirm database deletion..."
+            .cyan()
+            .bold()
     ))
     .map_err(|e| e.to_string());
 

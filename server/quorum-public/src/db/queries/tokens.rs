@@ -33,8 +33,7 @@ pub async fn store_refresh_token(
 ) -> Result<(), Box<dyn Error + Send + Sync>> {
     let token_hash = hash_token(refresh_token);
 
-    let query =
-        "CREATE refresh_token
+    let query = "CREATE refresh_token
          SET user_id = $user_id,
              token_hash = $token_hash,
              expires_at = $expires_at,
@@ -134,8 +133,7 @@ pub async fn validate_refresh_token(
 ) -> Result<(), Box<dyn Error + Send + Sync>> {
     let token_hash = hash_token(refresh_token);
 
-    let query =
-        "SELECT VALUE count() > 0 FROM refresh_token
+    let query = "SELECT VALUE count() > 0 FROM refresh_token
          WHERE user_id = $user_id
          AND token_hash = $token_hash
          AND is_revoked = false LIMIT 1";
