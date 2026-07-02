@@ -10,7 +10,6 @@ mod tests;
 mod utility;
 
 use crate::db::schema;
-use crate::utility::docker;
 use colored::Colorize;
 use quorum_core::db as core_db;
 use quorum_core::startup;
@@ -51,43 +50,13 @@ async fn main() {
     let timer = startup::create_timer();
     let _db = match core_db::init().await {
         Ok(db) => {
-            startup::print_step("Connecting to database", true, startup::elapsed(timer));
+            startup::print_step("Opening database", true, startup::elapsed(timer));
             db
         }
-        Err(_) => {
-            let docker_timer = startup::create_timer();
-            match docker::ensure_containers_running().await {
-                Ok(()) => {
-                    startup::print_step("Starting Docker", true, startup::elapsed(docker_timer));
-
-                    let retry_timer = startup::create_timer();
-                    match core_db::init().await {
-                        Ok(db) => {
-                            startup::print_step(
-                                "Connecting to database",
-                                true,
-                                startup::elapsed(retry_timer),
-                            );
-                            db
-                        }
-                        Err(e) => {
-                            startup::print_step(
-                                "Connecting to database",
-                                false,
-                                startup::elapsed(retry_timer),
-                            );
-                            eprintln!("{}", format!("  Error: {}", e).red());
-                            std::process::exit(1);
-                        }
-                    }
-                }
-                Err(docker_err) => {
-                    startup::print_step("Connecting to database", false, startup::elapsed(timer));
-                    startup::print_step("Starting Docker", false, startup::elapsed(docker_timer));
-                    eprintln!("{}", format!("  Error: {}", docker_err).red());
-                    std::process::exit(1);
-                }
-            }
+        Err(e) => {
+            startup::print_step("Opening database", false, startup::elapsed(timer));
+            eprintln!("{}", format!("  Error: {}", e).red());
+            std::process::exit(1);
         }
     };
 

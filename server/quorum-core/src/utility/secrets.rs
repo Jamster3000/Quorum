@@ -34,9 +34,7 @@ const SECRETS_PATH: &str = "secrets.enc";
 pub struct SerializableConfig {
     pub server_port: u16,
     pub server_host: String,
-    pub surreal_url: String,
-    pub surreal_user: String,
-    pub surreal_pass: String,
+    pub surreal_data_path: String,
     pub surreal_ns: String,
     pub surreal_db: String,
     pub jwt_secret: String,
@@ -251,41 +249,6 @@ pub fn run_setup() -> Result<SerializableConfig, String> {
     println!();
     typewriter_println(&format!(
         "{}",
-        "Please enter a username and password that the server uses"
-            .dimmed()
-            .bold()
-    ))
-    .map_err(|e| e.to_string())?;
-    typewriter_println(&format!(
-        "{}",
-        "to unlock the SurrealDB database. This is different to a Quorum account."
-            .dimmed()
-            .bold()
-    ))
-    .map_err(|e| e.to_string())?;
-    println!();
-
-    let surreal_username = Input::<String>::new()
-        .with_prompt("SurrealDB Root Username")
-        .default("(Default) root".to_string())
-        .interact()
-        .map_err(map_dialoguer_error)?;
-
-    let surreal_pass = Password::new()
-        .with_prompt("SurrealDB Root Password")
-        .interact()
-        .map_err(map_dialoguer_error)?;
-
-    println!();
-    typewriter_println(&format!("{}", "Configurations Complete!".cyan()))
-        .map_err(|e| e.to_string())?;
-    println!();
-
-    press_enter_to_continue(true, true);
-
-    println!();
-    typewriter_println(&format!(
-        "{}",
         "A passphrase will be used to encrypt your server configuration.".dimmed()
     ))
     .map_err(|e| e.to_string())?;
@@ -304,9 +267,7 @@ pub fn run_setup() -> Result<SerializableConfig, String> {
     Ok(SerializableConfig {
         server_port: 3000,
         server_host: "127.0.0.1".to_string(),
-        surreal_url: "localhost:8000".to_string(),
-        surreal_user: surreal_username,
-        surreal_pass,
+        surreal_data_path: "./data/db".to_string(),
         surreal_ns: "quorum".to_string(),
         surreal_db: "quorum".to_string(),
         jwt_secret: hex::encode(generate_random_bytes()),

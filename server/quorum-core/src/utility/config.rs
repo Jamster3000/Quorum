@@ -1,12 +1,13 @@
 //! Centralized configuration management.
 //!
-//! This module loads all environment variables once at application startup and provides
-//! a singleton `Config` struct that can be accessed from anywhere in the application.
-//! This eliminates the need to repeatedly read `.env` files and ensures consistent configuration
-//! values across the entire application.
+//! Configuration is loaded once at startup from an AES-256-GCM encrypted file (`secrets.enc`),
+//! decrypted using a passphrase the admin enters at the terminal. No `.env` files, no plaintext
+//! secrets on disk.
 //!
-//! Unlike a `OnceLock`, the config can be reloaded at runtime via `Config::reload()` without
-//! restarting the server. All reads are atomic and lock-free via `arc-swap`.
+//! The loaded config is stored in a global [`ArcSwap`] singleton, meaning:
+//! - All reads are atomic and lock-free via [`Config::get()`]
+//! - The config can be hot-reloaded at runtime via [`Config::reload()`] without restarting the server
+//! - Any reload is immediately visible to all subsequent [`Config::get()`] calls across all threads
 
 use crate::utility::secrets::{
     load_encrypted_config, prompt_passphrase, run_setup, save_encrypted_config, secrets_exist,
@@ -17,110 +18,122 @@ use colored::Colorize;
 use std::sync::Arc;
 use std::sync::OnceLock;
 
+/// The global configuration singleton.
+///
+/// Populated once by [`Config::load()`] and never replaced — only the inner [`Arc<Config>`]
+/// is swapped on reload, which is what [`ArcSwap`] is for.
+static CONFIG: OnceLock<ArcSwap<Config>> = OnceLock::new();
+
+/// Server-wide configuration, loaded from the encrypted `secrets.enc` file at startup.
+///
+/// All fields are read-only after initialization. To update values at runtime,
+/// edit `secrets.enc` and call [`Config::reload()`].
 #[derive(Debug)]
 pub struct Config {
-    /// HTTP server port number.
+    /// HTTP port the server binds to (e.g. `3000`).
     pub server_port: u16,
 
-    /// Full server URL including protocol and port (e.g., `http://127.0.0.1:3000`).
-    /// Used by clients and tests to connect to the server.
+    /// Full server URL including protocol and port (e.g. `http://127.0.0.1:3000`).
+    /// Used by the test suite and any internal self-referencing requests.
     pub server_url: String,
 
-    /// Server host/IP address to bind to.
+    /// IP address the server binds to (e.g. `127.0.0.1` or `0.0.0.0`).
     pub server_host: String,
 
-    /// SurrealDB connection URL.
-    pub surreal_url: String,
+    /// Path to the directory where SurrealDB stores its on-disk data.
+    ///
+    /// SurrealDB runs embedded (in-process) using RocksDB as the storage engine.
+    /// This directory is created automatically on first startup if it doesn't exist.
+    /// Defaults to `./data/db` if not set during setup.
+    pub surreal_data_path: String,
 
-    /// SurrealDB root username for authentication.
-    pub surreal_user: String,
-
-    /// SurrealDB root password for authentication.
-    pub surreal_pass: String,
-
-    /// SurrealDB namespace name.
+    /// SurrealDB namespace to use (e.g. `quorum`).
     pub surreal_ns: String,
 
-    /// SurrealDB database name.
+    /// SurrealDB database name within the namespace (e.g. `quorum`).
     pub surreal_db: String,
 
-    /// Secret key for signing and verifying JWT tokens.
+    /// Secret key used to sign and verify JWT access and refresh tokens.
+    ///
+    /// Auto-generated as a random 32-byte hex string during first-run setup.
+    /// Changing this value invalidates all currently issued tokens.
     pub jwt_secret: String,
 
-    /// Access token expiry time in minutes.
+    /// How long an access token remains valid, in minutes.
+    /// Access tokens are short-lived by design — default is 15 minutes.
     pub jwt_access_minutes: i64,
 
-    /// Refresh token expiry time in days.
+    /// How long a refresh token remains valid, in days.
+    /// Refresh tokens are long-lived — default is 7 days.
     pub jwt_refresh_days: i64,
 
-    /// Whether to run functional tests on server startup.
+    /// Whether to run the functional and robustness test suite on server startup.
+    ///
+    /// Should be `false` in production. When `true`, the test suite fires real HTTP
+    /// requests against the running server immediately after it becomes ready.
     pub enable_testing: bool,
 
-    /// Rate limit: requests per second for default endpoints.
+    /// Rate limit: sustained request rate for standard endpoints (requests per second).
     pub default_per_second: u64,
 
-    /// Rate limit: burst size for default endpoints.
+    /// Rate limit: maximum burst size for standard endpoints.
+    ///
+    /// Allows short spikes above `default_per_second` up to this many requests
+    /// before the limiter kicks in.
     pub default_burst_size: u32,
 
-    /// Rate limit: requests per second for testing endpoints.
+    /// Rate limit: sustained request rate for test/dev endpoints (requests per second).
+    ///
+    /// Intentionally higher than `default_per_second` so the test suite doesn't
+    /// rate-limit itself during a full run.
     pub testing_per_second: u64,
 
-    /// Rate limit: burst size for testing endpoints.
+    /// Rate limit: maximum burst size for test/dev endpoints.
     pub testing_burst_size: u32,
 }
 
-static CONFIG: OnceLock<ArcSwap<Config>> = OnceLock::new();
-
 impl Config {
-    /// Parses all environment variables into a `Config` instance.
-    fn build(
-        jwt_secret: String,
-        surreal_pass: String,
-    ) -> Result<Config, Box<dyn std::error::Error>> {
-        let server_port: u16 = std::env::var("SERVER_PORT")
-            .unwrap_or_else(|_| "3000".to_string())
-            .parse()?;
-
-        let server_host = std::env::var("SERVER_HOST").unwrap_or_else(|_| "127.0.0.1".to_string());
-
-        Ok(Config {
-            server_port,
-            server_host: server_host.clone(),
-            server_url: std::env::var("SERVER_URL")
-                .unwrap_or_else(|_| format!("http://{}:{}", server_host, server_port)),
-            surreal_url: std::env::var("SURREAL_URL")?,
-            surreal_user: std::env::var("SURREAL_USER")?,
-            surreal_pass,
-            surreal_ns: std::env::var("SURREAL_NS")?,
-            surreal_db: std::env::var("SURREAL_DB")?,
-            jwt_secret,
-            jwt_access_minutes: std::env::var("JWT_ACCESS_MINUTES")?.parse()?,
-            jwt_refresh_days: std::env::var("JWT_REFRESH_DAYS")?.parse()?,
-            enable_testing: std::env::var("ENABLE_TESTING")
-                .unwrap_or_else(|_| "true".to_string())
-                .parse()?,
-            default_per_second: std::env::var("DEFAULT_PER_SECOND")
-                .unwrap_or_else(|_| "2".to_string())
-                .parse()?,
-            default_burst_size: std::env::var("DEFAULT_BURST_SIZE")
-                .unwrap_or_else(|_| "5".to_string())
-                .parse()?,
-            testing_per_second: std::env::var("TESTING_PER_SECOND")
-                .unwrap_or_else(|_| "10".to_string())
-                .parse()?,
-            testing_burst_size: std::env::var("TESTING_BURST_SIZE")
-                .unwrap_or_else(|_| "50".to_string())
-                .parse()?,
-        })
+    /// Builds a [`Config`] directly from a decrypted [`SerializableConfig`].
+    ///
+    /// This is the only construction path — there are no environment variable fallbacks.
+    /// All values come from the encrypted secrets file, which was populated during first-run setup.
+    ///
+    /// [`SerializableConfig`]: crate::utility::secrets::SerializableConfig
+    fn from_serializable(s: crate::utility::secrets::SerializableConfig) -> Config {
+        Config {
+            server_url: format!("http://{}:{}", s.server_host, s.server_port),
+            server_port: s.server_port,
+            server_host: s.server_host,
+            surreal_data_path: s.surreal_data_path,
+            surreal_ns: s.surreal_ns,
+            surreal_db: s.surreal_db,
+            jwt_secret: s.jwt_secret,
+            jwt_access_minutes: s.jwt_access_minutes,
+            jwt_refresh_days: s.jwt_refresh_days,
+            enable_testing: s.enable_testing,
+            default_per_second: s.default_per_second,
+            default_burst_size: s.default_burst_size,
+            testing_per_second: s.testing_per_second,
+            testing_burst_size: s.testing_burst_size,
+        }
     }
 
-    /// Loads configuration from environment variables and initializes the global `CONFIG` singleton.
+    /// Loads configuration from `secrets.enc` and initializes the global [`CONFIG`] singleton.
     ///
-    /// # Returns
-    /// * `Ok(())` if the configuration was loaded successfully.
-    /// * `Err` if there was an error loading the configuration, such as missing or invalid environment variables.
+    /// On first run (no `secrets.enc` exists), walks the admin through the interactive setup
+    /// wizard, prompts for a passphrase, encrypts the config, saves it, then loads it.
     ///
-    /// Example
+    /// On subsequent runs, prompts for the passphrase and decrypts the existing file.
+    ///
+    /// This must be called exactly once, before any call to [`Config::get()`].
+    /// Calling it a second time returns an error (`"Config already initialized"`).
+    ///
+    /// # Errors
+    /// * Wrong passphrase — AES-GCM auth tag mismatch, decryption fails
+    /// * Corrupt or missing `secrets.enc` — file read or deserialization fails
+    /// * Setup wizard aborted — terminal I/O error during first-run prompts
+    ///
+    /// # Example
     /// ```rust
     /// Config::load().expect("Failed to load configuration");
     /// ```
@@ -134,34 +147,15 @@ impl Config {
             .map_err(|e| e.to_string())?;
 
             let passphrase = prompt_passphrase()?;
-            let serializable_config = load_encrypted_config(&passphrase)?;
+            let serializable = load_encrypted_config(&passphrase)?;
+            let config = Self::from_serializable(serializable);
 
-            let config = Config {
-                server_port: serializable_config.server_port,
-                server_host: serializable_config.server_host.clone(),
-                server_url: format!(
-                    "http://{}:{}",
-                    serializable_config.server_host, serializable_config.server_port
-                ),
-                surreal_url: serializable_config.surreal_url,
-                surreal_user: serializable_config.surreal_user,
-                surreal_pass: serializable_config.surreal_pass,
-                surreal_ns: serializable_config.surreal_ns,
-                surreal_db: serializable_config.surreal_db,
-                jwt_secret: serializable_config.jwt_secret,
-                jwt_access_minutes: serializable_config.jwt_access_minutes,
-                jwt_refresh_days: serializable_config.jwt_refresh_days,
-                enable_testing: serializable_config.enable_testing,
-                default_per_second: serializable_config.default_per_second,
-                default_burst_size: serializable_config.default_burst_size,
-                testing_per_second: serializable_config.testing_per_second,
-                testing_burst_size: serializable_config.testing_burst_size,
-            };
             CONFIG
                 .set(ArcSwap::from_pointee(config))
                 .map_err(|_| "Config already initialized".into())
         } else {
-            let serializable_config = run_setup()?;
+            // First run — guide the admin through setup, encrypt and save, then load normally
+            let serializable = run_setup()?;
             let passphrase = prompt_passphrase()?;
 
             println!();
@@ -173,36 +167,61 @@ impl Config {
 
             press_enter_to_continue(true, true);
 
-            save_encrypted_config(&serializable_config, &passphrase)?;
+            save_encrypted_config(&serializable, &passphrase)?;
+
+            // Recurse once — secrets.enc now exists so the next call takes the `if` branch
             Self::load()
         }
     }
 
-    /// Reloads configuration from environment variables without restarting the server.
-    /// All subsequent `Config::get()` calls will see the new values atomically.
+    /// Reloads configuration from `secrets.enc` without restarting the server.
+    ///
+    /// Prompts the admin for their passphrase, decrypts the file, and atomically swaps
+    /// the global config. All subsequent [`Config::get()`] calls will see the new values
+    /// immediately, with no downtime and no impact on in-flight requests.
+    ///
+    /// Useful when you've updated `secrets.enc` (e.g. changed rate limits or JWT expiry)
+    /// and want the changes applied without a full server restart.
     ///
     /// # Errors
-    /// * Same as `Config::load()` — missing or invalid environment variables
-    /// * Panics if called before `Config::load()`
+    /// * Wrong passphrase — decryption fails
+    /// * Corrupt `secrets.enc` — deserialization fails
+    ///
+    /// # Panics
+    /// Panics if called before [`Config::load()`].
     pub fn reload() -> Result<(), Box<dyn std::error::Error>> {
-        let current = Self::get();
-        let jwt_secret = current.jwt_secret.clone();
-        let surreal_pass = current.surreal_pass.clone();
-        drop(current);
+        typewriter_println(&format!(
+            "{}",
+            "Enter passphrase to reload config...".cyan().bold()
+        ))
+        .map_err(|e| e.to_string())?;
 
-        let config = Self::build(jwt_secret, surreal_pass)?;
+        let passphrase = prompt_passphrase()?;
+        let serializable = load_encrypted_config(&passphrase)?;
+        let config = Self::from_serializable(serializable);
+
         CONFIG
             .get()
             .expect("Config not initialized. Call Config::load() first.")
             .store(Arc::new(config));
+
         Ok(())
     }
 
     /// Returns a snapshot of the current configuration.
-    /// The snapshot is cheap to load and reflects any reloads since the last call.
+    ///
+    /// The returned guard is cheap to acquire (atomic load, no locking) and reflects
+    /// the latest [`Config::reload()`] if one has been called. Treat it like an `Arc<Config>` —
+    /// hold it for the duration of a request or operation, then drop it.
     ///
     /// # Panics
-    /// Panics if `Config::load()` has not been called yet.
+    /// Panics if [`Config::load()`] has not been called yet.
+    ///
+    /// # Example
+    /// ```rust
+    /// let config = Config::get();
+    /// println!("Listening on port {}", config.server_port);
+    /// ```
     pub fn get() -> arc_swap::Guard<Arc<Config>> {
         CONFIG
             .get()
