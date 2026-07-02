@@ -37,12 +37,6 @@ async fn main() {
         }
     };
 
-    startup::print_step(
-        "Loading environment",
-        true,
-        startup::elapsed(startup::create_timer()),
-    );
-
     // Load the config once and reuse it
     let config = quorum_core::utility::config::Config::get();
 
