@@ -650,6 +650,36 @@ pub async fn refresh_token(
         }
     };
 
+    let user_id = claims.sub.clone();
+
+    if auth::validate_refresh_token(&db, &user_id, &payload.refresh_token)
+        .await
+        .is_err()
+    {
+        let _ = log_audit_event(
+            &db,
+            AuditEvent {
+                log_type: "refresh_token_failed".to_string(),
+                action: Some("Refresh token not found or revoked".to_string()),
+                target_type_table: Some("users".to_string()),
+                target_type_table_id: Some(user_id.clone()),
+                user_id: Some(user_id.clone()),
+                ..Default::default()
+            },
+        )
+        .await;
+
+        return (
+            StatusCode::UNAUTHORIZED,
+            Json(AuthTokenResponse {
+                success: false,
+                user: None,
+                tokens: None,
+                message: "Invalid or expired refresh token".to_string(),
+            }),
+        );
+    }
+
     //Generate access token
     let access_token =
         match crate::utility::jwt::generate_access_token(&claims.sub, &claims.username) {
@@ -672,8 +702,8 @@ pub async fn refresh_token(
         AuditEvent {
             log_type: "refresh_token_success".to_string(),
             target_type_table: Some("users".to_string()),
-            target_type_table_id: Some(claims.sub.clone()),
-            user_id: Some(claims.sub.clone()),
+            target_type_table_id: Some(user_id.clone()),
+            user_id: Some(user_id),
             ..Default::default()
         },
     )

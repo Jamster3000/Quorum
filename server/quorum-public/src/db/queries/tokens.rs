@@ -33,7 +33,12 @@ pub async fn store_refresh_token(
 ) -> Result<(), Box<dyn Error + Send + Sync>> {
     let token_hash = hash_token(refresh_token);
 
-    let query = "CREATE refresh_token SET user_id = $user_id, token_hash = $token_hash, expires_at = $expires_at";
+    let query =
+        "CREATE refresh_token
+         SET user_id = $user_id,
+             token_hash = $token_hash,
+             expires_at = $expires_at,
+             is_revoked = false";
 
     db.query(query)
         .bind(("user_id", format!("users:{}", user_id)))
@@ -120,4 +125,32 @@ fn hash_token(token: &str) -> String {
     let mut hasher = Sha256::new();
     hasher.update(token.as_bytes());
     hex::encode(hasher.finalize())
+}
+
+pub async fn validate_refresh_token(
+    db: &DB,
+    user_id: &str,
+    refresh_token: &str,
+) -> Result<(), Box<dyn Error + Send + Sync>> {
+    let token_hash = hash_token(refresh_token);
+
+    let query =
+        "SELECT VALUE count() > 0 FROM refresh_token
+         WHERE user_id = $user_id
+         AND token_hash = $token_hash
+         AND is_revoked = false LIMIT 1";
+
+    let mut response = db
+        .query(query)
+        .bind(("user_id", format!("users:{}", user_id)))
+        .bind(("token_hash", token_hash))
+        .await?;
+
+    let is_valid = response.take::<Option<bool>>(0)?.unwrap_or(false);
+
+    if is_valid {
+        Ok(())
+    } else {
+        Err("Refresh token not found or revoked".into())
+    }
 }

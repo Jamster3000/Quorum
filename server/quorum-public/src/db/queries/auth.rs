@@ -351,3 +351,11 @@ pub async fn make_admin(db: &DB, username: &str) -> Result<(), Box<dyn Error + S
 
     Ok(())
 }
+
+pub async fn validate_refresh_token(
+    db: &DB,
+    user_id: &str,
+    refresh_token: &str,
+) -> Result<(), Box<dyn Error + Send + Sync>> {
+    tokens::validate_refresh_token(db, user_id, refresh_token).await
+}
