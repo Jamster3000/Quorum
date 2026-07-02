@@ -11,18 +11,5 @@ services:
       - SURREAL_ROOT_USER=${SURREAL_ROOT_USER}
       - SURREAL_ROOT_PASS=${SURREAL_ROOT_PASS}
 
-  minio:
-    image: minio/minio:latest
-    command: server /data --console-address ":9001"
-    ports:
-      - "9000:9000"
-      - "9001:9001"
-    environment:
-      MINIO_ROOT_USER: minioadmin
-      MINIO_ROOT_PASSWORD: apple
-    volumes:
-      - minio_data:/data
-
 volumes:
   surreal_data:
-  minio_data:
