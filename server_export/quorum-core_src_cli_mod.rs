@@ -1,17 +1,12 @@
 //! Main entry point for the server cli Commands
 //! This is where commands are defined properly, and where command functions are called.
 
+pub mod db;
 pub mod help;
 pub mod server;
-pub mod test;
-pub mod user;
 
+use crate::db::DB;
 use colored::Colorize;
-use quorum_core::cli::AdminSession;
-use quorum_core::cli::db;
-use quorum_core::cli::server::{audit, logout, logs, shutdown, status};
-use crate::cli::server::confirm_and_delete;
-use quorum_core::db::DB;
 use std::io::{self, Write};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
@@ -19,11 +14,57 @@ use tokio::sync::watch;
 
 const SESSION_TIMEOUT_MINS: u64 = 20;
 
+pub struct AdminSession {
+    pub logged_in: bool,
+    pub last_active: Instant,
+    pub username: Option<String>,
+    pub is_admin: bool,
+}
+
 struct Command {
     parts: Vec<String>,
     #[allow(dead_code)]
     params: Vec<String>,
     raw: String,
+}
+
+impl Default for AdminSession {
+    fn default() -> Self {
+        Self {
+            logged_in: false,
+            is_admin: false,
+            last_active: Instant::now(),
+            username: None,
+        }
+    }
+}
+
+/// Represents the state of an admin session in the CLI.
+impl AdminSession {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn is_valid(&self) -> bool {
+        self.logged_in
+            && self.last_active.elapsed() < Duration::from_secs(SESSION_TIMEOUT_MINS * 60)
+    }
+
+    pub fn update_is_admin(&mut self, is_admin: bool) {
+        self.is_admin = is_admin;
+    }
+
+    pub fn login(&mut self, username: String, is_admin: bool) {
+        self.logged_in = true;
+        self.username = Some(username);
+        self.is_admin = is_admin;
+        self.last_active = Instant::now();
+    }
+
+    pub fn logout(&mut self) {
+        self.logged_in = false;
+        self.username = None;
+    }
 }
 
 /// Parses a command string into a Command struct.
@@ -70,42 +111,30 @@ fn parse(input: &str) -> Option<Command> {
     })
 }
 
-/// Spawns the CLI in a separate blocking thread.
+/// Spawns the CLI in a separate asynchronous task.
 ///
-/// Runs an interactive command loop that listens for user input and dispatches commands
-/// to their respective handlers. The CLI operates on a dedicated thread to avoid blocking
-/// the async Tokio runtime, allowing the server to continue handling HTTP requests
-/// concurrently.
-///
-/// Session expiry is enforced—after 20 minutes of inactivity, users must re-authenticate
-/// with `server:login` before executing protected commands.
-///
-/// The CLI automatically exits when a shutdown signal is received via `shutdown_tx`.
+/// The server sits on the main thread/task, whilst the CLI runs on a seperate task to avoid holding the server from handling requests.
 ///
 /// # Arguments
-/// * `db` - A reference to the database connection, passed to all command handlers.
-/// * `server_start` - The instant when the server started, used for uptime calculations in `server:status`.
-/// * `shutdown_tx` - A watch channel sender that signals the CLI to exit when the server is shutting down.
+/// * `db` - A reference to the database connection.
+/// * `server_start` - The instant when the server started, used for uptime calculations.
+/// * `shutdown_tx` - A watch channel sender to signal server shutdown.
 ///
 /// # Example
 /// ```rust
-/// let (shutdown_tx, shutdown_rx) = tokio::sync::watch::channel(false);
-/// cli::spawn_cli(db, server_start, shutdown_tx).await;
-/// ```
+/// let db = DB::new("sqlite:memory:").await.unwrap();
+/// let server_start = Instant::now();
+/// let (shutdown_tx, shutdown_rx) = watch::channel(false);
+/// spawn_cli(db, server_start, shutdown_tx);
+///```
 pub async fn spawn_cli(db: DB, server_start: Instant, shutdown_tx: watch::Sender<bool>) {
     let session = Arc::new(Mutex::new(AdminSession::new()));
     let handle = tokio::runtime::Handle::current();
-    let shutdown_rx = shutdown_tx.subscribe();
 
     tokio::task::spawn_blocking(move || {
         std::thread::sleep(Duration::from_millis(600));
 
         loop {
-            // Check if shutdown was signaled
-            if shutdown_rx.has_changed().unwrap_or(false) {
-                break;
-            }
-
             print!("{} ", ">".cyan().bold());
             io::stdout().flush().unwrap();
 
@@ -133,6 +162,7 @@ pub async fn spawn_cli(db: DB, server_start: Instant, shutdown_tx: watch::Sender
                 None => continue,
             };
 
+            //Uses OS thread, where block_on is safe. This is used to ensure server commands work whilst accepting requests
             handle.block_on(dispatch(&cmd, &db, server_start, &session, &shutdown_tx));
         }
     });
@@ -162,51 +192,24 @@ async fn dispatch(
             help::print_command(command);
         }
 
-        // -- Server --
+        // -- server --
         [ns, command] if ns == "server" => match command.as_str() {
-            "signup" => {
-                server::signup(db).await;
-            }
-            "login" => server::login(db, session).await,
-            "make-admin" => {
-                let username = cmd.raw.split_once(' ').map(|x| x.1).unwrap_or("");
-                server::make_admin(db, username, session).await;
-            }
-            "status" => status(server_start).await,
-            "logout" => logout(session),
+            "status" => server::status(server_start).await,
+            "logout" => server::logout(session),
             "shutdown" => {
                 if !require_admin(session) {
                     return;
                 }
-                shutdown(db, server_start, shutdown_tx).await;
+                server::shutdown(db, server_start, shutdown_tx).await;
             }
             "logs" => {
                 let params = cmd.raw.split_once(' ').map(|x| x.1).unwrap_or("");
-                logs(db, params).await;
+                server::logs(db, params).await;
             }
             "audit" => {
                 let params = cmd.raw.split_once(' ').map(|x| x.1).unwrap_or("");
-                audit(db, params).await;
+                server::audit(db, params).await;
             }
-            _ => unknown(&cmd.raw),
-        },
-
-        // -- User --
-        [ns, command] if ns == "user" => match command.as_str() {
-            "delete" => {
-                if !require_admin(session) {
-                    return;
-                }
-
-                let id = cmd.raw.split_once(' ').map(|x| x.1).unwrap_or("");
-                user::delete(db, id).await;
-            }
-            _ => unknown(&cmd.raw),
-        },
-
-        // -- Test --
-        [ns, command] if ns == "test" => match command.as_str() {
-            "run" => test::run().await,
             _ => unknown(&cmd.raw),
         },
 
@@ -216,12 +219,6 @@ async fn dispatch(
             "table" => {
                 let params = cmd.raw.split_once(' ').map(|x| x.1).unwrap_or("");
                 db::table(db, params).await;
-            }
-            "delete" => {
-                /*if !require_admin(session) {
-                    return;
-                }*/
-                confirm_and_delete(shutdown_tx).await;
             }
             _ => unknown(&cmd.raw),
         },

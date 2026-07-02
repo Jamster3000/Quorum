@@ -70,42 +70,30 @@ fn parse(input: &str) -> Option<Command> {
     })
 }
 
-/// Spawns the CLI in a separate blocking thread.
+/// Spawns the CLI in a separate asynchronous task.
 ///
-/// Runs an interactive command loop that listens for user input and dispatches commands
-/// to their respective handlers. The CLI operates on a dedicated thread to avoid blocking
-/// the async Tokio runtime, allowing the server to continue handling HTTP requests
-/// concurrently.
-///
-/// Session expiry is enforced—after 20 minutes of inactivity, users must re-authenticate
-/// with `server:login` before executing protected commands.
-///
-/// The CLI automatically exits when a shutdown signal is received via `shutdown_tx`.
+/// The server sits on the main thread/task, whilst the CLI runs on a seperate task to avoid holding the server from handling requests.
 ///
 /// # Arguments
-/// * `db` - A reference to the database connection, passed to all command handlers.
-/// * `server_start` - The instant when the server started, used for uptime calculations in `server:status`.
-/// * `shutdown_tx` - A watch channel sender that signals the CLI to exit when the server is shutting down.
+/// * `db` - A reference to the database connection.
+/// * `server_start` - The instant when the server started, used for uptime calculations.
+/// * `shutdown_tx` - A watch channel sender to signal server shutdown.
 ///
 /// # Example
 /// ```rust
-/// let (shutdown_tx, shutdown_rx) = tokio::sync::watch::channel(false);
-/// cli::spawn_cli(db, server_start, shutdown_tx).await;
-/// ```
+/// let db = DB::new("sqlite:memory:").await.unwrap();
+/// let server_start = Instant::now();
+/// let (shutdown_tx, shutdown_rx) = watch::channel(false);
+/// spawn_cli(db, server_start, shutdown_tx);
+///```
 pub async fn spawn_cli(db: DB, server_start: Instant, shutdown_tx: watch::Sender<bool>) {
     let session = Arc::new(Mutex::new(AdminSession::new()));
     let handle = tokio::runtime::Handle::current();
-    let shutdown_rx = shutdown_tx.subscribe();
 
     tokio::task::spawn_blocking(move || {
         std::thread::sleep(Duration::from_millis(600));
 
         loop {
-            // Check if shutdown was signaled
-            if shutdown_rx.has_changed().unwrap_or(false) {
-                break;
-            }
-
             print!("{} ", ">".cyan().bold());
             io::stdout().flush().unwrap();
 
@@ -133,6 +121,7 @@ pub async fn spawn_cli(db: DB, server_start: Instant, shutdown_tx: watch::Sender
                 None => continue,
             };
 
+            //Uses OS thread, where block_on is safe. This is used to ensure server commands work whilst accepting requests
             handle.block_on(dispatch(&cmd, &db, server_start, &session, &shutdown_tx));
         }
     });
@@ -197,7 +186,6 @@ async fn dispatch(
                 if !require_admin(session) {
                     return;
                 }
-
                 let id = cmd.raw.split_once(' ').map(|x| x.1).unwrap_or("");
                 user::delete(db, id).await;
             }
@@ -221,7 +209,8 @@ async fn dispatch(
                 /*if !require_admin(session) {
                     return;
                 }*/
-                confirm_and_delete(shutdown_tx).await;
+
+                confirm_and_delete(db, shutdown_tx).await;
             }
             _ => unknown(&cmd.raw),
         },

@@ -1,10 +1,12 @@
 use crate::cli::AdminSession;
+use crate::db::schema;
 use colored::Colorize;
-use quorum_core::db::DB;
+use quorum_core::db::{self as core_db, DB};
 use std::sync::{Arc, Mutex};
 use quorum_core::utility::std::typewriter_println;
 use dialoguer::Input;
-use quorum_core::utility::secrets::prompt_passphrase;
+use quorum_core::utility::secrets::{prompt_passphrase, secrets_exist};
+use quorum_core::startup;
 
 /// Handles user signup
 ///
@@ -120,28 +122,11 @@ pub async fn make_admin(db: &DB, username: &str, session: &Arc<Mutex<AdminSessio
     }
 }
 
-/// Prompts the user to confirm database deletion and initiates a reset.
-///
-/// Displays a confirmation prompt and requires the user to enter their server passphrase
-/// to verify they have authority to perform this destructive operation. On confirmation,
-/// deletes the entire database directory and recreates it empty, then gracefully shuts
-/// down the server for restart.
-///
-/// The user will be prompted twice: once to confirm intent, and once to provide the passphrase.
-/// Either prompt can be cancelled by answering "no" to the confirmation or entering an invalid passphrase.
-///
-/// # Arguments
-/// * `shutdown_tx` - A watch channel sender used to signal server shutdown after a successful reset.
-///
-/// # Example
-/// ```rust
-/// confirm_and_delete(&shutdown_tx).await;
-/// ```
-pub async fn confirm_and_delete(shutdown_tx: &tokio::sync::watch::Sender<bool>) {
+pub async fn confirm_and_delete(db: &DB, shutdown_tx: &tokio::sync::watch::Sender<bool>) {
     println!();
     let _ = typewriter_println(&format!(
         "{}",
-        "WARNING: This will delete all data and shut down the server.\nYou must restart it manually after.\n\nContinue? (y/n)".yellow()
+        "Are you sure?\nThis will delete the whole database and all data stored, restarting the whole database from scratch (y/n)".yellow()
     ))
     .map_err(|e| e.to_string());
 
@@ -165,13 +150,13 @@ pub async fn confirm_and_delete(shutdown_tx: &tokio::sync::watch::Sender<bool>) 
 
     match prompt_passphrase() {
         Ok(passphrase) => {
-            if let Err(e) = perform_reset(&passphrase).await {
+            if let Err(e) = perform_reset(db, &passphrase).await {
                 eprintln!("{}", format!("Failed to reset database: {e}").red());
                 return;
             }
             println!(
                 "{}",
-                "Database reset complete. The server is shutting down.\nPlease restart the server to continue.".green()
+                "Database reset complete. The server is shutting down...".green()
             );
             let _ = shutdown_tx.send(true);
         }
@@ -181,38 +166,29 @@ pub async fn confirm_and_delete(shutdown_tx: &tokio::sync::watch::Sender<bool>) 
     }
 }
 
-/// Deletes and reinitializes the database with an empty schema.
-///
-/// Verifies the provided passphrase to ensure the caller has authority, then spawns a blocking
-/// task to delete the entire database directory and recreate it. After the filesystem operations
-/// complete, reinitializes the database schema from the initial migration script.
-///
-/// The database deletion is performed on a separate thread to avoid holding locks from the CLI's
-/// database reference, which would prevent the filesystem operations from succeeding on Windows.
-///
-/// # Errors
-///
-/// Returns an error when:
-/// - the passphrase is invalid,
-/// - the database directory cannot be deleted or recreated,
-/// - or schema initialization fails.
-///
-/// # Arguments
-/// * `passphrase` - The server passphrase, used to verify the caller's authority before performing the reset.
-async fn perform_reset(passphrase: &str) -> Result<(), Box<dyn std::error::Error>> {
+async fn perform_reset(db: &DB, passphrase: &str) -> Result<(), Box<dyn std::error::Error>> {
+    // Verify passphrase is correct by attempting to reload config
     quorum_core::utility::config::Config::load_with_passphrase(passphrase)?;
 
     let config = quorum_core::utility::config::Config::get();
-    let path = std::path::Path::new(&config.surreal_data_path).to_path_buf();
+    let path = std::path::Path::new(&config.surreal_data_path);
 
-    tokio::task::spawn_blocking(move || {
-        std::thread::sleep(std::time::Duration::from_millis(1000));
-        if path.exists() {
-            std::fs::remove_dir_all(&path).ok();
-        }
-        std::fs::create_dir_all(&path).ok();
-    })
-    .await?;
+    // Delete the database directory
+    if path.exists() {
+        std::fs::remove_dir_all(path)?;
+    }
+
+    // Recreate it
+    std::fs::create_dir_all(path)?;
+
+    // Reinitialize the database
+    let timer = startup::create_timer();
+    let new_db = quorum_core::db::init().await?;
+    startup::print_step("Opening database", true, startup::elapsed(timer));
+
+    let timer = startup::create_timer();
+    schema::init(&new_db).await?;
+    startup::print_step("Initializing schema", true, startup::elapsed(timer));
 
     Ok(())
 }
