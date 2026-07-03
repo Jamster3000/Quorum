@@ -39,16 +39,15 @@ Discord collects extensive user data, shares it with third parties, trains AI mo
 - **Administrator Setup** - Login with your Quorum account and promote yourself to admin as a one-time-only feature, meaning only your account can perform most server actions
 - **Server Commands** - Interact with the database and server using command-line commands
 - **Automated Tests** - Enable server tests to run through all functionality and verify everything works correctly
-- **Federation** - Host your own private server where your group or community can run independently from the public server. Quorum users can seamlessly navigate between public and private groups (Planned)
 
 ---
 
 ### Planned Features
 - **Voice & Video** — group calls via SFU relay
 - **FHE Moderation** — server-side content filtering without reading message content
-- **File Storage** — share files within groups
-- **Custom Emoji** — per-group emoji support
-- 
+- **File Storage** — share files and images within groups
+- **Federation** - Host your own private server where your group or community can run independently from the public server. Quorum users can seamlessly navigate between public and private groups
+
 ---
 
 ## Tech Stack
