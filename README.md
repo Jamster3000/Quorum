@@ -65,22 +65,13 @@ cargo run -p quorum-private
 
 > Or use `cargo run -p quorum-public` to build the public server.
 
-### 6. Start the Tauri application
+### 3. Start the Tauri application
 
 ```bash
 cd client
 npm install
 npm run tauri dev
 ```
-
----
-
-## Stopping the server
-
-The server running in debug mode, Ctrl-C works as normal. In release mode (the normal production release that everyone would be using) blocks ctrl-c, requiring an administrator user, to be logged in and use the `server:shutdown` command.
-
-## Wiping database
-Shutting the server down preserves all data in the database. To wipe the database, use the `db:delete` command as an administrator.
 
 ---
 
