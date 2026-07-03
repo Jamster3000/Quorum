@@ -97,4 +97,8 @@ Contributions are welcome. Please read [CONTRIBUTE.md](CONTRIBUTE.md) before ope
 
 ## License
 
-TBD — license will be added before public release.
+Quorum is licensed under the [GNU Affero General Public License v3.0 (AGPL-3.0)](https://www.gnu.org/licenses/agpl-3.0.html).
+
+In short: you're free to use, modify, and self-host Quorum. If you modify it and run it as a service, you must release your changes under the same license. This ensures Quorum stays open and transparent, even in forks.
+
+See the [LICENSE](LICENSE) file for full details.
