@@ -20,6 +20,37 @@ Discord collects extensive user data, shares it with third parties, trains AI mo
 
 ---
 
+## Features
+
+### Core Functionality
+- **Authentication** - Create accounts and login with username and password. Sign up with email is optional but suggested for account recovery.
+- **Direct Messages** - Send other users on the platform private secure messages (Planned)
+- **Message Compression** - All messages use custom text compression, saving server storage and allowing up to 4096 characters per message (Planned)
+- **Message Encryption** - All messages are encrypted using Full Homomorphic Encryption, allowing us to filter banned content without ever reading message text (Planned)
+- **Groups** - Create groups for your friends and set up multiple spaces in each group to organize chat content (Planned)
+- **Communities** - Evolve your group into a community, allowing it to be accessed by the public (Planned)
+- **Moderation Tools** - Strong, simple moderation tools to help groups and communities rid themselves of spam and rule violations, keeping them friendly and clean (Planned)
+- **Custom Banned Words** - Allow group and community moderators to add custom banned words for their spaces (Planned)
+- **Voice & Video** - Send voice messages or join calls to speak verbally, with optional video (Planned)
+
+### Server
+- **First Time Setup** - Automatically create default configuration settings so you don't need to understand or manually configure them. Settings are encrypted so unauthorized access can't expose them
+- **Passphrase Protection** - Set up a passphrase for critical server actions, ensuring only the administrator can perform sensitive operations securely
+- **Administrator Setup** - Login with your Quorum account and promote yourself to admin as a one-time-only feature, meaning only your account can perform most server actions
+- **Server Commands** - Interact with the database and server using command-line commands
+- **Automated Tests** - Enable server tests to run through all functionality and verify everything works correctly
+- **Federation** - Host your own private server where your group or community can run independently from the public server. Quorum users can seamlessly navigate between public and private groups (Planned)
+
+---
+
+### Planned Features
+- **Voice & Video** — group calls via SFU relay
+- **FHE Moderation** — server-side content filtering without reading message content
+- **File Storage** — share files within groups
+- **Custom Emoji** — per-group emoji support
+- 
+---
+
 ## Tech Stack
 
 | Layer | Technology |
