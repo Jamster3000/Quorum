@@ -1,18 +1,22 @@
 # Quorum
-Quorum is a privacy-focused, open source application - originally built with the intention of being an alternative to discord.
 
-Quorum is a work in progress and has limited use/functionality. Because Quorum is open source, this means others can host the backend on their own computer or server privately, meaning your conversations and data stay on infrastructure you own and trust (More details about this and more as it's developed)
+Quorum was inspired by Discord, born from community feedback about privacy concerns, security, and performance. This project focuses on three core goals:
+
+- **Privacy**: Collect only what's necessary and let users control their data
+- **Security**: Make unauthorized access and data theft practically impossible
+- **Performance**: Keep everything snappy without compromising security
  
 ---
 
-## Why Quorum?
+# Why Quorum?
 
-Discord harvests and shares user data with third parties, trains AI on your conversations and has been a little too well known for getting hacked or being unsecure. Quorum is built from the ground up with privacy as a non-negotiable — not a setting, not a tier, just how it works.
+Discord collects extensive user data, shares it with third parties, trains AI models on your conversations, and has suffered repeated security breaches. Of course, this applies to many other platforms, not just discord. Quorum is built differently - privacy isn't a feature you toggle on, it's the foundation.
 
-- **Open source** — read every line of code that handles your data
-- **Self-hostable** — run your own private server for your group
-- **No ads** — ever
-- **No AI training** on any of your data
+- **Open source** - audit every line of code that touches your data
+- **Self-hostable** - run your own server for complete control
+- **No tracking** - we don't collect data we don't need
+- **No AI training** - your conversations stay yours
+- **No ads** - ever
 
 ---
 
@@ -20,11 +24,9 @@ Discord harvests and shares user data with third parties, trains AI on your conv
 
 | Layer | Technology |
 |---|---|
-| Desktop app | Tauri 2 + SvelteKit + hand-written CSS |
+| App | Tauri + Svelte |
 | Backend | Rust + Axum |
 | Database | SurrealDB |
-| File storage | MinIO |
-| Infrastructure | Docker |
 
 ---
 
@@ -32,19 +34,13 @@ Discord harvests and shares user data with third parties, trains AI on your conv
 
 ```
 Quorum/
-├── client/          # Tauri desktop app (Svelte frontend)
-├── docker/          # Docker Compose configuration
-├── schema/          # SurrealQL database schema
+├── client/          # Tauri app (Svelte frontend)
 ├── server/          # Axum backend (Rust)
 ├── wireframes/      # UI design sketches
-└── .env.example     # Environment variable template
 ```
 
----
+## Tools required
 
-## Requirements
-
-- [Docker Desktop](https://www.docker.com/products/docker-desktop/)
 - [Node.js LTS](https://nodejs.org/)
 - [Rust](https://rustup.rs/)
 
