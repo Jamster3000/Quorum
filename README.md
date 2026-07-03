@@ -55,49 +55,17 @@ git clone https://github.com/Jamster3000/Quorum.git
 cd quorum
 ```
 
-### 2. Set up environment variables
-
-```bash
-cp .env.example .env
-```
-
-Open `.env` and fill in your values. The defaults work for local development without changes.
-
-### 3. Start the database and file storage
-
-```bash
-cd docker
-docker compose up -d
-```
-
-This starts:
-- SurrealDB on `localhost:8000`
-- MinIO on `localhost:9000` (dashboard at `localhost:9001`)
-
-### 4. Apply the database schema
-> This happens automatically and all tables in initialize.sqrl are created when the server starts up. SKIP this step if you are going to be running the server. This step is more informational on how to view the database.
-
-1. Go to [app.surrealdb.com](https://app.surrealdb.com)
-2. Create a new connection with these details:
-   - **Protocol**: WS
-   - **Host**: `localhost:8000`
-   - **Username**: `root`
-   - **Password**: `root`
-3. Open the query editor
-4. Paste the contents of `schema/initial.surql`
-5. Run the query
-
-> You may create an account with [app.surrealdb.com](https://app.surrealdb.com) if you wish but it is **not essential** or required for running surrealDB queries.
-
-### 5. Start the backend
+### 2. Start the backend
 
 ```bash
 cd server
-cargo run
+cargo run -p quorum-private
 ```
-> Or use cargo run dev if you're developing
+`cargo run -p quorum-private` runs in debug by default and needs the --release flag to run in release.
 
-### 6. Start the desktop app
+> Or use `cargo run -p quorum-public` to build the public server.
+
+### 6. Start the Tauri application
 
 ```bash
 cd client
@@ -107,18 +75,12 @@ npm run tauri dev
 
 ---
 
-## Stopping
+## Stopping the server
 
-```bash
-cd docker
-docker compose down
-```
+The server running in debug mode, Ctrl-C works as normal. In release mode (the normal production release that everyone would be using) blocks ctrl-c, requiring an administrator user, to be logged in and use the `server:shutdown` command.
 
-Data is preserved. To wipe everything and start fresh:
-
-```bash
-docker compose down -v
-```
+## Wiping database
+Shutting the server down preserves all data in the database. To wipe the database, use the `db:delete` command as an administrator.
 
 ---
 
