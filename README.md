@@ -5,7 +5,8 @@ Quorum was inspired by Discord, born from community feedback about privacy conce
 - **Privacy**: Collect only what's necessary and let users control their data
 - **Security**: Make unauthorized access and data theft practically impossible
 - **Performance**: Keep everything snappy without compromising security
- 
+
+> ⚠️ Quorum is in early development.
 ---
 
 # Why Quorum?
