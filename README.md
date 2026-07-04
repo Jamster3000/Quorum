@@ -20,6 +20,11 @@ Discord collects extensive user data, shares it with third parties, trains AI mo
 
 ---
 
+## Wireframes
+(To be replaced later)
+
+---
+
 ## Features
 
 ### Core Functionality
