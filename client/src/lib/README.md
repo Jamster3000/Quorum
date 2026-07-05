@@ -1,4 +1,6 @@
 # Lib
 
-The lib directory includes all component files. 
-These include component UI and component code.
+Two things live here:
+
+- **Components** — Reusable Svelte UI components
+- **Utils** — Helper functions, stores, and shared logic
