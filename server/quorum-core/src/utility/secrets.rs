@@ -202,67 +202,69 @@ fn map_dialoguer_error(e: dialoguer::Error) -> String {
 /// let config = run_setup().expect("Failed to run setup");
 /// ```
 pub fn run_setup() -> Result<SerializableConfig, String> {
-    typewriter_println(&format!(
-        "{}",
-        "\nWelcome to Quorum Server Setup!".cyan().bold()
-    ))
-    .map_err(|e| e.to_string())?;
-    println!();
-
-    press_enter_to_continue(true, true);
-
-    println!();
-    typewriter_println(&format!(
-        "{}",
-        "To ensure maximum security on your server, it will:".cyan()
-    ))
-    .map_err(|e| e.to_string())?;
-    typewriter_println("    • Auto-generate most server configurations with secure defaults")
+    if !cfg!(debug_assertions) {
+        typewriter_println(&format!(
+            "{}",
+            "\nWelcome to Quorum Server Setup!".cyan().bold()
+        ))
         .map_err(|e| e.to_string())?;
-    typewriter_println("    • Encrypt and store them in a protected file")
+        println!();
+
+        press_enter_to_continue(true, true);
+
+        println!();
+        typewriter_println(&format!(
+            "{}",
+            "To ensure maximum security on your server, it will:".cyan()
+        ))
         .map_err(|e| e.to_string())?;
-    typewriter_println(
-        "    • Only prompt you for configurations that are required for you to enter",
-    )
-    .map_err(|e| e.to_string())?;
-    println!();
-
-    press_enter_to_continue(true, true);
-
-    println!();
-    typewriter_println(&format!(
-        "{}",
-        "This ensures that even if someone gains access to your server,".dimmed()
-    ))
-    .map_err(|e| e.to_string())?;
-    typewriter_println(&format!(
-        "{}",
-        "they cannot access your sensitive configuration data without the passphrase,".dimmed()
-    ))
-    .map_err(|e| e.to_string())?;
-    typewriter_println(&format!("{}", "which only you should know.".dimmed()))
+        typewriter_println("    • Auto-generate most server configurations with secure defaults")
+            .map_err(|e| e.to_string())?;
+        typewriter_println("    • Encrypt and store them in a protected file")
+            .map_err(|e| e.to_string())?;
+        typewriter_println(
+            "    • Only prompt you for configurations that are required for you to enter",
+        )
         .map_err(|e| e.to_string())?;
-    println!();
+        println!();
 
-    press_enter_to_continue(true, true);
+        press_enter_to_continue(true, true);
 
-    println!();
-    typewriter_println(&format!(
-        "{}",
-        "A passphrase will be used to encrypt your server configuration.".dimmed()
-    ))
-    .map_err(|e| e.to_string())?;
-    typewriter_println(&format!(
-        "{}",
-        "This passphrase will be required every time you start the server.".dimmed()
-    ))
-    .map_err(|e| e.to_string())?;
-    typewriter_println(&format!(
-        "{}",
-        "Only you should know it - it acts as the key to unlock your server.".dimmed()
-    ))
-    .map_err(|e| e.to_string())?;
-    println!();
+        println!();
+        typewriter_println(&format!(
+            "{}",
+            "This ensures that even if someone gains access to your server,".dimmed()
+        ))
+        .map_err(|e| e.to_string())?;
+        typewriter_println(&format!(
+            "{}",
+            "they cannot access your sensitive configuration data without the passphrase,".dimmed()
+        ))
+        .map_err(|e| e.to_string())?;
+        typewriter_println(&format!("{}", "which only you should know.".dimmed()))
+            .map_err(|e| e.to_string())?;
+        println!();
+
+        press_enter_to_continue(true, true);
+
+        println!();
+        typewriter_println(&format!(
+            "{}",
+            "A passphrase will be used to encrypt your server configuration.".dimmed()
+        ))
+        .map_err(|e| e.to_string())?;
+        typewriter_println(&format!(
+            "{}",
+            "This passphrase will be required every time you start the server.".dimmed()
+        ))
+        .map_err(|e| e.to_string())?;
+        typewriter_println(&format!(
+            "{}",
+            "Only you should know it - it acts as the key to unlock your server.".dimmed()
+        ))
+        .map_err(|e| e.to_string())?;
+        println!();
+    }
 
     Ok(SerializableConfig {
         server_port: 3000,

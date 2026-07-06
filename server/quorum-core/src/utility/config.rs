@@ -139,29 +139,37 @@ impl Config {
     /// ```
     pub fn load() -> Result<(), Box<dyn std::error::Error>> {
         if secrets_exist() {
-            println!();
-            typewriter_println(&format!(
-                "{}",
-                "Enter passphrase to unlock the server...".cyan().bold()
-            ))
-            .map_err(|e| e.to_string())?;
+            if !cfg!(debug_assertions) {
+                println!();
+                typewriter_println(&format!(
+                    "{}",
+                    "Enter passphrase to unlock the server...".cyan().bold()
+                ))
+                .map_err(|e| e.to_string())?;
 
-            let passphrase = prompt_passphrase()?;
-            Self::load_with_passphrase(&passphrase)
+                let passphrase = prompt_passphrase()?;
+                Self::load_with_passphrase(&passphrase)
+            } else {
+                Self::load_with_passphrase(&"quorum")
+            }
         } else {
             let serializable = run_setup()?;
-            let passphrase = prompt_passphrase()?;
 
-            println!();
-            typewriter_println(&format!(
-                "{}",
-                "Passphrase setup successfully!".cyan().bold()
-            ))
-            .map_err(|e| e.to_string())?;
+            if !cfg!(debug_assertions) {
+                let passphrase = prompt_passphrase()?;
 
-            press_enter_to_continue(true, true);
+                println!();
+                typewriter_println(&format!(
+                    "{}",
+                    "Passphrase setup successfully!".cyan().bold()
+                ))
+                .map_err(|e| e.to_string())?;
 
-            save_encrypted_config(&serializable, &passphrase)?;
+                press_enter_to_continue(true, true);
+                save_encrypted_config(&serializable, &passphrase)?;
+            } else {
+                save_encrypted_config(&serializable, &"quorum")?;
+            }
 
             Self::load()
         }
