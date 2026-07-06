@@ -10,8 +10,14 @@ members = [
 edition = "2024"
 
 [profile.dev]
-opt-level = 1
-lto = false
-codegen-units = 256
-debug = 0
+opt-level = 0
+debug = 1
 incremental = true
+codegen-units = 256
+
+[profile.release]
+opt-level = "z"
+lto = "fat"
+codegen-units = 1
+panic = "abort"
+strip = "symbols"
