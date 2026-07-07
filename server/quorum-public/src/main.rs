@@ -154,8 +154,7 @@ async fn main() {
                     match result {
                         Ok(()) => {
                             println!(
-                                "\nYou cannot shut down the server with Ctrl+C \
-                                in release mode. Use server:shutdown."
+                                "\nYou cannot shut down the server with Ctrl+C. Use server:shutdown."
                             );
                         },
                         Err(_) => {

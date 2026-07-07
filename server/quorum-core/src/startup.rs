@@ -110,7 +110,6 @@ pub fn print_ready(port: u16) {
             .green()
             .bold()
     );
-    println!("{}", "Press Ctrl+C to stop\n".dimmed());
 }
 
 /// Create a timer for measuring elapsed time
