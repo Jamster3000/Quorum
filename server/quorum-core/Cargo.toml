@@ -21,3 +21,4 @@ argon2.workspace = true
 dialoguer.workspace = true
 zeroize.workspace = true
 aes-gcm.workspace = true
+rand.workspace = true
