@@ -5,7 +5,6 @@
 
 mod db;
 mod routes;
-mod utility;
 
 use colored::Colorize;
 //use reqwest::Client;
@@ -19,8 +18,6 @@ use std::time::Instant;
 
 #[tokio::main]
 async fn main() {
-    dotenvy::dotenv().ok();
-
     // Clear the terminal and move the cursor to top left corner
     print!("\x1B[2J\x1B[1;1H");
 
