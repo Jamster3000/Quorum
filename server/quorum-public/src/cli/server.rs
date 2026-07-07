@@ -5,6 +5,7 @@ use quorum_core::db::DB;
 use quorum_core::utility::secrets::prompt_passphrase;
 use quorum_core::utility::std::typewriter_println;
 use std::sync::{Arc, Mutex};
+use zeroize::Zeroizing;
 
 /// Handles user signup
 ///
@@ -167,6 +168,7 @@ pub async fn confirm_and_delete(shutdown_tx: &tokio::sync::watch::Sender<bool>) 
 
     match prompt_passphrase() {
         Ok(passphrase) => {
+            let passphrase = Zeroizing::new(passphrase);
             if let Err(e) = perform_reset(&passphrase).await {
                 eprintln!("{}", format!("Failed to reset database: {e}").red());
                 return;

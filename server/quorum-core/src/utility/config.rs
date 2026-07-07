@@ -17,6 +17,7 @@ use arc_swap::ArcSwap;
 use colored::Colorize;
 use std::sync::Arc;
 use std::sync::OnceLock;
+use zeroize::Zeroizing;
 
 /// The global configuration singleton.
 ///
@@ -147,7 +148,7 @@ impl Config {
                 ))
                 .map_err(|e| e.to_string())?;
 
-                let passphrase = prompt_passphrase()?;
+                let passphrase = Zeroizing::new(prompt_passphrase()?);
                 Self::load_with_passphrase(&passphrase)
             } else {
                 Self::load_with_passphrase(&"quorum")
@@ -156,7 +157,7 @@ impl Config {
             let serializable = run_setup()?;
 
             if !cfg!(debug_assertions) {
-                let passphrase = prompt_passphrase()?;
+                let passphrase = Zeroizing::new(prompt_passphrase()?);
 
                 println!();
                 typewriter_println(&format!(

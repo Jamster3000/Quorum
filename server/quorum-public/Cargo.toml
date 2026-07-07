@@ -29,3 +29,4 @@ rand.workspace = true
 email_address.workspace = true
 futures.workspace = true
 reqwest.workspace = true
+zeroize.workspace = true

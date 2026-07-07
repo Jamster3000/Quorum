@@ -146,7 +146,7 @@ async fn main() {
     {
         loop {
             tokio::select! {
-                result = &mut server_task => {
+                _ = &mut server_task => {
                     break;
             }
 
