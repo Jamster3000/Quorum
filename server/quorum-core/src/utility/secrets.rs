@@ -21,6 +21,8 @@ use std::{
     path::Path,
 };
 use zeroize::Zeroizing;
+use zxcvbn::{zxcvbn, Score};
+use crate::startup;
 
 fn generate_random_bytes() -> [u8; 32] {
     let mut bytes = [0u8; 32];
@@ -305,11 +307,21 @@ pub fn prompt_passphrase() -> Result<String, String> {
 }
 
 pub fn prompt_passphrase_new() -> Result<String, String> {
-    Password::new()
-        .with_prompt("Enter server passphrase")
-        .with_confirmation("Confirm passphrase", "Passphrases do not match")
-        .interact()
-        .map_err(map_dialoguer_error)
+    loop {
+        let passphrase = Password::new()
+            .with_prompt("Enter server passphrase")
+            .with_confirmation("Confirm passphrase", "Passphrases do not match")
+            .interact()
+            .map_err(map_dialoguer_error)?;
+
+        print!("\x1B[2J\x1B[1;1H");
+        startup::print_banner();
+
+        match validate_passphrase(&passphrase) {
+            Ok(()) => return Ok(passphrase),
+            Err(err) => eprintln!("{}", err.red()),
+        }
+    }
 }
 
 pub fn verify_admin_credentials(
@@ -336,4 +348,46 @@ pub fn verify_admin_credentials(
     argon2
         .verify_password(password.as_bytes(), &parsed_hash)
         .map_err(|_| "Invalid credentials".to_string())
+}
+
+pub fn validate_passphrase(passphrase: &str) -> Result<(), String> {
+    let len = passphrase.chars().count();
+
+    if len < 12 {
+        return Err("Use at least 12 characters.".into());
+    }
+
+    if len > 64 {
+        return Err("Passphrase is too long for this field.".into());
+    }
+
+    let estimate = zxcvbn(passphrase, &[]);
+
+    if estimate.score() < Score::Three {
+        if let Some(feedback) = estimate.feedback() {
+            let warning = feedback
+                .warning()
+                .map(|w| w.to_string())
+                .unwrap_or_default();
+
+            let suggestions = feedback
+                .suggestions()
+                .iter()
+                .map(|s| s.to_string())
+                .collect::<Vec<_>>()
+                .join(" ");
+
+            let message = format!("{} {}", warning, suggestions).trim().to_string();
+
+            if message.is_empty() {
+                return Err("Passphrase is too weak.".into());
+            }
+
+            return Err(format!("Passphrase is too weak. {message}"));
+        }
+
+        return Err("Passphrase is too weak.".into());
+    }
+
+    Ok(())
 }

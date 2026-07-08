@@ -22,3 +22,4 @@ dialoguer.workspace = true
 zeroize.workspace = true
 aes-gcm.workspace = true
 rand.workspace = true
+zxcvbn.workspace = true
