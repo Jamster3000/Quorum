@@ -212,65 +212,21 @@ pub fn run_setup() -> Result<SerializableConfig, String> {
         .map_err(|e| e.to_string())?;
         println!();
 
-        press_enter_to_continue(true, true);
-
-        println!();
         typewriter_println(&format!(
             "{}",
-            "To ensure maximum security on your server, it will:".cyan()
+            "Your server configuration will be encrypted with a passphrase.".dimmed()
         ))
         .map_err(|e| e.to_string())?;
-        typewriter_println("    • Auto-generate most server configurations with secure defaults")
-            .map_err(|e| e.to_string())?;
-        typewriter_println("    • Encrypt and store them in a protected file")
-            .map_err(|e| e.to_string())?;
-        typewriter_println(
-            "    • Only prompt you for configurations that are required for you to enter",
-        )
+        typewriter_println(&format!(
+            "{}",
+            "You'll need this passphrase every time you start the server.".dimmed()
+        ))
         .map_err(|e| e.to_string())?;
         println!();
 
-        press_enter_to_continue(true, true);
-
-        println!();
-        typewriter_println(&format!(
-            "{}",
-            "This ensures that even if someone gains access to your server,".dimmed()
-        ))
-        .map_err(|e| e.to_string())?;
-        typewriter_println(&format!(
-            "{}",
-            "they cannot access your sensitive configuration data without the passphrase,".dimmed()
-        ))
-        .map_err(|e| e.to_string())?;
-        typewriter_println(&format!("{}", "which only you should know.".dimmed()))
-            .map_err(|e| e.to_string())?;
-        println!();
-
-        press_enter_to_continue(true, true);
-
-        println!();
-        typewriter_println(&format!(
-            "{}",
-            "A passphrase will be used to encrypt your server configuration.".dimmed()
-        ))
-        .map_err(|e| e.to_string())?;
-        typewriter_println(&format!(
-            "{}",
-            "This passphrase will be required every time you start the server,".dimmed()
-        ))
-        .map_err(|e| e.to_string())?;
-        typewriter_println(&format!(
-            "{}",
-            "and to authenticate privileged CLI commands while the server is running.".dimmed()
-        ))
-        .map_err(|e| e.to_string())?;
-        typewriter_println(&format!(
-            "{}",
-            "Only you should know it - it acts as the key to unlock your server.".dimmed()
-        ))
-        .map_err(|e| e.to_string())?;
-        println!();
+        press_enter_to_continue(false, false);
+        print!("\x1B[2J\x1B[1;1H");
+        startup::print_banner();
     }
 
     Ok(SerializableConfig {
