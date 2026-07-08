@@ -255,7 +255,12 @@ pub fn run_setup() -> Result<SerializableConfig, String> {
         .map_err(|e| e.to_string())?;
         typewriter_println(&format!(
             "{}",
-            "This passphrase will be required every time you start the server.".dimmed()
+            "This passphrase will be required every time you start the server,".dimmed()
+        ))
+        .map_err(|e| e.to_string())?;
+        typewriter_println(&format!(
+            "{}",
+            "and to authenticate privileged CLI commands while the server is running.".dimmed()
         ))
         .map_err(|e| e.to_string())?;
         typewriter_println(&format!(
@@ -295,7 +300,40 @@ pub fn run_setup() -> Result<SerializableConfig, String> {
 pub fn prompt_passphrase() -> Result<String, String> {
     Password::new()
         .with_prompt("Enter server passphrase")
+        .interact()
+        .map_err(map_dialoguer_error)
+}
+
+pub fn prompt_passphrase_new() -> Result<String, String> {
+    Password::new()
+        .with_prompt("Enter server passphrase")
         .with_confirmation("Confirm passphrase", "Passphrases do not match")
         .interact()
         .map_err(map_dialoguer_error)
+}
+
+pub fn verify_admin_credentials(
+    username: &str,
+    password: &str,
+    stored_username: &str,
+    stored_hash: &str,
+) -> Result<(), String> {
+    use argon2::{
+        Algorithm, Argon2, Params, Version,
+        password_hash::{PasswordHash, PasswordVerifier},
+    };
+
+    if username != stored_username {
+        return Err("Invalid credentials".to_string());
+    }
+
+    let params = Params::new(65536, 3, 1, Some(32)).map_err(|e| e.to_string())?;
+    let argon2 = Argon2::new(Algorithm::Argon2id, Version::V0x13, params);
+
+    let parsed_hash = PasswordHash::new(stored_hash)
+        .map_err(|e| format!("Failed to parse stored hash: {}", e))?;
+
+    argon2
+        .verify_password(password.as_bytes(), &parsed_hash)
+        .map_err(|_| "Invalid credentials".to_string())
 }

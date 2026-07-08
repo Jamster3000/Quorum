@@ -10,7 +10,9 @@
 //! - Any reload is immediately visible to all subsequent [`Config::get()`] calls across all threads
 
 use crate::utility::secrets::{
-    load_encrypted_config, prompt_passphrase, run_setup, save_encrypted_config, secrets_exist,
+    load_encrypted_config, prompt_passphrase,
+    prompt_passphrase_new, run_setup,
+    save_encrypted_config, secrets_exist,
 };
 use crate::utility::std::{press_enter_to_continue, typewriter_println};
 use arc_swap::ArcSwap;
@@ -157,7 +159,7 @@ impl Config {
             let serializable = run_setup()?;
 
             if !cfg!(debug_assertions) {
-                let passphrase = Zeroizing::new(prompt_passphrase()?);
+                let passphrase = Zeroizing::new(prompt_passphrase_new()?);
 
                 println!();
                 typewriter_println(&format!(

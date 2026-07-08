@@ -19,3 +19,5 @@ tower.workspace = true
 tower-http.workspace = true
 tower_governor.workspace = true
 rpassword.workspace = true
+dialoguer.workspace = true
+zeroize.workspace = true

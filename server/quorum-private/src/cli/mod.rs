@@ -3,8 +3,6 @@
 
 pub mod help;
 pub mod server;
-pub mod test;
-pub mod user;
 
 use crate::cli::server::confirm_and_delete;
 use colored::Colorize;
@@ -181,25 +179,6 @@ async fn dispatch(
                 let params = cmd.raw.split_once(' ').map(|x| x.1).unwrap_or("");
                 audit(db, params).await;
             }
-            _ => unknown(&cmd.raw),
-        },
-
-        // -- User --
-        [ns, command] if ns == "user" => match command.as_str() {
-            "delete" => {
-                if !require_admin(session) {
-                    return;
-                }
-
-                let id = cmd.raw.split_once(' ').map(|x| x.1).unwrap_or("");
-                user::delete(db, id).await;
-            }
-            _ => unknown(&cmd.raw),
-        },
-
-        // -- Test --
-        [ns, command] if ns == "test" => match command.as_str() {
-            "run" => test::run().await,
             _ => unknown(&cmd.raw),
         },
 
