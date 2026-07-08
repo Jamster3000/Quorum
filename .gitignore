@@ -61,3 +61,4 @@ src-tauri/.env
 /client/src-tauri/gen/schemas/windows-schema.json
 /server/data/db
 *.enc
+/server/backup/secrets.enc.backup
