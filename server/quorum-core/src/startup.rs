@@ -110,6 +110,10 @@ pub fn print_ready(port: u16) {
             .green()
             .bold()
     );
+    println!(
+        "{}",
+        "Use command \"server:login\" to get authentication to restricted commands.".dimmed()
+    );
 }
 
 /// Create a timer for measuring elapsed time
