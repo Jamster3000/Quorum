@@ -20,6 +20,8 @@ use colored::Colorize;
 use std::sync::Arc;
 use std::sync::OnceLock;
 use zeroize::Zeroizing;
+use std::path::Path;
+use crate::utility::secrets::{SECRETS_PATH, SECRETS_BACKUP_PATH};
 
 /// The global configuration singleton.
 ///
@@ -141,6 +143,14 @@ impl Config {
     /// Config::load().expect("Failed to load configuration");
     /// ```
     pub fn load() -> Result<(), Box<dyn std::error::Error>> {
+        // Check if primary is missing but backup exists
+        if !Path::new(SECRETS_PATH).exists() && Path::new(SECRETS_BACKUP_PATH).exists() {
+            let backup_data = std::fs::read(SECRETS_BACKUP_PATH)
+                .map_err(|e| format!("Failed to read backup: {}", e))?;
+            std::fs::write(SECRETS_PATH, backup_data)
+                .map_err(|e| format!("Failed to restore from backup: {}", e))?;
+        }
+
         if secrets_exist() {
             if !cfg!(debug_assertions) {
                 println!();
@@ -153,7 +163,7 @@ impl Config {
                 let passphrase = Zeroizing::new(prompt_passphrase()?);
                 Self::load_with_passphrase(&passphrase)
             } else {
-                ///936
+                //936
                 Self::load_with_passphrase(&"correct horse battery staple")
             }
         } else {
@@ -172,7 +182,7 @@ impl Config {
                 press_enter_to_continue(true, true);
                 save_encrypted_config(&serializable, &passphrase)?;
             } else {
-                ///936
+                //936
                 save_encrypted_config(&serializable, &"correct horse battery staple")?;
             }
 

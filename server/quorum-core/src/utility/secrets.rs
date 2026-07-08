@@ -30,7 +30,8 @@ fn generate_random_bytes() -> [u8; 32] {
     bytes
 }
 
-const SECRETS_PATH: &str = "secrets.enc";
+pub const SECRETS_PATH: &str = "secrets.enc";
+pub const SECRETS_BACKUP_PATH: &str = "secrets.enc.backup";
 
 #[derive(Serialize, Deserialize)]
 pub struct SerializableConfig {
@@ -136,10 +137,19 @@ fn decrypt(encrypted_data: &[u8], passphrase: &str) -> Result<Vec<u8>, String> {
 pub fn save_encrypted_config(config: &SerializableConfig, passphrase: &str) -> Result<(), String> {
     let json = serde_json::to_vec(config).map_err(|e| format!("Serialization failed: {}", e))?;
     let encrypted = encrypt(&json, passphrase)?;
-    let mut file =
-        File::create(SECRETS_PATH).map_err(|e| format!("Failed to create secrets.enc: {}", e))?;
+
+    //Write backup secrets file
+    let mut backup = File::create(SECRETS_BACKUP_PATH)
+        .map_err(|e| format!("Failed to create backup: {}", e))?;
+    backup.write_all(&encrypted)
+        .map_err(|e| format!("Failed to write backup: {}", e))?;
+
+    // write primary secrets file
+    let mut file = File::create(SECRETS_PATH)
+        .map_err(|e| format!("Failed to create secrets.enc: {}", e))?;
     file.write_all(&encrypted)
         .map_err(|e| format!("Failed to write secrets.enc: {}", e))?;
+
     Ok(())
 }
 
