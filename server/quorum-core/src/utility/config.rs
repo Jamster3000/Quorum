@@ -153,7 +153,8 @@ impl Config {
                 let passphrase = Zeroizing::new(prompt_passphrase()?);
                 Self::load_with_passphrase(&passphrase)
             } else {
-                Self::load_with_passphrase(&"quorum")
+                ///936
+                Self::load_with_passphrase(&"correct horse battery staple")
             }
         } else {
             let serializable = run_setup()?;
@@ -171,7 +172,8 @@ impl Config {
                 press_enter_to_continue(true, true);
                 save_encrypted_config(&serializable, &passphrase)?;
             } else {
-                save_encrypted_config(&serializable, &"quorum")?;
+                ///936
+                save_encrypted_config(&serializable, &"correct horse battery staple")?;
             }
 
             Self::load()
