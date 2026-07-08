@@ -23,6 +23,7 @@ use std::{
 use zeroize::Zeroizing;
 use zxcvbn::{zxcvbn, Score};
 use crate::startup;
+use sha2::Digest;
 
 fn generate_random_bytes() -> [u8; 32] {
     let mut bytes = [0u8; 32];
@@ -31,7 +32,8 @@ fn generate_random_bytes() -> [u8; 32] {
 }
 
 pub const SECRETS_PATH: &str = "secrets.enc";
-pub const SECRETS_BACKUP_PATH: &str = "secrets.enc.backup";
+pub const SECRETS_BACKUP_PATH: &str = "backups/secrets.enc.backup";
+pub const SECRETS_CHECKSUM_PATH: &str = "backups/secrets.enc.sha256";
 
 #[derive(Serialize, Deserialize)]
 pub struct SerializableConfig {
@@ -122,12 +124,23 @@ fn decrypt(encrypted_data: &[u8], passphrase: &str) -> Result<Vec<u8>, String> {
 
 /// Saves the given configuration to an encrypted file using the provided passphrase.
 ///
+/// Encrypts the config and writes it to both the primary file (`secrets.enc`) and a backup
+/// (`backups/secrets.enc.backup`). The backup directory is created automatically if it doesn't exist.
+/// The backup is written first to ensure a valid copy exists even if the primary write fails.
+///
 /// # Arguments
 /// * `config` - The configuration to save.
 /// * `passphrase` - The passphrase used to encrypt the configuration.
 ///
 /// # Returns
 /// A `Result` indicating success or failure, with an error message as a `String` on failure.
+///
+/// # Errors
+/// Returns an error if:
+/// - Serialization of the config fails
+/// - Encryption fails
+/// - The backups directory cannot be created
+/// - Either the backup or primary file cannot be written
 ///
 /// # Example
 /// ```rust
@@ -138,13 +151,26 @@ pub fn save_encrypted_config(config: &SerializableConfig, passphrase: &str) -> R
     let json = serde_json::to_vec(config).map_err(|e| format!("Serialization failed: {}", e))?;
     let encrypted = encrypt(&json, passphrase)?;
 
-    //Write backup secrets file
+    // Calculate checksum
+    let mut hasher = sha2::Sha256::new();
+    hasher.update(&encrypted);
+    let checksum = hex::encode(hasher.finalize());
+
+    // Ensure backup directory exists
+    std::fs::create_dir_all("backups")
+        .map_err(|e| format!("Failed to create backups directory: {}", e))?;
+
+    // Write backup secrets file
     let mut backup = File::create(SECRETS_BACKUP_PATH)
         .map_err(|e| format!("Failed to create backup: {}", e))?;
     backup.write_all(&encrypted)
         .map_err(|e| format!("Failed to write backup: {}", e))?;
 
-    // write primary secrets file
+    // Write checksum
+    fs::write(SECRETS_CHECKSUM_PATH, &checksum)
+        .map_err(|e| format!("Failed to write checksum: {}", e))?;
+
+    // Write primary secrets file
     let mut file = File::create(SECRETS_PATH)
         .map_err(|e| format!("Failed to create secrets.enc: {}", e))?;
     file.write_all(&encrypted)
@@ -166,9 +192,28 @@ pub fn save_encrypted_config(config: &SerializableConfig, passphrase: &str) -> R
 /// let config = load_encrypted_config("my_secure_passphrase").expect("Failed to load encrypted config");
 /// ```
 pub fn load_encrypted_config(passphrase: &str) -> Result<SerializableConfig, String> {
-    let encrypted =
-        fs::read(SECRETS_PATH).map_err(|e| format!("Failed to read secrets.enc: {}", e))?;
-    let decrypted = decrypt(&encrypted, passphrase)?;
+    let data = fs::read(SECRETS_PATH)
+        .or_else(|_| {
+            fs::read(SECRETS_BACKUP_PATH)
+        })
+        .map_err(|_| "secrets.enc not found.".to_string())?;
+
+    // Verify checksum if it exists
+    if let Ok(stored_checksum) = fs::read_to_string(SECRETS_CHECKSUM_PATH) {
+        let mut hasher = sha2::Sha256::new();
+        hasher.update(&data);
+        let computed = hex::encode(hasher.finalize());
+
+        if computed != stored_checksum.trim() {
+            // Primary is corrupted, try backup
+            let backup_data = fs::read(SECRETS_BACKUP_PATH)
+                .map_err(|_| "Primary file corrupted and backup missing.".to_string())?;
+            let decrypted = decrypt(&backup_data, passphrase)?;
+            return serde_json::from_slice(&decrypted).map_err(|e| format!("Failed to deserialize config: {}", e));
+        }
+    }
+
+    let decrypted = decrypt(&data, passphrase)?;
     serde_json::from_slice(&decrypted).map_err(|e| format!("Failed to deserialize config: {}", e))
 }
 
