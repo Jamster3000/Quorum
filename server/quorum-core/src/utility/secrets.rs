@@ -5,6 +5,7 @@
 //! from a file. It also provides a setup process that prompts the user
 //! for necessary configurations and generates secure defaults.
 
+use crate::startup;
 use crate::utility::std::{press_enter_to_continue, typewriter_println};
 use aes_gcm::{
     Aes256Gcm, Nonce,
@@ -15,15 +16,14 @@ use dialoguer::Password;
 use rand_core::OsRng;
 use rand_core::RngCore;
 use serde::{Deserialize, Serialize};
+use sha2::Digest;
 use std::{
     fs::{self, File},
     io::Write,
     path::Path,
 };
 use zeroize::Zeroizing;
-use zxcvbn::{zxcvbn, Score};
-use crate::startup;
-use sha2::Digest;
+use zxcvbn::{Score, zxcvbn};
 
 fn generate_random_bytes() -> [u8; 32] {
     let mut bytes = [0u8; 32];
@@ -161,9 +161,10 @@ pub fn save_encrypted_config(config: &SerializableConfig, passphrase: &str) -> R
         .map_err(|e| format!("Failed to create backups directory: {}", e))?;
 
     // Write backup secrets file
-    let mut backup = File::create(SECRETS_BACKUP_PATH)
-        .map_err(|e| format!("Failed to create backup: {}", e))?;
-    backup.write_all(&encrypted)
+    let mut backup =
+        File::create(SECRETS_BACKUP_PATH).map_err(|e| format!("Failed to create backup: {}", e))?;
+    backup
+        .write_all(&encrypted)
         .map_err(|e| format!("Failed to write backup: {}", e))?;
 
     // Write checksum
@@ -171,8 +172,8 @@ pub fn save_encrypted_config(config: &SerializableConfig, passphrase: &str) -> R
         .map_err(|e| format!("Failed to write checksum: {}", e))?;
 
     // Write primary secrets file
-    let mut file = File::create(SECRETS_PATH)
-        .map_err(|e| format!("Failed to create secrets.enc: {}", e))?;
+    let mut file =
+        File::create(SECRETS_PATH).map_err(|e| format!("Failed to create secrets.enc: {}", e))?;
     file.write_all(&encrypted)
         .map_err(|e| format!("Failed to write secrets.enc: {}", e))?;
 
@@ -193,9 +194,7 @@ pub fn save_encrypted_config(config: &SerializableConfig, passphrase: &str) -> R
 /// ```
 pub fn load_encrypted_config(passphrase: &str) -> Result<SerializableConfig, String> {
     let data = fs::read(SECRETS_PATH)
-        .or_else(|_| {
-            fs::read(SECRETS_BACKUP_PATH)
-        })
+        .or_else(|_| fs::read(SECRETS_BACKUP_PATH))
         .map_err(|_| "secrets.enc not found.".to_string())?;
 
     // Verify checksum if it exists
@@ -209,7 +208,8 @@ pub fn load_encrypted_config(passphrase: &str) -> Result<SerializableConfig, Str
             let backup_data = fs::read(SECRETS_BACKUP_PATH)
                 .map_err(|_| "Primary file corrupted and backup missing.".to_string())?;
             let decrypted = decrypt(&backup_data, passphrase)?;
-            return serde_json::from_slice(&decrypted).map_err(|e| format!("Failed to deserialize config: {}", e));
+            return serde_json::from_slice(&decrypted)
+                .map_err(|e| format!("Failed to deserialize config: {}", e));
         }
     }
 

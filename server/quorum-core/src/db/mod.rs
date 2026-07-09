@@ -19,24 +19,24 @@ pub async fn init() -> Result<DB, Box<dyn Error>> {
             .map(|m| !m.permissions().readonly())
             .unwrap_or(false);
 
-    let db = Surreal::new::<RocksDb>(path)
-        .await
-        .map_err(|e| {
-            let mut hint = String::new();
-            if !parent_exists {
-                hint.push_str("Parent directory does not exist. ");
-            } else if !parent_writable {
-                hint.push_str("Parent directory is not writable. ");
-            } else {
-                hint.push_str("Check if the path is valid, writable, and not locked by another process. ");
-            }
-            hint.push_str("If the file exists, it may be corrupted.");
+    let db = Surreal::new::<RocksDb>(path).await.map_err(|e| {
+        let mut hint = String::new();
+        if !parent_exists {
+            hint.push_str("Parent directory does not exist. ");
+        } else if !parent_writable {
+            hint.push_str("Parent directory is not writable. ");
+        } else {
+            hint.push_str(
+                "Check if the path is valid, writable, and not locked by another process. ",
+            );
+        }
+        hint.push_str("If the file exists, it may be corrupted.");
 
-            format!(
-                "Failed to open embedded database at '{}'\nHint: {}\n\nError: {}",
-                path, hint, e
-            )
-        })?;
+        format!(
+            "Failed to open embedded database at '{}'\nHint: {}\n\nError: {}",
+            path, hint, e
+        )
+    })?;
 
     db.use_ns(&config.surreal_ns)
         .use_db(&config.surreal_db)

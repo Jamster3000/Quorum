@@ -3,9 +3,9 @@
 //! It sets up the server similar to the public server, tweaked to work with being self hostable by anyone.
 //! Use `cargo run -p quorum-private` to build/run the private version of the server, which combines the `quorum-core` shared code.
 
+mod cli;
 mod db;
 mod routes;
-mod cli;
 
 use colored::Colorize;
 //use reqwest::Client;

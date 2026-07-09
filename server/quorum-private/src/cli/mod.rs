@@ -1,15 +1,15 @@
 //! Main entry point for the server cli Commands
 //! This is where commands are defined properly, and where command functions are called.
 
+pub mod config;
 pub mod help;
 pub mod server;
-pub mod config;
 
+use crate::cli::config::{change_config_value, print_all};
 use crate::cli::server::confirm_and_delete;
 use colored::Colorize;
 use quorum_core::cli::AdminSession;
 use quorum_core::cli::db;
-use crate::cli::config::{change_config_value, print_all};
 use quorum_core::cli::server::{audit, logout, logs, shutdown, status};
 use quorum_core::db::DB;
 use std::io::{self, Write};
@@ -226,15 +226,25 @@ async fn dispatch(
         // -- config --
         [ns, command] if ns == "config" => {
             config_match_arms!(
-                session, cmd, command,
-                server_port, server_url, server_host,
-                surreal_data_path, surreal_ns, surreal_db,
-                jwt_secret, jwt_access_minutes, jwt_refresh_days,
+                session,
+                cmd,
+                command,
+                server_port,
+                server_url,
+                server_host,
+                surreal_data_path,
+                surreal_ns,
+                surreal_db,
+                jwt_secret,
+                jwt_access_minutes,
+                jwt_refresh_days,
                 enable_testing,
-                default_per_second, default_burst_size,
-                testing_per_second, testing_burst_size
+                default_per_second,
+                default_burst_size,
+                testing_per_second,
+                testing_burst_size
             );
-        },
+        }
 
         _ => unknown(&cmd.raw),
     }

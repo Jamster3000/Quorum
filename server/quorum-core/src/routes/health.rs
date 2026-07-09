@@ -30,8 +30,14 @@ pub async fn health() -> Json<HealthResponse> {
     let random_roll = rand::random::<u8>() % 20 + 1;
 
     if random_roll == 20 {
-        return Json(HealthResponse { status: "ok", critical: Some("That's a 20. Critical Success!") } )
+        return Json(HealthResponse {
+            status: "ok",
+            critical: Some("That's a 20. Critical Success!"),
+        });
     }
 
-    Json(HealthResponse { status: "ok", critical: None })
+    Json(HealthResponse {
+        status: "ok",
+        critical: None,
+    })
 }
