@@ -6,7 +6,6 @@ pub struct User {
     pub id: RecordId,
     pub username: String,
     pub email: Option<String>,
-    pub is_admin: bool,
     pub password_hash: Option<String>,
     pub created_at: Datetime,
     pub last_login: Option<Datetime>,
