@@ -31,7 +31,7 @@ struct Command {
 macro_rules! config_match_arms {
     ($session:expr, $cmd:expr, $command:expr, $($field:ident),*) => {
         match $command.as_str() {
-            "values" => {
+            "show" => {
                 if !require_admin($session) {
                     return;
                 }

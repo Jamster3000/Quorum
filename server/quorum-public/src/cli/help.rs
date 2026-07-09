@@ -156,6 +156,25 @@ const COMMANDS: &[CommandEntry] = &[
         requires_admin: false,
         params: &[],
     },
+    // --config--
+    CommandEntry {
+        command: "config:show",
+        summary: "Displays the current server configuration.",
+        description: "Prints the current server configuration settings.",
+        usage: "config:show",
+        requires_auth: true,
+        requires_admin: true,
+        params: &[],
+    },
+    CommandEntry {
+        command: "config:<key>",
+        summary: "Sets a configuration value.",
+        description: "Updates a specific configuration setting in the server using the format `config:<key> <value>`. For example: `config:server_port 8080`. This action requires admin privileges.",
+        usage: "config:<key> <value>",
+        requires_auth: true,
+        requires_admin: true,
+        params: &[("value", "The new value for the configuration key")],
+    },
 ];
 
 /// Prints a summary of all available commands, grouped by namespace.
@@ -169,7 +188,7 @@ pub fn print_all() {
         "  ─────────────────────────────────────────────────────".dimmed()
     );
 
-    let namespaces = ["help", "server", "db", "user", "test"];
+    let namespaces = ["help", "server", "db", "user", "test", "config"];
 
     for ns in namespaces {
         println!();
