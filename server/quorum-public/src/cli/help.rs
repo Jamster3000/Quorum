@@ -61,15 +61,6 @@ const COMMANDS: &[CommandEntry] = &[
         params: &[],
     },
     CommandEntry {
-        command: "server:make-admin",
-        summary: "Promotes a user to an administrator.",
-        description: "Converts a regular user into an administrator with elevated privileges.",
-        usage: "server:make-admin <username>",
-        requires_auth: false,
-        requires_admin: false,
-        params: &[("username", "The username of the user to promote")],
-    },
-    CommandEntry {
         command: "server:status",
         summary: "Shows uptime and basic server info.",
         description: "Prints how long the server has been running, what address it is listening on, and whether testing mode is active.",
@@ -135,6 +126,15 @@ const COMMANDS: &[CommandEntry] = &[
             ("name", "The name of the table to display"),
             ("page", "The page of results to display"),
         ],
+    },
+    CommandEntry {
+        command: "db:delete",
+        summary: "Deletes the database and resets it to new",
+        description: "Deletes the database and resets it to a new state. This action is irreversible and will remove all data.",
+        usage: "db:delete",
+        requires_auth: true,
+        requires_admin: true,
+        params: &[],
     },
     // --user--
     CommandEntry {

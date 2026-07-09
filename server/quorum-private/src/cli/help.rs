@@ -34,15 +34,6 @@ const COMMANDS: &[CommandEntry] = &[
     },
     // --server--
     CommandEntry {
-        command: "server:signup",
-        summary: "Creates a new user account.",
-        description: "Prompts for a username, password, and optional email address to create a new user account.",
-        usage: "server:signup",
-        requires_auth: false,
-        requires_admin: false,
-        params: &[],
-    },
-    CommandEntry {
         command: "server:login",
         summary: "Authenticates an operator session in the terminal.",
         description: "Prompts for a username and password and verifies them against the database. On success, grants access to write/destructive commands for the next 20 minutes of inactivity.",
@@ -50,15 +41,6 @@ const COMMANDS: &[CommandEntry] = &[
         requires_auth: false,
         requires_admin: false,
         params: &[],
-    },
-    CommandEntry {
-        command: "server:make-admin",
-        summary: "Promotes a user to an administrator.",
-        description: "Converts a regular user into an administrator with elevated privileges.",
-        usage: "server:make-admin <username>",
-        requires_auth: false,
-        requires_admin: false,
-        params: &[("username", "The username of the user to promote")],
     },
     CommandEntry {
         command: "server:status",
@@ -126,26 +108,6 @@ const COMMANDS: &[CommandEntry] = &[
             ("name", "The name of the table to display"),
             ("page", "The page of results to display"),
         ],
-    },
-    // --user--
-    CommandEntry {
-        command: "user:delete",
-        summary: "Deletes a user account.",
-        description: "Removes a user account from the database. This action is irreversible.",
-        usage: "user:delete <id>",
-        requires_auth: true,
-        requires_admin: true,
-        params: &[("id", "The ID of the user to delete")],
-    },
-    // --test--
-    CommandEntry {
-        command: "test:run",
-        summary: "Runs functional tests on the server.",
-        description: "Executes a suite of functional tests to verify that the server is operating correctly. This is only available if testing mode is enabled.",
-        usage: "test:run",
-        requires_auth: false,
-        requires_admin: false,
-        params: &[],
     },
 ];
 
