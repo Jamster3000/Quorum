@@ -11,8 +11,8 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /usr/src/app
 
-COPY . .
+COPY ./server .
 
-RUN cargo build --release -p quorum-public
+RUN cargo build --release
 
-CMD ["./server/target/release/quorum-public"]
+CMD ["./target/release/quorum-public"]
