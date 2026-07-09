@@ -293,7 +293,7 @@ pub fn run_setup() -> Result<SerializableConfig, String> {
         jwt_secret: hex::encode(generate_random_bytes()),
         jwt_access_minutes: 15,
         jwt_refresh_days: 7,
-        enable_testing: false,
+        enable_testing: true,
         default_per_second: 100,
         default_burst_size: 200,
         testing_per_second: 1000,
