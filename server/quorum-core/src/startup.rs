@@ -33,6 +33,12 @@ pub fn print_banner() {
     "#
     );
     println!("{}", "═".repeat(75).cyan());
+
+    if rand::random::<u8>() % 100 == 0 {
+        println!();
+        println!("{}", "Greetings, Professor Falken.".cyan().bold());
+        println!();
+    }
 }
 
 /// Display the "Initializing..." startup message
