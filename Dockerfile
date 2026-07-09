@@ -13,6 +13,6 @@ WORKDIR /usr/src/app
 
 COPY ./server .
 
-RUN cargo build --release
+RUN cargo build -p quorum-public --release
 
 CMD ["./target/release/quorum-public"]
