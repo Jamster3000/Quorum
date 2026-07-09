@@ -62,3 +62,5 @@ src-tauri/.env
 /server/data/db
 *.enc
 /server/backup/secrets.enc.backup
+/server/backups/secrets.enc.sha256
+/server/backups/secrets.enc.backup
