@@ -1,3 +1,4 @@
+// config.rs
 //! Centralized configuration management.
 //!
 //! Configuration is loaded once at startup from an AES-256-GCM encrypted file (`secrets.enc`),
@@ -258,5 +259,61 @@ impl Config {
             .get()
             .expect("Config not initialized. Call Config::load() first.")
             .load()
+    }
+
+    pub fn update(config_key: &str, config_value: &str) -> Result<(), Box<dyn std::error::Error>> {
+        let existing = CONFIG.get().ok_or("Config not initialized. Call Config::load() first.")?;
+        let current = existing.load();
+        let mut new_config = Config {
+            server_port: current.server_port,
+            server_url: current.server_url.clone(),
+            server_host: current.server_host.clone(),
+            surreal_data_path: current.surreal_data_path.clone(),
+            surreal_ns: current.surreal_ns.clone(),
+            surreal_db: current.surreal_db.clone(),
+            jwt_secret: current.jwt_secret.clone(),
+            jwt_access_minutes: current.jwt_access_minutes,
+            jwt_refresh_days: current.jwt_refresh_days,
+            enable_testing: current.enable_testing,
+            default_per_second: current.default_per_second,
+            default_burst_size: current.default_burst_size,
+            testing_per_second: current.testing_per_second,
+            testing_burst_size: current.testing_burst_size,
+        };
+        match config_key {
+            "server_port" => new_config.server_port = config_value.parse().map_err(|e| format!("Invalid port format: {}", e))?,
+            "server_url" => new_config.server_url = config_value.to_string(),
+            "server_host" => new_config.server_host = config_value.to_string(),
+            "surreal_data_path" => new_config.surreal_data_path = config_value.to_string(),
+            "surreal_ns" => new_config.surreal_ns = config_value.to_string(),
+            "surreal_db" => new_config.surreal_db = config_value.to_string(),
+            "jwt_secret" => new_config.jwt_secret = config_value.to_string(),
+            "jwt_access_minutes" => new_config.jwt_access_minutes = config_value.parse().map_err(|e| format!("Invalid minutes format: {}", e))?,
+            "jwt_refresh_days" => new_config.jwt_refresh_days = config_value.parse().map_err(|e| format!("Invalid days format: {}", e))?,
+            "enable_testing" => new_config.enable_testing = config_value.parse().map_err(|e| format!("Invalid boolean format: {}", e))?,
+            "default_per_second" => new_config.default_per_second = config_value.parse().map_err(|e| format!("Invalid integer format: {}", e))?,
+            "default_burst_size" => new_config.default_burst_size = config_value.parse().map_err(|e| format!("Invalid integer format: {}", e))?,
+            "testing_per_second" => new_config.testing_per_second = config_value.parse().map_err(|e| format!("Invalid integer format: {}", e))?,
+            "testing_burst_size" => new_config.testing_burst_size = config_value.parse().map_err(|e| format!("Invalid integer format: {}", e))?,
+            _ => return Err(format!("Unknown config key: {}", config_key).into()),
+        }
+        save_encrypted_config(&crate::utility::secrets::SerializableConfig {
+            server_port: new_config.server_port,
+            server_host: new_config.server_host.clone(),
+            surreal_data_path: new_config.surreal_data_path.clone(),
+            surreal_ns: new_config.surreal_ns.clone(),
+            surreal_db: new_config.surreal_db.clone(),
+            jwt_secret: new_config.jwt_secret.clone(),
+            jwt_access_minutes: new_config.jwt_access_minutes,
+            jwt_refresh_days: new_config.jwt_refresh_days,
+            enable_testing: new_config.enable_testing,
+            default_per_second: new_config.default_per_second,
+            default_burst_size: new_config.default_burst_size,
+            testing_per_second: new_config.testing_per_second,
+            testing_burst_size: new_config.testing_burst_size,
+        }, &"correct horse battery staple")?;
+
+        existing.store(Arc::new(new_config));
+        Ok(())
     }
 }
