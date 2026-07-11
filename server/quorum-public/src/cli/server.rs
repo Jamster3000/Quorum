@@ -6,6 +6,33 @@ use quorum_core::utility::std::typewriter_println;
 use std::sync::{Arc, Mutex};
 use zeroize::Zeroizing;
 
+
+use quorum_core::db::{self as core_db, DB};
+use crate::db::schema;
+use quorum_core::startup;
+
+pub async fn reinitialize_schema(db: &DB) -> Result<(), String> {
+    let timer = startup::create_timer();
+
+    match schema::init(db).await {
+        Ok(()) => {
+            startup::print_step("Re-initializing schema", true, startup::elapsed(timer));
+
+            Ok(())
+        }
+
+        Err(error) => {
+            startup::print_step("Re-initializing schema", false, startup::elapsed(timer));
+
+            eprintln!("{}", format!("  Error: {}", error).red());
+
+            let _ = core_db::queries::server_logs::log_error(db, error.to_string(), 0).await;
+
+            Err(error.to_string())
+        }
+    }
+}
+
 /// Authenticates an admin session using the server passphrase.
 ///
 /// Prompts for the passphrase and attempts to decrypt secrets.enc with it.
@@ -25,10 +52,7 @@ pub fn login(session: &Arc<Mutex<AdminSession>>) {
         if sess.is_valid() {
             println!(
                 "{}",
-                format!(
-                    "Already logged in. Run server:logout first."
-                )
-                .yellow()
+                format!("Already logged in. Run server:logout first.").yellow()
             );
             return;
         }

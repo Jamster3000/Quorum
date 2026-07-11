@@ -26,6 +26,8 @@ struct Command {
     raw: String,
 }
 
+
+
 /// Parses a command string into a Command struct.
 ///
 /// Commands use colon between the command category and the actual command,
@@ -180,6 +182,14 @@ async fn dispatch(
             "audit" => {
                 let params = cmd.raw.split_once(' ').map(|x| x.1).unwrap_or("");
                 audit(db, params).await;
+            }
+            "update-database" => {
+                if let Err(error) = server::reinitialize_schema(&db).await {
+                    eprintln!(
+                        "{}",
+                        format!("Failed to reinitialize schema: {error}").red()
+                    );
+                }
             }
             _ => unknown(&cmd.raw),
         },

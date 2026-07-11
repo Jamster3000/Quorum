@@ -34,6 +34,15 @@ const COMMANDS: &[CommandEntry] = &[
     },
     // --server--
     CommandEntry {
+        command: "server:update-database",
+        summary: "Updates server to use updated database.",
+        description: "Reinitializes database for updating purposes, an identical process to startup, so that the server can use the most up to date database.",
+        usage: "server:update-database",
+        requires_auth: false,
+        requires_admin: false,
+        params: &[],
+    },
+    CommandEntry {
         command: "server:signup",
         summary: "Creates a new user account.",
         description: "Prompts for a username, password, and optional email address to create a new user account.",
