@@ -75,6 +75,7 @@ jobs:
         working-directory: client
         run: |
           npm ci
+          npx svelte-kit sync
           npx typedoc --out ../docs-client src/lib --tsconfig jsconfig.json
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
