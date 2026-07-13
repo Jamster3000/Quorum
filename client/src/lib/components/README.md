@@ -7,6 +7,6 @@ This directory contains all **reusable Svelte components** for the Quorum client
 ## Structure
    Folder      | Purpose                                                                 |
  |-------------|-------------------------------------------------------------------------|
- | `app/`      | **App-wide components** (e.g., `Header`, `Footer`).                     |
- | `layout/`   | **Layout components** (e.g., `TitleBar` for window controls).           |
+ | `app/`      | **parent components** - for components that use other components        |
+ | `layout/`   | **Layout components** - components for the layouts                      |
  | `ui/`       | **General UI components** (e.g., buttons, modals, inputs, cards).       |
