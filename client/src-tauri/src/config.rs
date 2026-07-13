@@ -10,7 +10,8 @@ pub fn init() {
 
 /// Gets the url of the public SERVER_URL
 ///
-/// # Returns
+/// # Returns#
+///
 pub fn get_server_url() -> &'static str {
     "http://127.0.0.1:3000"
 }
