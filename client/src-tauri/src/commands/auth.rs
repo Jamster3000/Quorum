@@ -1,6 +1,6 @@
+use crate::common::make_auth_request;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
-use crate::common::make_auth_request;
 
 #[derive(Serialize)]
 pub struct SignupResponse {
@@ -120,9 +120,7 @@ pub async fn login(payload: LoginPayload) -> Result<LoginResponse, String> {
 
     // Capture the result of make_auth_request (don't use ? yet)
     let auth_response = match make_auth_request("/auth/login", &request_payload, 200).await {
-        Ok(response) => {
-            response
-        }
+        Ok(response) => response,
         Err(e) => {
             return Ok(LoginResponse {
                 success: false,
@@ -138,7 +136,10 @@ pub async fn login(payload: LoginPayload) -> Result<LoginResponse, String> {
     println!("Auth response: {:?}", auth_response);
 
     if !auth_response["success"].as_bool().unwrap_or(false) {
-        let error_message = auth_response["message"].as_str().unwrap_or("Invalid username/email or password").to_string();
+        let error_message = auth_response["message"]
+            .as_str()
+            .unwrap_or("Invalid username/email or password")
+            .to_string();
         return Ok(LoginResponse {
             success: false,
             message: error_message,
@@ -150,16 +151,23 @@ pub async fn login(payload: LoginPayload) -> Result<LoginResponse, String> {
     }
 
     // Extract tokens and user data...
-    let tokens = auth_response["tokens"].as_object().ok_or("Invalid tokens in response")?;
+    let tokens = auth_response["tokens"]
+        .as_object()
+        .ok_or("Invalid tokens in response")?;
     let access_token = tokens["access_token"].as_str().map(|s| s.to_string());
     let refresh_token = tokens["refresh_token"].as_str().map(|s| s.to_string());
-    let user = auth_response["user"].as_object().ok_or("Invalid user in response")?;
+    let user = auth_response["user"]
+        .as_object()
+        .ok_or("Invalid user in response")?;
     let user_id = user["id"].as_str().map(|s| s.to_string());
     let username = user["username"].as_str().map(|s| s.to_string());
 
     Ok(LoginResponse {
         success: true,
-        message: auth_response["message"].as_str().unwrap_or("Logged in successfully.").to_string(),
+        message: auth_response["message"]
+            .as_str()
+            .unwrap_or("Logged in successfully.")
+            .to_string(),
         access_token,
         refresh_token,
         user_id,
@@ -176,7 +184,10 @@ pub async fn refresh_token(refresh_token: String) -> Result<LoginResponse, Strin
     let auth_response = make_auth_request("/auth/refresh", &payload, 200).await?;
 
     if !auth_response["success"].as_bool().unwrap_or(false) {
-        let error_msg = auth_response["message"].as_str().unwrap_or("Failed to refresh token").to_string();
+        let error_msg = auth_response["message"]
+            .as_str()
+            .unwrap_or("Failed to refresh token")
+            .to_string();
         return Ok(LoginResponse {
             success: false,
             message: error_msg,
@@ -187,13 +198,18 @@ pub async fn refresh_token(refresh_token: String) -> Result<LoginResponse, Strin
         });
     }
 
-    let tokens = auth_response["tokens"].as_object().ok_or("Invalid tokens in response")?;
+    let tokens = auth_response["tokens"]
+        .as_object()
+        .ok_or("Invalid tokens in response")?;
     let access_token = tokens["access_token"].as_str().map(|s| s.to_string());
     let new_refresh_token = tokens["refresh_token"].as_str().map(|s| s.to_string());
 
     Ok(LoginResponse {
         success: true,
-        message: auth_response["message"].as_str().unwrap_or("Token refreshed successfully.").to_string(),
+        message: auth_response["message"]
+            .as_str()
+            .unwrap_or("Token refreshed successfully.")
+            .to_string(),
         access_token,
         refresh_token: new_refresh_token,
         user_id: None,
