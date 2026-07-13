@@ -184,7 +184,7 @@ https://tabler.io/icons
 
 ## Contributing
 
-Contributions are welcome. Please read [CONTRIBUTE.md](CONTRIBUTE.md) before opening a pull request.
+Contributions are welcome. Please read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request.
 
 ---
 
