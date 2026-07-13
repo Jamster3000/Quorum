@@ -1,5 +1,6 @@
 mod commands;
 pub mod common;
+pub mod config;
 
 use tauri_plugin_store::Builder as StoreBuilder;
 
