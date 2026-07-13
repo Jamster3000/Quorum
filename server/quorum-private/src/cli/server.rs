@@ -23,10 +23,7 @@ pub fn login(session: &Arc<Mutex<AdminSession>>) {
     {
         let sess = session.lock().unwrap();
         if sess.is_valid() {
-            println!(
-                "{}",
-                format!("Already logged in. Run server:logout first.").yellow()
-            );
+            println!("{}", "Already logged in. Run server:logout first.".yellow());
             return;
         }
     }

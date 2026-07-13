@@ -164,7 +164,7 @@ impl Config {
                 Self::load_with_passphrase(&passphrase)
             } else {
                 //936
-                Self::load_with_passphrase(&"correct horse battery staple")
+                Self::load_with_passphrase("correct horse battery staple")
             }
         } else {
             let serializable = run_setup()?;
@@ -183,7 +183,7 @@ impl Config {
                 save_encrypted_config(&serializable, &passphrase)?;
             } else {
                 //936
-                save_encrypted_config(&serializable, &"correct horse battery staple")?;
+                save_encrypted_config(&serializable, "correct horse battery staple")?;
             }
 
             Self::load()
@@ -346,7 +346,7 @@ impl Config {
                 testing_per_second: new_config.testing_per_second,
                 testing_burst_size: new_config.testing_burst_size,
             },
-            &"correct horse battery staple",
+            "correct horse battery staple",
         )?;
 
         existing.store(Arc::new(new_config));

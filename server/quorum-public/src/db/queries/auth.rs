@@ -50,10 +50,8 @@ pub async fn signup_user(
         return Err("Invalid password length".into());
     }
 
-    if let Some(email) = email {
-        if !check_email_address(email) {
-            return Err("Invalid email address".into());
-        }
+    if let Some(email) = email && !check_email_address(email) {
+        return Err("Invalid email address".into());
     }
 
     let password_hash = crate::utility::auth_common::hash(password)

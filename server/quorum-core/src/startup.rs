@@ -34,7 +34,7 @@ pub fn print_banner() {
     );
     println!("{}", "═".repeat(75).cyan());
 
-    if rand::random::<u8>() % 100 == 0 {
+    if rand::random::<u8>().is_multiple_of(100) {
         println!();
         println!("{}", "Greetings, Professor Falken.".cyan().bold());
         println!();

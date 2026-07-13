@@ -40,19 +40,19 @@ pub fn print_all() {
     );
 
     println!(
-        "│ {:<22} : {} │",
+        "│ {:<22} : {:<33} │",
         "server_host".yellow(),
-        format!("{:<33}", cfg.server_host.white())
+        cfg.server_host.white()
     );
     println!(
-        "│ {:<22} : {} │",
+        "│ {:<22} : {:<33} │",
         "server_port".yellow(),
-        format!("{:<33}", cfg.server_port.to_string().white())
+        cfg.server_port.to_string().white()
     );
     println!(
-        "│ {:<22} : {} │",
+        "│ {:<22} : {:<33} │",
         "server_url".yellow(),
-        format!("{:<33}", cfg.server_url.white())
+        cfg.server_url.white()
     );
 
     println!(
@@ -60,19 +60,19 @@ pub fn print_all() {
         "├────────────────────────────────────────────────────────────┤".dimmed()
     );
     println!(
-        "│ {:<22} : {} │",
+        "│ {:<22} : {:<33} │",
         "surreal_data_path".yellow(),
-        format!("{:<33}", cfg.surreal_data_path.white())
+        cfg.surreal_data_path.white()
     );
     println!(
-        "│ {:<22} : {} │",
+        "│ {:<22} : {:<33} │",
         "surreal_ns".yellow(),
-        format!("{:<33}", cfg.surreal_ns.white())
+        cfg.surreal_ns.white()
     );
     println!(
-        "│ {:<22} : {} │",
+        "│ {:<22} : {:<33} │",
         "surreal_db".yellow(),
-        format!("{:<33}", cfg.surreal_db.white())
+        cfg.surreal_db.white()
     );
 
     println!(
@@ -85,19 +85,19 @@ pub fn print_all() {
         cfg.jwt_secret.clone()
     };
     println!(
-        "│ {:<22} : {} │",
+        "│ {:<22} : {:<33} │",
         "jwt_secret".yellow(),
-        format!("{:<33}", short_jwt.dimmed())
+        short_jwt.dimmed()
     );
     println!(
-        "│ {:<22} : {} │",
+        "│ {:<22} : {:<33} │",
         "jwt_access_minutes".yellow(),
-        format!("{:<33}", format!("{} min", cfg.jwt_access_minutes).white())
+        format!("{} min", cfg.jwt_access_minutes).white()
     );
     println!(
-        "│ {:<22} : {} │",
+        "│ {:<22} : {:<33} │",
         "jwt_refresh_days".yellow(),
-        format!("{:<33}", format!("{} days", cfg.jwt_refresh_days).white())
+        format!("{} days", cfg.jwt_refresh_days).white()
     );
 
     println!(
@@ -115,24 +115,24 @@ pub fn print_all() {
         testing_status
     );
     println!(
-        "│ {:<22} : {} │",
+        "│ {:<22} : {:<33} │",
         "default_per_second".yellow(),
-        format!("{:<33}", cfg.default_per_second.to_string().white())
+        cfg.default_per_second.to_string().white()
     );
     println!(
-        "│ {:<22} : {} │",
+        "│ {:<22} : {:<33} │",
         "default_burst_size".yellow(),
-        format!("{:<33}", cfg.default_burst_size.to_string().white())
+        cfg.default_burst_size.to_string().white()
     );
     println!(
-        "│ {:<22} : {} │",
+        "│ {:<22} : {:<33} │",
         "testing_per_second".yellow(),
-        format!("{:<33}", cfg.testing_per_second.to_string().white())
+        cfg.testing_per_second.to_string().white()
     );
     println!(
-        "│ {:<22} : {} │",
+        "│ {:<22} : {:<33} │",
         "testing_burst_size".yellow(),
-        format!("{:<33}", cfg.testing_burst_size.to_string().white())
+        cfg.testing_burst_size.to_string().white()
     );
 
     println!(

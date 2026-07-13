@@ -207,7 +207,7 @@ async fn dispatch(
                 audit(db, params).await;
             }
             "update-database" => {
-                if let Err(error) = server::reinitialize_schema(&db).await {
+                if let Err(error) = server::reinitialize_schema(db).await {
                     eprintln!(
                         "{}",
                         format!("Failed to reinitialize schema: {error}").red()
