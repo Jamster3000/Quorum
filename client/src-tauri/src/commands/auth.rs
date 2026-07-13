@@ -35,7 +35,7 @@ pub struct LoginPayload {
 #[tauri::command]
 pub async fn signup(payload: SignupPayload) -> Result<SignupResponse, String> {
     println!("testone");
-    if payload.username.len() < 1 {
+    if payload.username.is_empty() {
         return Ok(SignupResponse {
             success: false,
             message: "Username must be at least 1 characters.".to_string(),
