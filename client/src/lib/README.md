@@ -1,6 +1,11 @@
 # Lib
 
-Two things live here:
+This directory contains **reusable code** for the Quorum client frontend.
 
-- **Components** — Reusable Svelte UI components
-- **Utils** — Helper functions, stores, and shared logic
+---
+
+## Structure
+   Folder      | Purpose                                                                 |
+ |-------------|-------------------------------------------------------------------------|
+ | `components/` | Reusable **Svelte UI components** (e.g., buttons, modals, layouts).    |
+ | `utils/`     | **Helper functions**, stores, and shared logic. |
