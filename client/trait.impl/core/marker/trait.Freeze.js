@@ -1,0 +1,9 @@
+(function() {
+    const implementors = Object.fromEntries([["quorum_lib",[["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.97.0/core/marker/trait.Freeze.html\" title=\"trait core::marker::Freeze\">Freeze</a> for <a class=\"struct\" href=\"quorum_lib/commands/auth/struct.LoginPayload.html\" title=\"struct quorum_lib::commands::auth::LoginPayload\">LoginPayload</a>",0,1,["quorum_lib::commands::auth::LoginPayload"]],["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.97.0/core/marker/trait.Freeze.html\" title=\"trait core::marker::Freeze\">Freeze</a> for <a class=\"struct\" href=\"quorum_lib/commands/auth/struct.LoginResponse.html\" title=\"struct quorum_lib::commands::auth::LoginResponse\">LoginResponse</a>",0,1,["quorum_lib::commands::auth::LoginResponse"]],["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.97.0/core/marker/trait.Freeze.html\" title=\"trait core::marker::Freeze\">Freeze</a> for <a class=\"struct\" href=\"quorum_lib/commands/auth/struct.SignupPayload.html\" title=\"struct quorum_lib::commands::auth::SignupPayload\">SignupPayload</a>",0,1,["quorum_lib::commands::auth::SignupPayload"]],["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.97.0/core/marker/trait.Freeze.html\" title=\"trait core::marker::Freeze\">Freeze</a> for <a class=\"struct\" href=\"quorum_lib/commands/auth/struct.SignupResponse.html\" title=\"struct quorum_lib::commands::auth::SignupResponse\">SignupResponse</a>",0,1,["quorum_lib::commands::auth::SignupResponse"]]]]]);
+    if (window.register_implementors) {
+        window.register_implementors(implementors);
+    } else {
+        window.pending_implementors = implementors;
+    }
+})()
+//{"start":59,"fragment_lengths":[1452]}
