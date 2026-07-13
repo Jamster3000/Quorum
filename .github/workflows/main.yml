@@ -1,12 +1,14 @@
-name: Rust backend CI
+name: Rust CI
 on:
   push:
     paths:
       - 'server/**'
+      - 'client/src-tauri/**'
       - '.github/workflows/rust-backend-ci.yml'
   pull_request:
     paths:
       - 'server/**'
+      - 'client/src-tauri/**'
       - '.github/workflows/rust-backend-ci.yml'
 permissions:
   contents: write
@@ -34,25 +36,49 @@ jobs:
         with:
           workspaces: |
             server -> target
+            client/src-tauri -> target
 
-      - name: Check formatting
+      # server code CI
+      - name: Check server formatting
         working-directory: server
         run: cargo fmt --all -- --check
 
-      - name: Run Clippy
+      - name: Run server Clippy
         working-directory: server
         run: cargo clippy --all-targets --all-features -- -W warnings
 
-      - name: Generate docs for all crates
+      - name: Generate server docs
         working-directory: server
         run: cargo doc --no-deps --document-private-items --workspace
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
+      # ===== CLIENT CI =====
+      - name: Check client formatting
+        working-directory: client/src-tauri
+        run: cargo fmt --all -- --check
+
+      - name: Run client Clippy
+        working-directory: client/src-tauri
+        run: cargo clippy --all-targets --all-features -- -W warnings
+
+      - name: Generate client docs
+        working-directory: client/src-tauri
+        run: cargo doc --no-deps --document-private-items --workspace
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+      # deploy documentation
+      - name: Prepare docs directory
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          mkdir -p docs-out/server
+          mkdir -p docs-out/client
+          cp -r server/target/doc/* docs-out/server/ || true
+          cp -r client/src-tauri/target/doc/* docs-out/client/ || true
+
       - name: Create root index page
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
-          mkdir -p server/target/doc
-          cat > server/target/doc/index.html << 'EOF'
+          cat > docs-out/index.html << 'EOF'
           <!DOCTYPE html>
           <html lang="en">
           <head>
@@ -122,6 +148,16 @@ jobs:
               }
               .card p { color: var(--text-dim); font-size: 0.92rem; line-height: 1.55; margin: 0; flex: 1; }
               .card .view-link { font-size: 0.85rem; color: var(--violet); font-weight: 600; }
+              .section-title {
+                font-size: 0.85rem;
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                color: var(--text-dim);
+                margin: 2rem 0 1rem;
+                padding: 0 1.5rem;
+              }
+              .section-title:first-child { margin-top: 0; }
               footer { margin-top: 3rem; color: var(--text-dim); font-size: 0.8rem; text-align: center; }
               footer a { color: var(--violet); text-decoration: none; }
               footer a:hover { text-decoration: underline; }
@@ -130,24 +166,35 @@ jobs:
           <body>
             <header>
               <h1>Quorum Documentation</h1>
-              <p>Rustdoc reference for Quorum's workspace — shared core logic plus the public and private server binaries.</p>
+              <p>Rustdoc reference for Quorum's workspace — backend server and client binaries.</p>
             </header>
-            <main class="grid">
-              <a class="card" href="quorum_core/index.html">
-                <span class="crate-name">quorum-core</span>
-                <p>Shared library: groups, channels, messages, permissions, and JWT verification used by both server binaries.</p>
-                <span class="view-link">View docs &rarr;</span>
-              </a>
-              <a class="card" href="quorum_public/index.html">
-                <span class="crate-name">quorum-public</span>
-                <p>Public server binary. Adds signup/login, account management, JWT signing, and the users table on top of quorum-core.</p>
-                <span class="view-link">View docs &rarr;</span>
-              </a>
-              <a class="card" href="quorum_private/index.html">
-                <span class="crate-name">quorum-private</span>
-                <p>Self-hosted private server binary. Depends only on quorum-core — no signup code or users table exists in this crate.</p>
-                <span class="view-link">View docs &rarr;</span>
-              </a>
+            <main>
+              <div class="section-title">Backend Server</div>
+              <div class="grid">
+                <a class="card" href="server/quorum_core/index.html">
+                  <span class="crate-name">quorum-core</span>
+                  <p>Shared library: groups, channels, messages, permissions, and JWT verification used by both server binaries.</p>
+                  <span class="view-link">View docs &rarr;</span>
+                </a>
+                <a class="card" href="server/quorum_public/index.html">
+                  <span class="crate-name">quorum-public</span>
+                  <p>Public server binary. Adds signup/login, account management, JWT signing, and the users table on top of quorum-core.</p>
+                  <span class="view-link">View docs &rarr;</span>
+                </a>
+                <a class="card" href="server/quorum_private/index.html">
+                  <span class="crate-name">quorum-private</span>
+                  <p>Self-hosted private server binary. Depends only on quorum-core — no signup code or users table exists in this crate.</p>
+                  <span class="view-link">View docs &rarr;</span>
+                </a>
+              </div>
+              <div class="section-title">Desktop Client</div>
+              <div class="grid">
+                <a class="card" href="client/quorum_lib/index.html">
+                  <span class="crate-name">quorum-lib</span>
+                  <p>Tauri backend library. Handles commands, auth, state management, and desktop API integrations for the SvelteKit frontend.</p>
+                  <span class="view-link">View docs &rarr;</span>
+                </a>
+              </div>
             </main>
             <footer>
               Generated from <a href="https://github.com/iamster3000/Quorum">github.com/iamster3000/Quorum</a>
@@ -161,6 +208,6 @@ jobs:
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: server/target/doc
+          publish_dir: docs-out
           publish_branch: gh-pages
           force_orphan: false
