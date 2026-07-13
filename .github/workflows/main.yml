@@ -28,6 +28,11 @@ jobs:
         with:
           components: rustfmt, clippy
 
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
       - name: Set up sccache
         uses: mozilla/sccache-action@v0.0.9
 
@@ -66,6 +71,13 @@ jobs:
         working-directory: client/src-tauri
         run: cargo clippy --all-targets --all-features -- -W warnings
 
+      - name: Generate TypeScript docs
+        working-directory: client
+        run: |
+          npm ci
+          npx typedoc --out ../docs-client src/lib --tsconfig jsconfig.json
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
       - name: Generate client docs
         working-directory: client/src-tauri
         run: cargo doc --no-deps --document-private-items --lib
@@ -77,8 +89,10 @@ jobs:
         run: |
           mkdir -p docs-out/server
           mkdir -p docs-out/client
+          mkdir -p docs-out/client-ts
           cp -r server/target/doc/* docs-out/server/ || true
           cp -r client/src-tauri/target/doc/* docs-out/client/ || true
+          cp -r docs-client/* docs-out/client-ts/ || true
 
       - name: Create root index page
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -197,6 +211,14 @@ jobs:
                 <a class="card" href="client/quorum_lib/index.html">
                   <span class="crate-name">quorum-lib</span>
                   <p>Tauri backend library. Handles commands, auth, state management, and desktop API integrations for the SvelteKit frontend.</p>
+                  <span class="view-link">View docs &rarr;</span>
+                </a>
+              </div>
+              <div class="section-title">Frontend (TypeScript + Svelte)</div>
+              <div class="grid">
+                <a class="card" href="client-ts/index.html">
+                  <span class="crate-name">Client Frontend</span>
+                  <p>TypeScript utilities, Svelte components, and SvelteKit routes for the Quorum desktop client UI.</p>
                   <span class="view-link">View docs &rarr;</span>
                 </a>
               </div>
