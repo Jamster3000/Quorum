@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["change_config_value","print_all"]};

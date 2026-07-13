@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["SESSION_TIMEOUT_MINS"],"fn":["dispatch","parse","require_admin","spawn_cli","unknown"],"macro":[["config_match_arms",1]],"mod":["config","help","server"],"struct":["Command"]};

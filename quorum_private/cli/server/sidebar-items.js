@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["confirm_and_delete","login","perform_reset"]};
