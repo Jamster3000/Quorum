@@ -50,7 +50,9 @@ pub async fn signup_user(
         return Err("Invalid password length".into());
     }
 
-    if let Some(email) = email && !check_email_address(email) {
+    if let Some(email) = email
+        && !check_email_address(email)
+    {
         return Err("Invalid email address".into());
     }
 
