@@ -12,6 +12,7 @@ pub fn init() {
 }
 
 /// Gets the url of the public SERVER_URL
+///
 pub fn get_server_url() -> &'static str {
     SERVER_URL.get_or_init(|| {
         dotenvy::dotenv().ok();
