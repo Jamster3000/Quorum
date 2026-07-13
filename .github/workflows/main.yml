@@ -31,6 +31,11 @@ jobs:
       - name: Set up sccache
         uses: mozilla/sccache-action@v0.0.9
 
+      - name: Install system dependencies for Tauri
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libssl-dev
+
       - name: Cache Rust dependencies
         uses: Swatinem/rust-cache@v2
         with:
@@ -38,7 +43,7 @@ jobs:
             server -> target
             client/src-tauri -> target
 
-      # server code CI
+      # ===== SERVER CI =====
       - name: Check server formatting
         working-directory: server
         run: cargo fmt --all -- --check
@@ -63,10 +68,10 @@ jobs:
 
       - name: Generate client docs
         working-directory: client/src-tauri
-        run: cargo doc --no-deps --document-private-items --workspace
+        run: cargo doc --no-deps --document-private-items --lib
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
-      # deploy documentation
+      # ===== DOCUMENTATION DEPLOYMENT =====
       - name: Prepare docs directory
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
