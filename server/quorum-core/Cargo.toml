@@ -24,3 +24,7 @@ aes-gcm.workspace = true
 rand.workspace = true
 zxcvbn.workspace = true
 sha2.workspace = true
+
+[features]
+public-only = []
+private-only = []
