@@ -1,8 +1,7 @@
-﻿﻿# Contribution
 
----
-
-## Table of Contents
+  # Contribution
+  
+  ## Table of Contents
 
 - [Project Structure](#project-structure)
 - [Getting Started](#getting-started)
@@ -18,10 +17,7 @@
 ```
 quorum/
 ├── client/        # Tauri 2 + SvelteKit frontend
-├── docker/        # Docker Compose for SurrealDB and MinIO
-├── server/        # Rust + Axum backend
-├── schema/        # SurrealQL schema files
-└── docker/        # Docker Compose for SurrealDB and MinIO
+└── server/        # Rust + Axum backend
 ```
 
 ---
@@ -34,35 +30,21 @@ quorum/
 |---|---|
 | Rust (stable) | Backend (`server/`) |
 | Node.js + npm/npx | Frontend (`client/`) |
-| Docker + Docker Compose | SurrealDB + MinIO (`docker/`) |
 
-### Running locally
+### Running Locally
 
-1. Start the database and file storage:
-   ```bash
-   cd docker
-   docker compose up -d
-   ```
-
-2. Start the backend:
+1. **Start the backend**:
    ```bash
    cd server
-   cargo run
+   cargo run -p quorum-private
    ```
-   OR
-   ```bash
-    cd server
-    cargo run dev
-    ```
+   > Use `cargo run -p quorum-private --release` for production mode.
+   > Or use `cargo run -p quorum-public` to build the public server.
 
-3. Start the frontend:
+2. **Start the frontend**:
    ```bash
    cd client
-   npm run tauri
-   ```
-   OR
-   ```bash
-   cd client
+   npm install
    npm run tauri dev
    ```
 
@@ -70,7 +52,7 @@ quorum/
 
 ## Submitting Changes
 
-Contributions are submitted via **GitHub pull requests**. There is no requirement to open an issue first.
+Contributions are submitted via **GitHub pull requests**. There is no requirement to open an issue first before a pull request is made.
 
 1. Fork the repository and create a branch from `main`.
 2. Make your changes.
@@ -97,7 +79,7 @@ Linting with Clippy is also expected:
 cargo clippy -- -W warnings
 ```
 
-### SurrealQL (`schema/`)
+### SurrealQL (`initial.surql`)
 
 The following conventions apply to all `.surql` files, these files are created when there are large amount of queries to run.
 
@@ -130,10 +112,6 @@ DEFINE FIELD IF NOT EXISTS email ON TABLE users TYPE string
 DEFINE INDEX IF NOT EXISTS idx_username ON TABLE users COLUMNS username UNIQUE;
 DEFINE INDEX IF NOT EXISTS idx_email ON TABLE users COLUMNS email UNIQUE;
 ```
-
-### Docker (`docker/`)
-
-Keep `docker-compose.yml` clean and commented where non-obvious configuration is used.
 
 ---
 
