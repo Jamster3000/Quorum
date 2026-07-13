@@ -1,17 +1,6 @@
 
-  # Contribution
+# Contribution
   
-  ## Table of Contents
-
-- [Project Structure](#project-structure)
-- [Getting Started](#getting-started)
-- [Submitting Changes](#submitting-changes)
-- [Code Style](#code-style)
-- [Documentation Comments](#documentation-comments)
-- [Commit Messages](#commit-messages)
-
----
-
 ## Project Structure
 
 ```
