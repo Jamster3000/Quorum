@@ -21,77 +21,78 @@ Discord collects extensive user data, shares it with third parties, trains AI mo
 ---
 
 ## Wireframes
-> We used Wireframes to get the structure and layout right as we wanted. The colours presented in the wireframes **do not** reflect what the final production will look like.
->
-> NOTE: A "group" can have one or more "spaces". The "spaces" presented in the wireframes may not reach finial production.
+> We used wireframes to get the structure and layout right. The colors presented **do not** reflect the final design.
+> NOTE: A "group" can have one or more "spaces." The "spaces" shown may not reach final production.
 
+---
 
 ### Home screen for authenticated user
-<img width="1919" height="1079" alt="image" src="https://github.com/user-attachments/assets/a78bc95f-6135-484a-b128-6d881abfe0f4" />
+<img width="650" alt="Home screen for authenticated user" src="https://github.com/user-attachments/assets/a78bc95f-6135-484a-b128-6d881abfe0f4" />
+
+---
 
 ### Create an account
-<img width="1919" height="1079" alt="image" src="https://github.com/user-attachments/assets/782b2717-862c-496e-95d5-d5f089d4a9c4" />
+<img width="650" alt="Create an account" src="https://github.com/user-attachments/assets/782b2717-862c-496e-95d5-d5f089d4a9c4" />
 
-
+---
 ### Login
-<img width="1919" height="1079" alt="image" src="https://github.com/user-attachments/assets/3dcd6923-d13c-42c9-97b3-3a90a96d1c43" />
+<img width="650" alt="Login" src="https://github.com/user-attachments/assets/3dcd6923-d13c-42c9-97b3-3a90a96d1c43" />
 
-
+---
 ### Account settings
-<img width="1919" height="1079" alt="image" src="https://github.com/user-attachments/assets/03344d1e-6dac-4c0c-b52a-f78c9bfdcec7" />
+<img width="650" alt="Account settings" src="https://github.com/user-attachments/assets/03344d1e-6dac-4c0c-b52a-f78c9bfdcec7" />
 
-
+---
 ### Search for public groups
-<img width="1919" height="1079" alt="image" src="https://github.com/user-attachments/assets/a677ee8e-beb7-4d7c-8e06-2ff5289a60d3" />
+<img width="650" alt="Search for public groups" src="https://github.com/user-attachments/assets/a677ee8e-beb7-4d7c-8e06-2ff5289a60d3" />
 
-
+---
 ### Creating a group (on public server)
-<img width="1919" height="1079" alt="image" src="https://github.com/user-attachments/assets/2ce58c89-0acf-4096-90b2-02caa3bf84f0" />
+<img width="650" alt="Creating a group (on public server)" src="https://github.com/user-attachments/assets/2ce58c89-0acf-4096-90b2-02caa3bf84f0" />
 
-
+---
 ### Group
-<img width="1919" height="1079" alt="image" src="https://github.com/user-attachments/assets/1021d59e-7374-4c00-b0e0-e4c47bfbe1c6" />
+<img width="650" alt="Group" src="https://github.com/user-attachments/assets/1021d59e-7374-4c00-b0e0-e4c47bfbe1c6" />
 
-
+---
 ### Group Space - Voice
-<img width="1919" height="1079" alt="image" src="https://github.com/user-attachments/assets/504a182c-20af-43e2-819b-36a5ebc4074e" />
+<img width="650" alt="Group Space - Voice" src="https://github.com/user-attachments/assets/504a182c-20af-43e2-819b-36a5ebc4074e" />
 
-
+---
 ### Photo Gallery Space - viewing
-<img width="1919" height="1079" alt="image" src="https://github.com/user-attachments/assets/6c4fe29c-9cf5-4f53-bd4d-240942f73c89" />
+<img width="650" alt="Photo Gallery Space - viewing" src="https://github.com/user-attachments/assets/6c4fe29c-9cf5-4f53-bd4d-240942f73c89" />
 
-
+---
 ### Photo Gallery Space - Adding/uploading an image
-<img width="1919" height="1079" alt="image" src="https://github.com/user-attachments/assets/5a5df9b1-7e26-4900-afef-95f318b81d43" />
+<img width="650" alt="Photo Gallery Space - Adding/uploading an image" src="https://github.com/user-attachments/assets/5a5df9b1-7e26-4900-afef-95f318b81d43" />
 
-
+---
 ### IDE/notepad space
-<img width="1919" height="1079" alt="image" src="https://github.com/user-attachments/assets/bfd624a6-76fd-43ed-84ae-bf43b9746219" />
+<img width="650" alt="IDE/notepad space" src="https://github.com/user-attachments/assets/bfd624a6-76fd-43ed-84ae-bf43b9746219" />
 
-
+---
 ### IDE/notepad space - file editing
-<img width="1919" height="1079" alt="image" src="https://github.com/user-attachments/assets/d050e304-380e-4a22-8839-0ed1cd852235" />
+<img width="650" alt="IDE/notepad space - file editing" src="https://github.com/user-attachments/assets/d050e304-380e-4a22-8839-0ed1cd852235" />
 
-
+---
 ### Project Board Space - To Do
-<img width="1919" height="1079" alt="image" src="https://github.com/user-attachments/assets/f7617d87-c83c-4922-967f-26aee65055e2" />
+<img width="650" alt="Project Board Space - To Do" src="https://github.com/user-attachments/assets/f7617d87-c83c-4922-967f-26aee65055e2" />
 
+---
+### Project Board Space - Kanban
+<img width="650" alt="Project Board Space - Kanban" src="https://github.com/user-attachments/assets/010deafc-cf28-4e01-8099-7f626a6bc93b" />
 
-### Project Board Space - Kanabn
-<img width="1919" height="1079" alt="image" src="https://github.com/user-attachments/assets/010deafc-cf28-4e01-8099-7f626a6bc93b" />
-
-
+---
 ### Project Board Space - Gantt Chart
-<img width="1919" height="1079" alt="image" src="https://github.com/user-attachments/assets/3553ce94-3930-4006-a9c0-be6d5efe76e1" />
+<img width="650" alt="Project Board Space - Gantt Chart" src="https://github.com/user-attachments/assets/3553ce94-3930-6506-a9c0-be6d5efe76e1" />
 
-
+---
 ### Project Board Space - Calendar
-<img width="1919" height="1079" alt="image" src="https://github.com/user-attachments/assets/067c4732-e3f5-41f6-9d61-482552dda8a3" />
+<img width="650" alt="Project Board Space - Calendar" src="https://github.com/user-attachments/assets/067c4732-e3f5-41f6-9d61-482552dda8a3" />
 
-
+---
 ### Project Board Space - Table
-<img width="1919" height="1079" alt="image" src="https://github.com/user-attachments/assets/3d89745d-d470-4a96-9ede-673634b5e399" />
-
+<img width="650" alt="Project Board Space - Table" src="https://github.com/user-attachments/assets/3d89745d-d470-4a96-9ede-673634b5e399" />
 ---
 
 ## Features
