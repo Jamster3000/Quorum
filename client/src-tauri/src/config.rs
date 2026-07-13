@@ -11,6 +11,7 @@ pub fn init() {
     SERVER_URL.set(url).expect("Failed to set SERVER_URL");
 }
 
+/// Gets the url of the public SERVER_URL
 pub fn get_server_url() -> &'static str {
     SERVER_URL.get_or_init(|| {
         dotenvy::dotenv().ok();
