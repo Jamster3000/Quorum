@@ -6,9 +6,8 @@ use quorum_core::utility::std::typewriter_println;
 use std::sync::{Arc, Mutex};
 use zeroize::Zeroizing;
 
-
-use quorum_core::db::{self as core_db, DB};
 use crate::db::schema;
+use quorum_core::db::{self as core_db, DB};
 use quorum_core::startup;
 
 pub async fn reinitialize_schema(db: &DB) -> Result<(), String> {

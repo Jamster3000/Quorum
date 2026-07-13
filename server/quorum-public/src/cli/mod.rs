@@ -51,8 +51,6 @@ macro_rules! config_match_arms {
     };
 }
 
-
-
 /// Parses a command string into a Command struct.
 ///
 /// Commands use colon between the command category and the actual command,
