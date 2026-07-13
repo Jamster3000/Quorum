@@ -64,3 +64,9 @@ src-tauri/.env
 /server/backup/secrets.enc.backup
 /server/backups/secrets.enc.sha256
 /server/backups/secrets.enc.backup
+
+*storybook.log
+storybook-static
+/client/.storybook
+/client/src/stories
+/client/vitest.shims.d.ts
