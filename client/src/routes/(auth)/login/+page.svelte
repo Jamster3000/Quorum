@@ -9,7 +9,7 @@
   import Checkbox from '$lib/components/ui/Checkbox.svelte';
   import Button from '$lib/components/ui/Button.svelte';
   import { IconHexagonFilled, IconArrowLeft } from '@tabler/icons-svelte-runes';
-  import { Store } from '@tauri-apps/plugin-store';
+  import { setTokens } from '$lib/stores/authStore';
 
   let username_or_email = '';
   let password = '';
@@ -49,7 +49,7 @@
         handleLoginFailure(result.message);
       } else {
         handleLoginSuccess(result.message);
-        await storeTokens(result.access_token, result.refresh_token, result.user_id, result.username);
+        await setTokens(result.access_token, result.refresh_token, result.user_id, result.username)
         goto("/");
       }
     } catch (e) {
@@ -69,15 +69,6 @@
     errorMessage = message;
     alertType = 'success';
     showAlert = true;
-  }
-
-  async function storeTokens(accessToken: string, refreshToken: string, userId: string, username: string) {
-    const store = await Store.load(".auth.dat");
-    await store.set("access_token", accessToken);
-    await store.set("refresh_token", refreshToken);
-    await store.set("user_id", userId);
-    await store.set("username", username);
-    await store.save();
   }
 </script>
 

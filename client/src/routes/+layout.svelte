@@ -15,7 +15,7 @@
 </script>
 
 {#key $navigating?.to?.url.pathname}
-  <div in:fade={{ duration: 450 }}>
+  <div in:fade={{ duration: 550 }}>
     <slot />
   </div>
 {/key}

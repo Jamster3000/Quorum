@@ -7,13 +7,15 @@
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
     "skipLibCheck": true,
-    "sourceMap": true,
+    "sourceMap": false,
     "strict": true,
     "moduleResolution": "bundler",
     "baseUrl": ".",
     "paths": {
       "$lib": [ "src/lib" ],
       "$lib/*": [ "src/lib/*" ]
-    }
+    },
+    "include": [ "src/**/*" ],
+    "exclude": [ "node_modules", "build", "dist" ]
   }
 }

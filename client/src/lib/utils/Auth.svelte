@@ -1,6 +1,5 @@
 <script lang="ts">
   import { isLoggedIn } from '$lib/utils/auth';
-  import { Store } from '@tauri-apps/plugin-store';
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
 

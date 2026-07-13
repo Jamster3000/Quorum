@@ -1,12 +1,10 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
-  import { Store } from '@tauri-apps/plugin-store';
+  import { clearAuthStore } from '$lib/stores/authStore';
   import Auth from '$lib/utils/Auth.svelte';
 
   async function logout() {
-    const store = await Store.load('.auth.dat');
-    await store.clear();
-    await store.save();
+    await clearAuthStore();
     goto('/');
   }
 </script>
