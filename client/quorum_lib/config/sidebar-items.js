@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["get_server_url","init"],"static":["SERVER_URL"]};

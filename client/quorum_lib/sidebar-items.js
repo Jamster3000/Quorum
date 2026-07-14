@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["run"],"mod":["commands","common"]};
+window.SIDEBAR_ITEMS = {"fn":["run"],"mod":["commands","common","config"]};
