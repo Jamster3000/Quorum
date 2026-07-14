@@ -64,7 +64,7 @@ export async function isTokenValid(): Promise<boolean> {
     lastCheckTime = now;
 
     const store = await getAuthStore(); 
-    const accessToken = await store.get('access_token');
+    const accessToken = await store.get<string>('access_token');
 
     if (!accessToken) {
         return false;
