@@ -67,6 +67,5 @@ src-tauri/.env
 
 *storybook.log
 storybook-static
-/client/.storybook
 /client/src/stories
 /client/vitest.shims.d.ts
