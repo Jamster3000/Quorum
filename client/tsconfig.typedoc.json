@@ -6,6 +6,8 @@
     "allowJs": true,
     "checkJs": false,
     "skipLibCheck": true,
+    "ignoreDeprecations": "6.0",
+    "baseUrl": ".",
     "paths": {
       "$lib": [ "src/lib" ],
       "$lib/*": [ "src/lib/*" ]
