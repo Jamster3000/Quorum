@@ -2,7 +2,7 @@ use std::sync::OnceLock;
 
 static SERVER_URL: OnceLock<String> = OnceLock::new();
 
-///
+/// Initializes the SERVER_URL with a hardcoded value.
 pub fn init() {
     let url = "http://127.0.0.1:3000".to_string();
 
