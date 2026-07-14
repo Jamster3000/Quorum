@@ -12,7 +12,7 @@ export async function getAuthStore(): Promise<Store> {
 export async function getAccessToken(): Promise<string | null> {
     try {
         const store = await getAuthStore();
-        return await store.get('access_token');
+        return (await store.get('access_token')) ?? null;
     } catch (error) {
         console.error('Failed to get access token:', error);
         return null;
@@ -22,7 +22,7 @@ export async function getAccessToken(): Promise<string | null> {
 export async function getRefreshToken(): Promise<string | null> {
     try {
         const store = await getAuthStore();
-        return await store.get('refresh_token');
+        return (await store.get('refresh_token')) ?? null;
     } catch (error) {
         console.error('Failed to get refresh token:', error);
         return null;
@@ -32,7 +32,7 @@ export async function getRefreshToken(): Promise<string | null> {
 export async function getUserId(): Promise<string | null> {
     try {
         const store = await getAuthStore();
-        return await store.get('user_id');
+        return (await store.get('user_id')) ?? null;
     } catch (error) {
         console.error('Failed to get user ID:', error);
         return null;
@@ -42,7 +42,7 @@ export async function getUserId(): Promise<string | null> {
 export async function getUsername(): Promise<string | null> {
     try {
         const store = await getAuthStore();
-        return await store.get('username');
+        return (await store.get('username')) ?? null
     } catch (error) {
         console.error('Failed to get username:', error);
         return null;

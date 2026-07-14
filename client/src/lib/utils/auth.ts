@@ -17,7 +17,7 @@ export async function isLoggedIn() {
 
 export async function getAccessToken(): Promise<string | null> {
     const store = await getAuthStore(); 
-    return await store.get('access_token');
+    return (await store.get('access_token')) ?? null;
 }
 
 export async function refreshAccessToken(): Promise<boolean> {
@@ -71,7 +71,7 @@ export async function isTokenValid(): Promise<boolean> {
     }
 
     try {
-        const payload = JSON.parse(atob(accessToken.split('.')[1]));
+        const payload = JSON.parse(atob(accessToken.split('.')[1])) as { exp: number };
         const expiresAt = payload.exp * 1000;
         const now = Date.now();
         const buffer = 5 * 60 * 1000;
