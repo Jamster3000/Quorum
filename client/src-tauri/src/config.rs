@@ -10,6 +10,7 @@ pub fn init() {
 
 /// Gets the url of the public SERVER_URL
 ///
+/// Currently hardcoded -> Will need updating
 /// # Returns
 /// A static string slice representing the server URL.
 pub fn get_server_url() -> &'static str {
