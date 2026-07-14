@@ -9,7 +9,7 @@
     "skipLibCheck": true,
     "sourceMap": false,
     "strict": true,
-    "moduleResolution": "bundler",
-    "include": [ "src/**/*.ts", "src/**/*.svelte" ]
-  }
+    "moduleResolution": "bundler"
+  },
+  "include": [ "src/**/*.ts", "src/**/*.svelte" ]
 }
