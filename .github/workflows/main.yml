@@ -76,7 +76,7 @@ jobs:
         run: |
           npm ci
           npx svelte-kit sync
-          npx typedoc --out ../docs-client --entryPointStrategy expand src/lib
+          npx typedoc --out ../docs-client --entryPointStrategy expand --skipErrorChecking src/lib
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
       - name: Generate client docs
