@@ -7,12 +7,12 @@
 </script>
 
 {#if href}
-  <a {href} class="btn {variant}  {fontSize}">
-    <slot />
+  <a {href} class="btn {variant} {fontSize}" class:disabled>
+    <span class="btn-text"><slot /></span>
   </a>
 {:else}
-  <button {type} {disabled} class="btn {variant}" on:click>
-    <slot />
+  <button {type} {disabled} class="btn {variant} {fontSize}" on:click>
+    <span class="btn-text"><slot /></span>
   </button>
 {/if}
 
@@ -20,82 +20,94 @@
   .btn {
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 6px;
-    padding: 10px 24px;
-    border-radius: 999px;
-    font-weight: 700;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-weight: 600;
     font-family: var(--font-primary);
     text-decoration: none;
     border: none;
     cursor: pointer;
-    position: relative;
-    overflow: hidden;
-    transition: transform 0.15s, box-shadow 0.15s;
+    transition:
+      background-color 0.15s ease,
+      border-color 0.15s ease,
+      box-shadow 0.15s ease,
+      transform 0.15s ease;
+    will-change: box-shadow, transform;
   }
 
-  .btn::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: white;
-    opacity: 0;
-    transition: opacity 0.15s;
+  .btn-text {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: transform 0.2s ease;
   }
 
-  .btn:hover::before { 
-      opacity: 0.08; 
+  .btn:hover:not(.disabled):not(:disabled) .btn-text {
+    transform: scale(1.05);
   }
 
-  .btn:active {
-      transform: scale(0.97); 
+  .btn:active:not(.disabled):not(:disabled) .btn-text {
+    transform: scale(0.95);
   }
 
   .primary {
     background: var(--primary-colour);
-    color: var(--background-colour);
-    box-shadow: 0 0 16px color-mix(in srgb, var(--primary-colour) 40%, transparent);
+    color: #ffffff;
+    box-shadow: 
+      0 1px 3px rgba(0, 0, 0, 0.15),
+      0 3px 6px rgba(0, 0, 0, 0.1),
+      inset 0 -1px 2px rgba(0, 0, 0, 0.2);
   }
 
-  .primary:hover {
-    box-shadow: 0 0 24px color-mix(in srgb, var(--primary-colour) 60%, transparent);
+  .primary:hover:not(.disabled):not(:disabled) {
+    background: color-mix(in srgb, var(--primary-colour) 90%, black);
+    box-shadow:
+      0 2px 5px rgba(0, 0, 0, 0.15),
+      0 5px 10px rgba(0, 0, 0, 0.12),
+      inset 0 -1px 2px rgba(0, 0, 0, 0.2);
+    transform: translateY(-1px);
+  }
+
+  .primary:active:not(.disabled):not(:disabled) {
+    box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.3);
+    transform: translateY(0);
   }
 
   .secondary {
     background: transparent;
-    color: var(--secondary-colour);
-    border: 1.5px solid var(--secondary-colour);
-    box-shadow: 0 0 16px color-mix(in srgb, var(--secondary-colour) 20%, transparent);
-  }
-
-  .secondary:hover {
-    background: color-mix(in srgb, var(--secondary-colour) 10%, transparent);
-    box-shadow: 0 0 24px color-mix(in srgb, var(--secondary-colour) 35%, transparent);
-  }
-
-  .btn:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
+    color: #20b2aa;
+    border: 1.5px solid #20b2aa;
     box-shadow: none;
-    transform: none;
   }
 
-  .xsmall {
-      font-size: var(--font-xsmall);
+  .secondary:hover:not(.disabled):not(:disabled) {
+    background: color-mix(in srgb, #20b2aa 10%, transparent);
+    border-color: #20b2aa;
+    transform: translateY(-1px);
   }
 
-  .small {
-      font-size: var(--font-small);
+  .secondary:active:not(.disabled):not(:disabled) {
+    background: color-mix(in srgb, #20b2aa 15%, transparent);
+    transform: translateY(0);
   }
 
-  .medium {
-      font-size: var(--font-medium);
+  .btn:focus-visible {
+    outline: 2px solid var(--primary-colour);
+    outline-offset: 2px;
   }
 
-  .large {
-      font-size: var(--font-large);
+  .btn:disabled,
+  .btn.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none !important;
   }
 
-  .xlarge {
-      font-size: var(--font-xlarge);
-  }
+  .xsmall { font-size: var(--font-xsmall); }
+  .small { font-size: var(--font-small); }
+  .medium { font-size: var(--font-medium); }
+  .large { font-size: var(--font-large); }
+  .xlarge { font-size: var(--font-xlarge); }
 </style>

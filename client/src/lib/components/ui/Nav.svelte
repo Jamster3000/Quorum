@@ -3,8 +3,11 @@
 </script>
 
 <nav class="nav">
-  {#each links as link}
-    <a href={link.href}>{link.label}</a>
+  {#each links as link, i}
+    <a href={link.href} class="nav-link">{link.label}</a>
+    {#if i < links.length - 1}
+      <span class="divider">|</span>
+    {/if}
   {/each}
 </nav>
 
@@ -12,36 +15,44 @@
   .nav {
     display: flex;
     align-items: center;
-    gap: 2rem;
+    gap: 1rem;
   }
 
-  .nav a {
+  .nav-link {
     font-size: var(--font-medium);
-    font-weight: 600;
-    color: var(--text-muted-colour);
+    font-weight: 700;
+    color: var(--text-colour);
     text-decoration: none;
-    padding: 4px 0;
+    padding: 6px 12px;
+    border-radius: 8px;
     position: relative;
-    transition: color 0.15s;
+    transition: color 0.15s, background 0.15s;
   }
 
-  .nav a::after {
+  .divider {
+    color: var(--text-colour);
+    opacity: 0.3;
+  }
+
+  .nav-link::after {
     content: '';
     position: absolute;
-    bottom: -2px;
-    left: 0;
+    bottom: 0;
+    left: 50%;
     width: 0;
     height: 2px;
     background: var(--primary-colour);
     border-radius: 999px;
+    transform: translateX(-50%);
     transition: width 0.2s;
   }
 
-  .nav a:hover {
+  .nav-link:hover {
     color: var(--text-colour);
+    background: color-mix(in srgb, var(--primary-colour) 10%, transparent);
   }
 
-  .nav a:hover::after {
-    width: 100%;
+  .nav-link:hover::after {
+    width: calc(100% - 24px);
   }
 </style>

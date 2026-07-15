@@ -7,13 +7,15 @@
   const navLinks = [
     { label: 'Features', href: '#' },
     { label: 'Self-host', href: '#' },
-    { label: 'Docs', href: '#' },
+    { label: 'Documentation', href: '#' },
+    { label: 'GitHub', href: '#' },
+    { label: 'Contact Us', href: '#' },
   ];
 </script>
 
 <header class="header">
   <a href="/" class="header-logo">
-    <IconHexagonFilled size={24} color="var(--primary-colour)" />
+    <IconHexagonFilled size={28} color="var(--primary-colour)" />
     <span>Quorum</span>
   </a>
 
@@ -33,6 +35,7 @@
       padding: 0 2rem;
       height: 64px;
       background: color-mix(in srgb, var(--background-colour) 95%, var(--primary-colour));
+      border-bottom: 2px solid color-mix(in srgb, var(--primary-colour) 20%, transparent);
       backdrop-filter: blur(12px);
       position: sticky;
       z-index: 10;
@@ -42,7 +45,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: var(--font-large);
+  font-size: var(--font-xlarge);
   font-weight: 700;
   color: var(--text-colour);
   text-decoration: none;

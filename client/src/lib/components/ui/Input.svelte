@@ -45,9 +45,9 @@
         aria-label={showPassword ? 'Hide password' : 'Show password'}
       >
         {#if showPassword}
-          <IconEyeOff size={16} color="var(--text-muted-colour)" />
+          <IconEyeOff size={16} color="var(--text-colour)" />
         {:else}
-          <IconEye size={16} color="var(--text-muted-colour)" />
+          <IconEye size={16} color="var(--text-colour)" />
         {/if}
       </button>
     {/if}
@@ -110,7 +110,7 @@
   }
 
   input::placeholder {
-    color: var(--text-muted-colour);
+    color: var(--text-colour);
     opacity: 0.6;
   }
 
@@ -136,7 +136,7 @@
   .helper {
     font-size: 12px;
     font-weight: 600;
-    color: var(--text-muted-colour);
+    color: var(--text-colour);
   }
 
   .error-text {

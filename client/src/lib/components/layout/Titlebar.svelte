@@ -1,6 +1,6 @@
 <script lang="ts">
   import { getCurrentWindow } from '@tauri-apps/api/window';
-  import { IconMinus, IconSquare, IconX, IconHexagonFilled } from '@tabler/icons-svelte-runes';
+  import { IconMinus, IconSquares, IconX, IconHexagonFilled } from '@tabler/icons-svelte-runes';
 
   const appWindow = getCurrentWindow();
 </script>
@@ -13,15 +13,15 @@
 
   <div class="titlebar-controls">
     <button class="minimise" type="button" on:click={() => appWindow.minimize()}>
-        <IconMinus size={12} color="var(--text-colour)" />
+        <IconMinus size={16} color="white" />
     </button>
 
     <button class="maximise" type="button" on:click={() => appWindow.toggleMaximize()}>
-        <IconSquare size={16} color="var(--text-colour)" />
+        <IconSquares size={16} color="white" />
     </button>
 
     <button class="close" type="button" on:click={() => appWindow.close()}>
-        <IconX size={16} color="var(--text-colour)" />
+        <IconX size={16} color="white" />
     </button>
   </div>
 </div>

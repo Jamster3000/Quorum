@@ -114,7 +114,7 @@
   .label-text {
     font-size: 13px;
     font-weight: 600;
-    color: var(--text-muted-colour);
+    color: var(--text-colour);
     line-height: 1.5;
   }
 

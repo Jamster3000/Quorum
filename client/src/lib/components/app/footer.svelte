@@ -6,8 +6,10 @@
   const footerLinks = [
     { label: 'Privacy', href: '#' },
     { label: 'Terms', href: '#' },
-    { label: 'Docs', href: '#' },
+    { label: 'Contact', href: '#' },
     { label: 'GitHub', href: '#' },
+    { label: 'Documentation', href: '#' },
+    { label: 'Status Page', href: '#' },
   ];
 </script>
 
@@ -29,8 +31,8 @@
     justify-content: space-between;
     padding: 0 2rem;
     height: 52px;
-    background: color-mix(in srgb, var(--background-colour) 85%, var(--primary-colour));
-    border-top: 1px solid color-mix(in srgb, var(--primary-colour) 30%, transparent);
+    background: color-mix(in srgb, var(--background-colour) 95%, var(--primary-colour));
+    border-top: 2px solid color-mix(in srgb, var(--primary-colour) 20%, transparent);
   }
 
   .footer-logo {
@@ -52,6 +54,6 @@
   .footer-copy {
     font-size: var(--font-small);
     font-weight: 600;
-    color: var(--text-muted-colour);
+    color: var(--text-colour);
   }
 </style>

@@ -201,7 +201,7 @@
   .login-link {
     text-align: center;
     font-size: 13px;
-    color: var(--text-muted-colour);
+    color: var(--text-colour);
   }
 
   .login-link a, .form a {
@@ -220,7 +220,7 @@
   gap: 6px;
   font-size: 13px;
   font-weight: 700;
-  color: var(--text-muted-colour);
+  color: var(--text-colour);
   text-decoration: none;
   transition: color 0.15s;
 }

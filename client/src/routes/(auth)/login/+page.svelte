@@ -191,7 +191,7 @@
   gap: 6px;
   font-size: 13px;
   font-weight: 700;
-  color: var(--text-muted-colour);
+  color: var(--text-colour);
   text-decoration: none;
   transition: color 0.15s;
 }

@@ -1,12 +1,11 @@
 :root {
     /* Colours */
-    --primary-colour: #178070;
-    --secondary-colour: #8b7cf8;
+    --primary-colour: #0f574b;
+    --secondary-colour: #22BFB7;
     --card-colour: #2b2d31;
     --background-colour: #1e1f22;
     --border-colour: #3a3b3f;
-    --text-colour: #f2f3f5;
-    --text-muted-colour: #b5bac1;
+    --text-colour: #eaebeb;
     /* Semantic Colours */
     --alert-error-text: #ff4d4d;
     --alert-error-bg: rgba(255, 77, 77, 0.1);
@@ -44,11 +43,22 @@
     font-family: var(--font-primary);
 }
 
+html, body {
+    overflow: hidden;
+    height: 100vh;
+}
+
 body {
     padding-top: var(--titlebar-height);
     background-color: var(--background-colour);
 }
 
 .page {
-    padding-top: 2rem;
+    padding: 20px 50px;
+    overflow-y: auto;
+    height: calc(100vh - var(--titlebar-height) - 115px);
+}
+
+h1, h2, h3, h4, h5, h6, p {
+    color: var(--text-colour);
 }
