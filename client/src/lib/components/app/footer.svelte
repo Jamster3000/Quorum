@@ -65,43 +65,4 @@
     font-weight: 600;
     color: var(--text-colour);
   }
-
-  .nav {
-    display: flex;
-    align-items: center;
-    gap: 2rem;
-  }
-
-  .nav-link {
-    font-size: var(--font-medium);
-    font-weight: 700;
-    color: var(--text-colour);
-    text-decoration: none;
-    padding: 6px 12px;
-    border-radius: 8px;
-    position: relative;
-    transition: color 0.15s, background 0.15s;
-  }
-
-  .nav-link::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 50%;
-    width: 0;
-    height: 2px;
-    background: var(--primary-colour);
-    border-radius: 999px;
-    transform: translateX(-50%);
-    transition: width 0.2s;
-  }
-
-  .nav-link:hover {
-    color: var(--text-colour);
-    background: color-mix(in srgb, var(--primary-colour) 10%, transparent);
-  }
-
-  .nav-link:hover::after {
-    width: calc(100% - 24px);
-  }
 </style>
