@@ -1,10 +1,22 @@
 <script lang="ts">
   export let links: { label: string; href: string }[] = [];
+  export let onLinkClick: ((link: { label: string; href: string }) => void) | undefined = undefined;
 </script>
 
 <nav class="nav">
   {#each links as link, i}
-    <a href={link.href} class="nav-link">{link.label}</a>
+    <a 
+      href={link.href}
+      class="nav-link"
+      on:click={(e) => {
+        if (onLinkClick) {
+          e.preventDefault();
+          onLinkClick(link);
+        }
+      }}
+    >
+      {link.label}
+    </a>
     {#if i < links.length - 1}
       <span class="divider">|</span>
     {/if}
@@ -22,6 +34,9 @@
     font-size: var(--font-medium);
     font-weight: 700;
     color: var(--text-colour);
+    background: transparent;
+    border: none;
+    cursor: pointer;
     text-decoration: none;
     padding: 6px 12px;
     border-radius: 8px;
