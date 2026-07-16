@@ -1,14 +1,23 @@
 <script lang="ts">
   import { getCurrentWindow } from '@tauri-apps/api/window';
-  import { IconMinus, IconSquares, IconX, IconHexagonFilled } from '@tabler/icons-svelte-runes';
+  import { IconMinus, IconSquares, IconX, IconHexagonFilled, IconCircleArrowLeft, IconCircleArrowRight  } from '@tabler/icons-svelte-runes';
+  import Button from '$lib/components/ui/Button.svelte';
 
   const appWindow = getCurrentWindow();
 </script>
 
 <div class="titlebar" data-tauri-drag-region>
   <div class="titlebar-title" data-tauri-drag-region>
+    <Button variant="transparent" iconOnly={true} on:click={() => window.history.back()}>
+      <IconCircleArrowLeft size={24} color="var(--text-colour)" />
+    </Button>
+
+    <Button variant="transparent" iconOnly={true} on:click={() => window.history.forward()}>
+      <IconCircleArrowRight size={24} color="var(--text-colour)" />
+    </Button>
+    
+    <p class="title-text">Quorum</p>
     <IconHexagonFilled size={18} color="var(--text-colour)" />  
-    Quorum
   </div>
 
   <div class="titlebar-controls">
@@ -46,7 +55,11 @@
     display: flex;
     align-items: center;
     gap: 6px;
-    padding-left: 8px;
+    padding-left: 4px;
+}
+
+.title-text {
+    padding-left: 14px;
 }
 
 .titlebar-controls {

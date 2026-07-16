@@ -1,17 +1,18 @@
 <script lang="ts">
   export let href: string | undefined = undefined;
-  export let variant: 'primary' | 'secondary' = 'primary';
+  export let variant: 'primary' | 'secondary' | 'transparent' = 'primary';
   export let type: 'button' | 'submit' = 'button';
   export let disabled: boolean = false;
   export let fontSize: 'xsmall' | 'small' | 'medium' | 'large' | 'xlarge' = 'medium';
+  export let iconOnly: boolean = false;
 </script>
 
 {#if href}
-  <a {href} class="btn {variant} {fontSize}" class:disabled>
+  <a {href} class="btn {variant} {fontSize}" class:disabled class:iconOnly>
     <span class="btn-text"><slot /></span>
   </a>
 {:else}
-  <button {type} {disabled} class="btn {variant} {fontSize}" on:click>
+  <button {type} {disabled} class="btn {variant} {fontSize}" class:iconOnly on:click>
     <span class="btn-text"><slot /></span>
   </button>
 {/if}
@@ -35,6 +36,11 @@
       box-shadow 0.15s ease,
       transform 0.15s ease;
     will-change: box-shadow, transform;
+  }
+
+  .btn.iconOnly {
+    padding: 0;
+    border-radius: 6px;
   }
 
   .btn-text {
@@ -91,6 +97,12 @@
   .secondary:active:not(.disabled):not(:disabled) {
     background: color-mix(in srgb, #20b2aa 15%, transparent);
     transform: translateY(0);
+  }
+
+  .transparent {
+   background: transparent;
+    color: var(--text-colour);
+    box-shadow: none;
   }
 
   .btn:focus-visible {
