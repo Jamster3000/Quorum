@@ -10,6 +10,8 @@
   import { IconHexagonFilled, IconArrowLeft } from '@tabler/icons-svelte-runes';
   import { setTokens } from '$lib/stores/authStore';
 
+  export const prerender = true;
+
   let username_or_email = '';
   let password = '';
   let confirmPassword = '';

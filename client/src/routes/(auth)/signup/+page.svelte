@@ -8,6 +8,8 @@
   import Button from '$lib/components/ui/Button.svelte';
   import { IconHexagonFilled, IconArrowLeft } from '@tabler/icons-svelte-runes';
 
+  export const prerender = true;
+
   let username = '';
   let email = '';
   let password = '';
