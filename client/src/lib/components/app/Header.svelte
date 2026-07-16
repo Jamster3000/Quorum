@@ -8,7 +8,7 @@
     { label: 'Features', href: '#' },
     { label: 'Self-host', href: '#' },
     { label: 'Documentation', href: '#' },
-    { label: 'GitHub', href: '#' },
+    { label: 'GitHub', href: 'https://github.com/Jamster3000/Quorum' },
     { label: 'Contact Us', href: '#' },
   ];
 </script>

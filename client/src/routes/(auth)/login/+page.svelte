@@ -2,7 +2,6 @@
   import { invoke } from '@tauri-apps/api/core';
   import { page } from '$app/stores';
   import { goto } from '$app/navigation';
-  import Titlebar from '$lib/components/layout/Titlebar.svelte';
   import Alert from '$lib/components/ui/Alert.svelte';
   import Card from '$lib/components/ui/Card.svelte';
   import Input from '$lib/components/ui/Input.svelte';
@@ -71,8 +70,6 @@
     showAlert = true;
   }
 </script>
-
-<Titlebar />
 
 <main class="page">
   <div class="login-wrap">

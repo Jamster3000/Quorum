@@ -4,6 +4,7 @@
   import { navigating } from '$app/stores';
   import { onMount } from 'svelte';
   import { isTokenValid } from '$lib/utils/auth';
+  import Titlebar from '$lib/components/layout/Titlebar.svelte';
 
   onMount(() => {
       const interval = setInterval(async () => {
@@ -13,6 +14,8 @@
       return () => clearInterval(interval);
   });
 </script>
+
+<Titlebar />
 
 {#key $navigating?.to?.url.pathname}
   <div in:fade={{ duration: 550 }}>
