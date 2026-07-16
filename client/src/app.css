@@ -62,3 +62,14 @@ body {
 h1, h2, h3, h4, h5, h6, p {
     color: var(--text-colour);
 }
+
+a {
+    color: var(--secondary-colour);
+    text-decoration: underline;
+    text-decoration-color: transparent;
+    transition: text-decoration-color 0.4s ease;
+}
+
+    a:hover {
+        text-decoration-color: currentColor;
+    }

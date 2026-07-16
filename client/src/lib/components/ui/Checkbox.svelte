@@ -20,7 +20,10 @@
         <path d="M1 5L4.5 8.5L11 1" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
     </div>
-    <span class="label-text">{label}</span>
+    <span class="label-text">
+      {#if label}{label}{/if}
+      <slot />
+    </span>
   </label>
 
   {#if error}

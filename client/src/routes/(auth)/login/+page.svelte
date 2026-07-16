@@ -132,6 +132,8 @@
         />
 
         <Button variant="primary" type="submit" fontSize="medium">Log in</Button>
+
+        <p class="signup-link">Don't have an account? <a href="/login">Sign up</a></p>
       </form>
     </Card>
 
@@ -166,6 +168,12 @@
   .login-header h1 {
     font-size: 24px;
     font-weight: 700;
+    color: var(--text-colour);
+  }
+
+  .signup-link {
+    text-align: center;
+    font-size: 13px;
     color: var(--text-colour);
   }
 

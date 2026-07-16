@@ -204,16 +204,6 @@
     color: var(--text-colour);
   }
 
-  .login-link a, .form a {
-    color: var(--primary-colour);
-    text-decoration: none;
-    font-weight: 700;
-  }
-
-  .login-link a:hover, .form a:hover {
-    text-decoration: underline;
-  }
-
 .back-link {
   display: inline-flex;
   align-items: center;
