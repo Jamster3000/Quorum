@@ -74,19 +74,18 @@
 </script>
 
 <main class="page">
+   <a href="/" class="back-link">
+     <IconArrowLeft size={20} />
+     Back to home
+   </a>
+
   <div class="signup-wrap">
-
-    <a href="/" class="back-link">
-      <IconArrowLeft size={16} />
-      Back to home
-    </a>
-
     <div class="signup-header">
       <IconHexagonFilled size={32} color="var(--primary-colour)" />
       <h1>Create your account</h1>
     </div>
 
-    <Card padding="large">
+    <Card padding="xlarge">
       <form class="form" on:submit|preventDefault={handleSubmit}>
 
         {#if errors.form}
@@ -150,6 +149,7 @@
 
 <style>
   .page {
+    position: relative;
     min-height: 100vh;
     display: flex;
     align-items: center;
@@ -182,7 +182,7 @@
   .form {
     display: flex;
     flex-direction: column;
-    gap: 1.25rem;
+    gap: 2rem;
   }
 
   .form-error {
@@ -202,10 +202,13 @@
   }
 
 .back-link {
+  position: absolute;
   display: inline-flex;
   align-items: center;
+  top: 2rem;
+  left: 2rem;
   gap: 6px;
-  font-size: 13px;
+  font-size: var(--font-medium);
   font-weight: 700;
   color: var(--text-colour);
   text-decoration: none;

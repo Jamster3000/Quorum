@@ -1,5 +1,5 @@
 <script lang="ts">
-  export let padding: 'none' | 'small' | 'medium' | 'large' = 'medium';
+  export let padding: 'none' | 'small' | 'medium' | 'large' | 'xlarge' = 'medium';
   export let variant: 'default' | 'gradient' = 'default';
 </script>
 
@@ -38,5 +38,9 @@
 
   .large { 
     padding: 2rem;
+  }
+
+  .xlarge {
+      padding: 3rem;
   }
 </style>
