@@ -3,7 +3,6 @@
   import Header from '$lib/components/app/Header.svelte';
   import Footer from '$lib/components/app/Footer.svelte';
   import Auth from '$lib/utils/Auth.svelte';
-  import Button from '$lib/components/ui/Button.svelte';
 </script>
 
 <Auth redirectTo="/home" shouldBeLoggedIn={false} />

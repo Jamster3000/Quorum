@@ -2,7 +2,7 @@
   import { IconEye, IconEyeOff } from '@tabler/icons-svelte-runes';
 
   export let label: string = '';
-  export let type: string = 'text';
+  export let type: 'text' | 'password' | 'email' | 'hidden' | 'number' | 'search' | 'tel' | 'url' = 'text';
   export let placeholder: string = '';
   export let value: string = '';
   export let error: string = '';
@@ -14,7 +14,9 @@
 
   let showPassword = false;
 
-  $: inputType = password ? (showPassword ? 'text' : 'password') : type;
+  const validTypes = ['text', 'password', 'email', 'hidden', 'number', 'search', 'tel', 'url'];
+  $: safeType = validTypes.includes(type) ? type : 'text';
+  $: inputType = password ? (showPassword ? 'text' : 'password') : safeType;
 </script>
 
 <div class="field">
@@ -25,7 +27,7 @@
     </label>
   {/if}
 
-  <div class="input-wrap" class:error={!!error}>
+  <div class="input-wrap" class:error={!!error} class:disabled>
     <input
       {id}
       type={inputType}
@@ -43,11 +45,12 @@
         class="eye-toggle"
         on:click={() => showPassword = !showPassword}
         aria-label={showPassword ? 'Hide password' : 'Show password'}
+        {disabled}
       >
         {#if showPassword}
-          <IconEyeOff size={16} color="var(--text-colour)" />
+          <IconEyeOff size={16} />
         {:else}
-          <IconEye size={16} color="var(--text-colour)" />
+          <IconEye size={16} />
         {/if}
       </button>
     {/if}
@@ -68,13 +71,13 @@
   }
 
   label {
-    font-size: 13px;
+    font-size: var(--font-medium);
     font-weight: 700;
     color: var(--text-colour);
   }
 
   .required {
-    color: var(--error-colour);
+    color: var(--alert-error-text);
     margin-left: 2px;
   }
 
@@ -83,8 +86,8 @@
     align-items: center;
     background: var(--background-colour);
     border: 1.5px solid var(--border-colour);
-    border-radius: 10px;
-    transition: border-color 0.15s, box-shadow 0.15s;
+    border-radius: 8px;
+    transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
   }
 
   .input-wrap:focus-within {
@@ -93,8 +96,14 @@
   }
 
   .input-wrap.error {
-    border-color: var(--error-colour);
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--error-colour) 15%, transparent);
+    border-color: var(--alert-error-text);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--alert-error-text) 15%, transparent);
+  }
+
+  .input-wrap.disabled {
+    background: color-mix(in srgb, var(--card-colour) 50%, transparent);
+    opacity: 0.6;
+    cursor: not-allowed;
   }
 
   input {
@@ -103,7 +112,7 @@
     border: none;
     outline: none;
     padding: 10px 14px;
-    font-size: 14px;
+    font-size: var(--font-medium);
     font-family: var(--font-primary);
     color: var(--text-colour);
     width: 100%;
@@ -115,7 +124,6 @@
   }
 
   input:disabled {
-    opacity: 0.4;
     cursor: not-allowed;
   }
 
@@ -126,20 +134,33 @@
     padding: 0 12px;
     display: flex;
     align-items: center;
+    justify-content: center;
     height: 100%;
+    color: var(--text-colour);
+    transition: opacity 0.15s;
   }
 
-  .eye-toggle:hover :global(svg) {
-    stroke: var(--text-colour);
+  .eye-toggle:hover:not(:disabled) {
+    opacity: 0.7;
+  }
+
+  .eye-toggle:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .eye-toggle:focus-visible {
+    outline: 2px solid var(--primary-colour);
+    outline-offset: 2px;
   }
 
   .helper {
-    font-size: 12px;
+    font-size: var(--font-small);
     font-weight: 600;
     color: var(--text-colour);
   }
 
   .error-text {
-    color: var(--error-colour);
+    color: var(--alert-error-text);
   }
 </style>

@@ -20,9 +20,7 @@
         <path d="M1 5L4.5 8.5L11 1" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
     </div>
-    <span class="label-text">
-      <slot>{label}</slot>
-    </span>
+    <span class="label-text">{label}</span>
   </label>
 
   {#if error}
@@ -34,7 +32,7 @@
   .checkbox-field {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 6px;
   }
 
   input[type="checkbox"] {
@@ -50,10 +48,11 @@
     gap: 10px;
     cursor: pointer;
     user-select: none;
+    width: fit-content;
   }
 
   .checkbox-row.disabled {
-    opacity: 0.4;
+    opacity: 0.5;
     cursor: not-allowed;
   }
 
@@ -94,7 +93,7 @@
   .tick {
     width: 12px;
     height: 10px;
-    color: var(--background-colour);
+    color: var(--text-colour);
     position: relative;
     z-index: 1;
     stroke-dasharray: 20;
@@ -112,26 +111,16 @@
   }
 
   .label-text {
-    font-size: 13px;
+    font-size: var(--font-small);
     font-weight: 600;
     color: var(--text-colour);
     line-height: 1.5;
   }
 
-  .label-text :global(a) {
-    color: var(--primary-colour);
-    text-decoration: none;
-    font-weight: 700;
-  }
-
-  .label-text :global(a:hover) {
-    text-decoration: underline;
-  }
-
   .error-text {
     font-size: 12px;
     font-weight: 600;
-    color: var(--error-colour);
+    color: var(--alert-error-text);
     padding-left: 30px;
   }
 </style>
