@@ -1,4 +1,4 @@
-<script lang="ts">
+ <script lang="ts">
   import { invoke } from '@tauri-apps/api/core';
   import { goto } from '$app/navigation';
   import Alert from '$lib/components/ui/Alert.svelte';
@@ -54,7 +54,6 @@
       loading = false;
     }
   }
-
 
   function handleSignupFailure(message: string) {
     errorMessage = message;

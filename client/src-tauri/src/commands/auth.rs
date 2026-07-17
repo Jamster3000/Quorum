@@ -1,5 +1,6 @@
 use crate::common::make_auth_request;
 use serde::{Deserialize, Serialize};
+use tauri::Emitter;
 use serde_json::json;
 
 #[derive(Serialize)]
@@ -132,7 +133,10 @@ pub async fn login(payload: LoginPayload) -> Result<AuthSuccess, String> {
 }
 
 #[tauri::command]
-pub async fn refresh_token(refresh_token: String) -> Result<AuthSuccess, String> {
+pub async fn refresh_token(
+    refresh_token: String,
+    app_handle: tauri::AppHandle,
+) -> Result<AuthSuccess, String> {
     let payload = json!({
         "refresh_token": refresh_token,
     });
@@ -144,6 +148,9 @@ pub async fn refresh_token(refresh_token: String) -> Result<AuthSuccess, String>
             .as_str()
             .unwrap_or("Failed to refresh token")
             .to_string();
+
+        let _ = app_handle.emit("token_expired", ());
+
         return Err(error_msg);
     }
 
