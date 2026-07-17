@@ -10,6 +10,13 @@
   import { IconHexagonFilled, IconArrowLeft } from '@tabler/icons-svelte-runes';
   import { setTokens } from '$lib/stores/authStore';
 
+  interface AuthSuccess {
+    access_token: string;
+    refresh_token: string;
+    user_id: string;
+    username: string;
+  }
+
   let username_or_email = '';
   let password = '';
   let confirmPassword = '';
@@ -37,22 +44,18 @@
     loading = true;
 
     try {
-      const result = await invoke<{ success: boolean; message: string; access_token: string, refresh_token: string, user_id: string, username: string }>('login', {
+      const result = await invoke<AuthSuccess>('login', {
         payload: {
           username_or_email: username_or_email,
           password: password,
         }
       });
 
-      if (!result.success) {
-        handleLoginFailure(result.message);
-      } else {
-        handleLoginSuccess(result.message);
-        await setTokens(result.access_token, result.refresh_token, result.user_id, result.username)
-        goto("/");
-      }
+      handleLoginSuccess('Logged in successfully');
+      await setTokens(result.access_token, result.refresh_token, result.user_id, result.username);
+      goto("/home");
     } catch (e) {
-      formError = 'Something went wrong. Please try again.';
+      handleLoginFailure(e as string);
     } finally {
       loading = false;
     }

@@ -8,6 +8,10 @@
   import Button from '$lib/components/ui/Button.svelte';
   import { IconHexagonFilled, IconArrowLeft } from '@tabler/icons-svelte-runes';
 
+  interface SignupSuccess {
+    message: string;
+  }
+
   let username = '';
   let email = '';
   let password = '';
@@ -29,16 +33,11 @@
   };
 
   async function handleSubmit() {
-    if (!agreedToTerms) {
-      formError = 'You must agree to the Terms of Service.';
-      return;
-    }
-
     formError = '';
     loading = true;
 
     try {
-      const result = await invoke<{ success: boolean; message: string }>('signup', {
+      const result = await invoke<SignupSuccess>('signup', {
         payload: {
           username,
           email: email || null,
@@ -47,18 +46,15 @@
         }
       });
 
-      if (!result.success) {
-        handleSignupFailure(result.message);
-      } else {
-        handleSignupSuccess(result.message);
-        goto("/login?created=1");
-      }
+      handleSignupSuccess(result.message);
+      goto("/login?created=1");
     } catch (e) {
-      formError = 'Something went wrong. Please try again.';
+      handleSignupFailure(e as string);
     } finally {
       loading = false;
     }
   }
+
 
   function handleSignupFailure(message: string) {
     errorMessage = message;
