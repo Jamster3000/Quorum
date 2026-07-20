@@ -62,6 +62,7 @@ export async function setTokens(
         await store.set('user_id', userId);
         await store.set('username', username);
         await store.save();
+        console.log('Tokens saved to store');
     } catch (error) {
         console.error('Failed to set tokens:', error);
         throw error;

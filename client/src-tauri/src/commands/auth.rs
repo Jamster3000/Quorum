@@ -31,7 +31,7 @@ pub struct LoginPayload {
 }
 
 #[tauri::command]
-pub async fn signup(payload: SignupPayload) -> Result<SignupSuccess, String> {
+pub async fn signup(app: tauri::AppHandle, payload: SignupPayload) -> Result<SignupSuccess, String> {
     if payload.username.is_empty() {
         return Err("Username must be at least 1 character.".to_string());
     }
@@ -77,7 +77,7 @@ pub async fn signup(payload: SignupPayload) -> Result<SignupSuccess, String> {
         }
     }
 
-    make_auth_request("/auth/signup", &new_payload, 201).await?;
+    make_auth_request(&app, "/auth/signup", &new_payload, 201).await?;
 
     Ok(SignupSuccess {
         message: "Account created successfully.".to_string(),
@@ -85,13 +85,13 @@ pub async fn signup(payload: SignupPayload) -> Result<SignupSuccess, String> {
 }
 
 #[tauri::command]
-pub async fn login(payload: LoginPayload) -> Result<AuthSuccess, String> {
+pub async fn login(app: tauri::AppHandle, payload: LoginPayload) -> Result<AuthSuccess, String> {
     let request_payload = json!({
         "username_or_email": payload.username_or_email,
         "password": payload.password,
     });
 
-    let auth_response = make_auth_request("/auth/login", &request_payload, 200).await?;
+    let auth_response = make_auth_request(&app, "/auth/login", &request_payload, 200).await?;
 
     if !auth_response["success"].as_bool().unwrap_or(false) {
         let error_message = auth_response["message"]
@@ -135,13 +135,15 @@ pub async fn login(payload: LoginPayload) -> Result<AuthSuccess, String> {
 #[tauri::command]
 pub async fn refresh_token(
     refresh_token: String,
+    user_id: String,
     app_handle: tauri::AppHandle,
 ) -> Result<AuthSuccess, String> {
     let payload = json!({
         "refresh_token": refresh_token,
+        "user_id": user_id,
     });
 
-    let auth_response = make_auth_request("/auth/refresh", &payload, 200).await?;
+    let auth_response = make_auth_request(&app_handle, "/auth/refresh", &payload, 200).await?;
 
     if !auth_response["success"].as_bool().unwrap_or(false) {
         let error_msg = auth_response["message"]

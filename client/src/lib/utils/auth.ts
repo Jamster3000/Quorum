@@ -1,4 +1,4 @@
-import { getAuthStore, getRefreshToken } from '$lib/stores/authStore';
+import { getAuthStore, getRefreshToken, getUserId } from '$lib/stores/authStore';
 import { invoke } from '@tauri-apps/api/core';
 
 let lastCheckTime = 0;
@@ -21,12 +21,15 @@ export async function getAccessToken(): Promise<string | null> {
 }
 
 export async function refreshAccessToken(): Promise<boolean> {
-    const refreshToken = await getRefreshToken(); 
+    const refreshToken = await getRefreshToken();
+    const userId = await getUserId();
 
-    if (!refreshToken) {
-        console.error('No refresh token available');
+    if (!refreshToken || !userId) {
+        console.error('✗ Missing refresh token or user ID');
         return false;
     }
+
+    console.log('→ Attempting to refresh access token...');
 
     try {
         const result = await invoke<{
@@ -34,7 +37,7 @@ export async function refreshAccessToken(): Promise<boolean> {
             message: string;
             access_token?: string;
             refresh_token?: string;
-        }>('refresh_token', { refreshToken });
+        }>('refresh_token', { refreshToken, userId });
 
         if (result.success && result.access_token) {
             const store = await getAuthStore();
@@ -43,50 +46,45 @@ export async function refreshAccessToken(): Promise<boolean> {
                 await store.set('refresh_token', result.refresh_token);
             }
             await store.save();
+            console.log('✓ Access token refreshed successfully');
             return true;
         } else {
-            console.error('Failed to refresh token:', result.message);
+            console.error('✗ Refresh failed:', result.message);
             return false;
         }
     } catch (e) {
-        console.error('Error refreshing token:', e);
+        console.error('✗ Error refreshing token:', e);
         return false;
     }
 }
 
 export async function isTokenValid(): Promise<boolean> {
-    const now = Date.now();
-
-    if (now - lastCheckTime < CHECK_DEBOUNCE_MS) {
-        console.debug('Token check skipped (debounced)');
-        return true;
-    }
-    lastCheckTime = now;
-
-    const store = await getAuthStore(); 
+    const store = await getAuthStore();
     const accessToken = await store.get<string>('access_token');
 
     if (!accessToken) {
+        console.log('✗ No access token found');
         return false;
     }
 
     try {
-        const payload = JSON.parse(atob(accessToken.split('.')[1])) as { exp: number };
+        const base64Url = accessToken.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const payload = JSON.parse(atob(base64)) as { exp: number };
         const expiresAt = payload.exp * 1000;
         const now = Date.now();
         const buffer = 5 * 60 * 1000;
 
-        console.debug(`Token expires at: ${new Date(expiresAt).toISOString()}`);
-        console.debug(`Current time: ${new Date(now).toISOString()}`);
-        console.debug(`Time until expiry: ${(expiresAt - now) / 1000} seconds`);
+        console.log(`Token expires at: ${new Date(expiresAt).toISOString()}, now: ${new Date(now).toISOString()}`);
 
         if (expiresAt - now < buffer) {
-            console.log("Token is about to expire, refreshing...");
+            console.log('→ Token expiring soon, refreshing...');
             return await refreshAccessToken();
         }
+        console.log('✓ Token still valid');
         return true;
     } catch (e) {
-        console.error('Error validating token:', e);
+        console.error('✗ Error decoding token:', e);
         return false;
     }
 }

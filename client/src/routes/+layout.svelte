@@ -2,17 +2,27 @@
   import '../app.css';
   import { fade } from 'svelte/transition';
   import { navigating } from '$app/stores';
+  import { listen } from '@tauri-apps/api/event';
+  import { refreshAccessToken, isTokenValid } from '$lib/utils/auth';
+  import { clearAuthStore } from '$lib/stores/authStore';
+  import { goto } from '$app/navigation';
   import { onMount } from 'svelte';
-  import { isTokenValid } from '$lib/utils/auth';
   import Titlebar from '$lib/components/layout/Titlebar.svelte';
 
   onMount(() => {
-      const interval = setInterval(async () => {
-          await isTokenValid();
-      }, 10 * 60 * 1000);
-
-      return () => clearInterval(interval);
+  listen('auth:token-expired', async () => {
+    const refreshed = await refreshAccessToken();
+    if (!refreshed) {
+      await clearAuthStore();
+      goto('/login?from=expired');
+    }
   });
+
+  listen('auth:refresh-failed', async () => {
+    await clearAuthStore();
+    goto('/login?from=expired');
+  });
+});
 </script>
 
 <Titlebar />

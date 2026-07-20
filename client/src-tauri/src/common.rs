@@ -1,3 +1,5 @@
+use tauri::{AppHandle, Emitter};
+
 static CLIENT: std::sync::OnceLock<reqwest::Client> = std::sync::OnceLock::new();
 
 #[allow(clippy::redundant_closure)]
@@ -6,6 +8,7 @@ fn get_client() -> &'static reqwest::Client {
 }
 
 pub async fn make_auth_request(
+    app: &AppHandle,
     endpoint: &str,
     payload: &serde_json::Value,
     expected_status: u16,
@@ -13,7 +16,6 @@ pub async fn make_auth_request(
     let client = get_client();
     let server_url = "http://127.0.0.1:3000";
 
-    //Make a request to an endpoint and return the response
     let response = client
         .post(format!("{}{}", server_url, endpoint))
         .json(payload)
@@ -26,6 +28,14 @@ pub async fn make_auth_request(
         .json()
         .await
         .map_err(|e| format!("Failed to parse response: {}", e))?;
+
+    if status == 401 {
+        if endpoint == "/auth/refresh" {
+            let _ = app.emit("auth:refresh-failed", ());
+        } else {
+            let _ = app.emit("auth:token-expired", ());
+        }
+    }
 
     if status != expected_status {
         let error_msg = body["message"].as_str().unwrap_or("Unknown error");
