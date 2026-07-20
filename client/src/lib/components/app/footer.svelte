@@ -5,12 +5,12 @@
   import Nav from '$lib/components/ui/Nav.svelte';
 
   const footerLinks = [
-    { label: 'Privacy', href: '#' },
-    { label: 'Terms', href: '#' },
-    { label: 'Contact', href: '#' },
+    { label: 'Privacy', href:'/privacy' },
+    { label: 'Terms', href:'/terms' },
+    { label: 'Contact', href:'/contact' },
     { label: 'Documentation', href: 'https://jamster3000.github.io/Quorum/' },
-    { label: 'GitHub', href: 'https://github.com/Jamster3000/Quorum' },
-    { label: 'Status Page', href: '#' },
+    { label: 'GitHub', href:'https://github.com/Jamster3000/Quorum' },
+    { label: 'Status Page', href:'/status' },
   ];
 
   async function handleNavClick(link: { label: string; href: string }) {

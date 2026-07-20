@@ -8,7 +8,7 @@
 <Header />
 
 <main class="page">
-	<p>This will be where the unauthorised landing page content will go</p>
+	<p> Successfull connection to privacy</p>
 </main>
 
 <Footer />

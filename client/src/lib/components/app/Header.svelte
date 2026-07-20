@@ -6,11 +6,11 @@
   import Button from '$lib/components/ui/Button.svelte';
 
   const navLinks = [
-    { label: 'Features', href: '#' },
-    { label: 'Self-host', href: '#' },
+    { label: 'Features', href: '/features' },
+    { label: 'Self-host', href: '/selfhost' },
     { label: 'Documentation', href: 'https://jamster3000.github.io/Quorum/' },
     { label: 'GitHub', href: 'https://github.com/Jamster3000/Quorum' },
-    { label: 'Contact Us', href: '#' },
+    { label: 'Contact Us', href: '/contact_us' },
   ];
 
   async function handleNavClick(link: { label: string; href: string }) {
