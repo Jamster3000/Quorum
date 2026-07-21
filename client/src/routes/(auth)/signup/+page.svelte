@@ -115,6 +115,9 @@
           placeholder="At least 8 characters"
           bind:value={password}
           error={errors.password}
+          counter
+          counterbool
+          maxLength={35}
           password
           required
         />

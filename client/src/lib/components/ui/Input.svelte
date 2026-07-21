@@ -10,6 +10,9 @@
   export let disabled: boolean = false;
   export let required: boolean = false;
   export let password: boolean = false;
+  export let counterbool: boolean = false;
+  export let counter: string = "";
+  export let maxLength: number | undefined = undefined;
   export let id: string = crypto.randomUUID();
 
   let showPassword = false;
@@ -34,6 +37,7 @@
       {placeholder}
       {disabled}
       {required}
+      maxlength={maxLength}
       bind:value
       on:input
       on:blur
@@ -53,6 +57,14 @@
           <IconEye size={16} />
         {/if}
       </button>
+    {/if}
+  </div>
+
+  <div class="counter">
+    {#if counterbool}
+      <span class="counter">
+        {value.length}{maxLength !== undefined ? ` / ${maxLength}` : ''}
+      </span>
     {/if}
   </div>
 
