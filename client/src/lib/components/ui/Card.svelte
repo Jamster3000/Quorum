@@ -1,16 +1,28 @@
 <script lang="ts">
   export let padding: 'none' | 'small' | 'medium' | 'large' | 'xlarge' = 'medium';
+  export let width: string = '100%';
+  export let center: boolean = true;
   export let variant: 'default' | 'gradient' = 'default';
 </script>
 
-<div class="card {padding} {variant}">
+<div class="card {padding} {variant}" class:center style="--card-width: {width}">
   <slot />
 </div>
 
 <style>
+  :root {
+    --card-width: 100%;
+  }
+
   .card {
+    width: var(--card-width);
     border-radius: 12px;
     border: 1px solid var(--border-colour);
+  }
+
+  .card.center {
+    margin-left: auto;
+    margin-right: auto;
   }
 
   .default {
@@ -41,6 +53,6 @@
   }
 
   .xlarge {
-      padding: 3rem;
+    padding: 3rem;
   }
 </style>
