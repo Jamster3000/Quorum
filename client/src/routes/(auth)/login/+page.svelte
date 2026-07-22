@@ -102,7 +102,7 @@
       <h1>Log in to your account</h1>
     </div>
 
-    <Card padding="xlarge">
+    <Card padding="xlarge" center={false}>
       <form class="form" on:submit|preventDefault={handleSubmit}>
 
         {#if errors.form}
@@ -170,14 +170,14 @@
   }
 
   .login-header h1 {
-    font-size: 24px;
+    font-size: var(--font-xlarge);
     font-weight: 700;
     color: var(--text-colour);
   }
 
   .signup-link {
     text-align: center;
-    font-size: 13px;
+    font-size: var(--font-xsmall);
     color: var(--text-colour);
   }
 
@@ -204,7 +204,7 @@
   top: 2rem;
   left: 2rem;
   gap: 6px;
-  font-size: var(--font-medium);
+  font-size: var(--font-small);
   font-weight: 700;
   color: var(--text-colour);
 }

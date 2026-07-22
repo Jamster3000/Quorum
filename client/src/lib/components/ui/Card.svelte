@@ -18,12 +18,12 @@
     width: var(--card-width);
     border-radius: 12px;
     border: 1px solid var(--border-colour);
-    text-align: center;
   }
 
   .card.center {
     margin-left: auto;
     margin-right: auto;
+    text-align: center;
   }
 
   .default {

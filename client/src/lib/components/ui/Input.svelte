@@ -83,7 +83,7 @@
 
   label {
     font-size: var(--font-medium);
-    font-weight: 700;
+    font-weight: 400;
     color: var(--text-colour);
   }
 
@@ -123,7 +123,7 @@
     border: none;
     outline: none;
     padding: 10px 14px;
-    font-size: var(--font-medium);
+    font-size: var(--font-small);
     font-family: var(--font-primary);
     color: var(--text-colour);
     width: 100%;
@@ -167,7 +167,7 @@
 
   .helper {
     font-size: var(--font-small);
-    font-weight: 600;
+    font-weight: 400;
     color: var(--text-colour);
   }
 
