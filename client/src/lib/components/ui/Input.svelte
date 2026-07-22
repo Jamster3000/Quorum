@@ -10,8 +10,7 @@
   export let disabled: boolean = false;
   export let required: boolean = false;
   export let password: boolean = false;
-  export let counterbool: boolean = false;
-  export let counter: string = "";
+  export let counter: boolean = false;
   export let maxLength: number | undefined = undefined;
   export let id: string = crypto.randomUUID();
 
@@ -61,7 +60,7 @@
   </div>
 
   <div class="counter">
-    {#if counterbool}
+    {#if counter}
       <span class="counter">
         {value.length}{maxLength !== undefined ? ` / ${maxLength}` : ''}
       </span>
@@ -174,5 +173,11 @@
 
   .error-text {
     color: var(--alert-error-text);
+  }
+
+  .counter {
+    color: var(--text-colour);
+    font-size: var(--font-small);
+    opacity: 0.8;
   }
 </style>

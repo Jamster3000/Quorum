@@ -120,6 +120,8 @@
           placeholder="e.g. dragonslayer99"
           bind:value={username_or_email}
           error={errors.username_or_email}
+          counter={true}
+          maxLength={18}
           required
         />
 
@@ -127,9 +129,6 @@
           label="Password"
           placeholder="At least 8 characters"
           bind:value={password}
-          counterbool
-          counter
-          maxLength={35}
           error={errors.password}
           password
           required
