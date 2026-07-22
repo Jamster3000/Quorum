@@ -18,6 +18,7 @@
     width: var(--card-width);
     border-radius: 12px;
     border: 1px solid var(--border-colour);
+    text-align: center;
   }
 
   .card.center {
@@ -41,18 +42,18 @@
   }
 
   .small { 
-    padding: 1rem;
-  }
-
-  .medium { 
     padding: 1.5rem;
   }
 
-  .large { 
+  .medium { 
     padding: 2rem;
   }
 
+  .large { 
+    padding: 2.5rem;
+  }
+
   .xlarge {
-    padding: 3rem;
+    padding: 4rem;
   }
 </style>
