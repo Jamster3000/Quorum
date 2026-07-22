@@ -32,7 +32,7 @@
 
   .nav-link {
     font-size: var(--font-medium);
-    font-weight: 700;
+    font-weight: 400;
     color: var(--text-colour);
     background: transparent;
     border: none;
