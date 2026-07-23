@@ -1,7 +1,7 @@
 use crate::common::make_auth_request;
 use serde::{Deserialize, Serialize};
-use tauri::Emitter;
 use serde_json::json;
+use tauri::Emitter;
 
 #[derive(Serialize)]
 pub struct AuthSuccess {
@@ -31,7 +31,10 @@ pub struct LoginPayload {
 }
 
 #[tauri::command]
-pub async fn signup(app: tauri::AppHandle, payload: SignupPayload) -> Result<SignupSuccess, String> {
+pub async fn signup(
+    app: tauri::AppHandle,
+    payload: SignupPayload,
+) -> Result<SignupSuccess, String> {
     if payload.username.is_empty() {
         return Err("Username must be at least 1 character.".to_string());
     }
@@ -115,10 +118,7 @@ pub async fn login(app: tauri::AppHandle, payload: LoginPayload) -> Result<AuthS
     let user = auth_response["user"]
         .as_object()
         .ok_or("Invalid user in response")?;
-    let user_id = user["id"]
-        .as_str()
-        .ok_or("Missing user id")?
-        .to_string();
+    let user_id = user["id"].as_str().ok_or("Missing user id")?.to_string();
     let username = user["username"]
         .as_str()
         .ok_or("Missing username")?

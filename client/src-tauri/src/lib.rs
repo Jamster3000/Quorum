@@ -10,9 +10,7 @@ pub fn run() {
         .setup(|app| {
             #[cfg(desktop)]
             app.handle()
-            .plugin(
-                tauri_plugin_single_instance::init(|_app, _args, _cwd| {})
-            )?;
+                .plugin(tauri_plugin_single_instance::init(|_app, _args, _cwd| {}))?;
 
             Ok(())
         })
