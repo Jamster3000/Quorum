@@ -1,21 +1,24 @@
 <script lang="ts">
   export let padding: 'none' | 'small' | 'medium' | 'large' | 'xlarge' = 'medium';
-  export let width: string = '100%';
+  export let width: string = '100%'; //Can be set to auto for it to work its own width out based on content.
+  export let height: string = 'auto'; //Can be set to auto for it to work its own height out based on content.
   export let center: boolean = true;
   export let variant: 'default' | 'gradient' = 'default';
 </script>
 
-<div class="card {padding} {variant}" class:center style="--card-width: {width}">
+<div class="card {padding} {variant}" class:center style="--card-width: {width}; --card-height: {height};">
   <slot />
 </div>
 
 <style>
   :root {
     --card-width: 100%;
+    --card-height: auto;
   }
 
   .card {
     width: var(--card-width);
+    height: var(--card-height);
     border-radius: 12px;
     border: 1px solid var(--border-colour);
   }

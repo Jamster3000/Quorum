@@ -28,6 +28,9 @@
     --font-xlarge: 1.75rem;
     /* Misc */
     --titlebar-height: 28px;
+    --header-height: 64px;
+    --footer-height: 52px;
+    --page-padding: 20px 50px;
 }
 
 @font-face {
@@ -54,7 +57,7 @@ body {
 }
 
 .page {
-    padding: 20px 50px;
+    padding: var(--page-padding);
     overflow-y: auto;
     height: calc(100vh - var(--titlebar-height) - 115px);
 }

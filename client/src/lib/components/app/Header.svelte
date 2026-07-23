@@ -42,7 +42,7 @@
     align-items: center;
     justify-content: space-between;
     padding: 0 2rem;
-    height: 64px;
+    height: var(--header-height);
     background: color-mix(in srgb, var(--background-colour) 85%, var(--primary-colour));
     border-bottom: 2px solid color-mix(in srgb, var(--primary-colour) 20%, transparent);
     backdrop-filter: blur(12px);

@@ -39,7 +39,7 @@
     align-items: center;
     justify-content: space-between;
     padding: 0 2rem;
-    height: 52px;
+    height: var(--footer-height);
     background: color-mix(in srgb, var(--background-colour) 85%, var(--primary-colour));
     border-top: 2px solid color-mix(in srgb, var(--primary-colour) 20%, transparent);
   }
