@@ -3,8 +3,8 @@
 /** @type { import('@storybook/sveltekit').StorybookConfig } */
 const config = {
   "stories": [
-    "../src/**/*.mdx",
-    "../src/**/*.stories.@(js|ts|svelte)"
+    "../src/**/*.stories.@(js|ts|svelte)",
+    "../src/lib/components/ui/stories/*.stories.@(js|ts|svelte)"
   ],
   "addons": [
     "@storybook/addon-svelte-csf",
