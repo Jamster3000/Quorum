@@ -27,6 +27,9 @@
     margin-left: auto;
     margin-right: auto;
     text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
   }
 
   .default {

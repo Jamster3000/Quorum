@@ -33,9 +33,7 @@
 
 <style>
   .checkbox-field {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
+    display: block;
   }
 
   input[type="checkbox"] {
@@ -46,12 +44,10 @@
   }
 
   .checkbox-row {
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
+    display: block;
     cursor: pointer;
     user-select: none;
-    width: fit-content;
+    margin-bottom: 6px;
   }
 
   .checkbox-row.disabled {
@@ -62,16 +58,17 @@
   .box {
     width: 20px;
     height: 20px;
-    min-width: 20px;
     border-radius: 6px;
     border: 1.5px solid var(--border-colour);
     background: var(--background-colour);
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    display: inline-block;
+    vertical-align: middle;
+    text-align: center;
+    line-height: 20px;
     transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
     position: relative;
     overflow: hidden;
+    box-sizing: border-box;
   }
 
   .box::before {
@@ -102,6 +99,7 @@
     stroke-dasharray: 20;
     stroke-dashoffset: 20;
     transition: stroke-dashoffset 0.2s ease 0.05s;
+    vertical-align: middle;
   }
 
   .box.checked .tick {
@@ -114,6 +112,9 @@
   }
 
   .label-text {
+    display: inline-block;
+    vertical-align: middle;
+    margin-left: 6px;
     font-size: var(--font-small);
     font-weight: 600;
     color: var(--text-colour);
@@ -121,9 +122,9 @@
   }
 
   .error-text {
+    display: block;
     font-size: 12px;
     font-weight: 600;
     color: var(--alert-error-text);
-    padding-left: 30px;
   }
 </style>
