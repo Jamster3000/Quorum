@@ -1,6 +1,6 @@
 <script lang="ts">
   import Header from '$lib/components/app/Header.svelte';
-  import Footer from '$lib/components/app/footer.svelte';
+  import Footer from '$lib/components/app/Footer.svelte';
   import Auth from '$lib/utils/Auth.svelte';
 </script>
 
