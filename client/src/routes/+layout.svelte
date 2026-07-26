@@ -7,7 +7,7 @@
   import { clearAuthStore } from '$lib/stores/authStore';
   import { goto } from '$app/navigation';
   import { onMount } from 'svelte';
-  import Titlebar from '$lib/components/layout/Titlebar.svelte';
+  import Titlebar from '$lib/components/app/Titlebar.svelte';
 
   onMount(() => {
   listen('auth:token-expired', async () => {
