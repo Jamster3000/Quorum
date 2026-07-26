@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { IconCheck } from '@tabler/icons-svelte-runes';
+
   export let label: string = '';
   export let checked: boolean = false;
   export let disabled: boolean = false;
@@ -16,9 +18,9 @@
       on:change
     />
     <div class="box" class:checked>
-      <svg class="tick" viewBox="0 0 12 10" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M1 5L4.5 8.5L11 1" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
+      {#if checked}
+        <IconCheck size={18} color="white" style="position: relative; z-index: 1;" />
+      {/if}
     </div>
     <span class="label-text">
       {#if label}{label}{/if}
@@ -88,22 +90,6 @@
 
   .box.checked::before {
     transform: scale(1);
-  }
-
-  .tick {
-    width: 12px;
-    height: 10px;
-    color: var(--text-colour);
-    position: relative;
-    z-index: 1;
-    stroke-dasharray: 20;
-    stroke-dashoffset: 20;
-    transition: stroke-dashoffset 0.2s ease 0.05s;
-    vertical-align: middle;
-  }
-
-  .box.checked .tick {
-    stroke-dashoffset: 0;
   }
 
   input[type="checkbox"]:focus-visible + .box {
