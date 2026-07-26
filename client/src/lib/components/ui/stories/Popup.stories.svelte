@@ -1,7 +1,7 @@
 <script module>
     import { defineMeta } from '@storybook/addon-svelte-csf';
-    import Popup from '../../Popup.svelte';
-    import Card from '../../Card.svelte';
+    import Popup from '../Popup.svelte';
+    import Card from '../Card.svelte';
 
     const { Story } = defineMeta({
         title: 'UI/Popup',

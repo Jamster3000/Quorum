@@ -1,7 +1,7 @@
 <script module>
     import { defineMeta } from '@storybook/addon-svelte-csf';
-    import Nav from '../../Nav.svelte';
-    import Card from '../../Card.svelte';
+    import Nav from '../Nav.svelte';
+    import Card from '../Card.svelte';
 
     const { Story } = defineMeta({
         title: 'UI/Nav',

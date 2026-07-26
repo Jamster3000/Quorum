@@ -1,15 +1,15 @@
 <script module>
     import { defineMeta } from '@storybook/addon-svelte-csf';
-    import Footer from '../Footer.svelte';
+    import Header from '../Header.svelte';
 
     const { Story } = defineMeta({
-        title: 'App/Footer',
-        component: Footer,
+        title: 'App/Header',
+        component: Header,
     });
 </script>
 
 {#snippet template(args)}
-    <Footer {...args}/>
+    <Header {...args}/>
 {/snippet}
 
-<Story name="Footer" {template}/>
+<Story name="Header" {template}/>

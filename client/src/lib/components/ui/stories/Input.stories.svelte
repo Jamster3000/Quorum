@@ -1,7 +1,7 @@
 <script module>
     import { defineMeta } from '@storybook/addon-svelte-csf';
-    import Input from '../../Input.svelte';
-    import Card from '../../Card.svelte'
+    import Input from '../Input.svelte';
+    import Card from '../Card.svelte'
 
     const { Story } = defineMeta({
         title: 'UI/Input',

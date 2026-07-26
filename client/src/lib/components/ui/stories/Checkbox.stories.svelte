@@ -1,7 +1,7 @@
 <script module>
     import { defineMeta } from '@storybook/addon-svelte-csf';
-    import Checkbox from '../../Checkbox.svelte';
-    import Card from '../../Card.svelte'
+    import Checkbox from '../Checkbox.svelte';
+    import Card from '../Card.svelte'
 
     const { Story } = defineMeta({
         title: 'UI/Checkbox',

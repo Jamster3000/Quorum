@@ -1,6 +1,6 @@
 <script module>
     import { defineMeta } from '@storybook/addon-svelte-csf';
-    import Alert from '../../Alert.svelte';
+    import Alert from '../Alert.svelte';
 
     const { Story } = defineMeta({
         title: 'UI/Alert',
