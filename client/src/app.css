@@ -8,16 +8,17 @@
     --text-colour: #eaebeb;
     /* Semantic Colours */
     --alert-error-text: #ff4d4d;
-    --alert-error-bg: rgba(255, 77, 77, 0.1);
+    --alert-error-bg-text: #FFA3A3;
+    --alert-error-bg: rgba(255, 77, 77, 0.09);
     --alert-error-border: #ff4d4d;
     --alert-success-text: #00ff88;
-    --alert-success-bg: rgba(0, 255, 136, 0.1);
+    --alert-success-bg: rgba(0, 255, 136, 0.09);
     --alert-success-border: #00ff88;
     --alert-info-text: #4da6ff;
-    --alert-info-bg: rgba(77, 166, 255, 0.1);
+    --alert-info-bg: rgba(77, 166, 255, 0.09);
     --alert-info-border: #4da6ff;
     --alert-warning-text: #ffcc00;
-    --alert-warning-bg: rgba(255, 204, 0, 0.1);
+    --alert-warning-bg: rgba(255, 204, 0, 0.09);
     --alert-warning-border: #ffcc00;
     /* Fonts */
     --font-primary: 'Outfit', sans-serif;

@@ -2,26 +2,36 @@
   import { IconCheck } from '@tabler/icons-svelte-runes';
 
   export let label: string = '';
+  export let ariaLabel: string = '';
   export let checked: boolean = false;
   export let disabled: boolean = false;
   export let error: string = '';
   export let id: string = crypto.randomUUID();
+
+  $: computedAriaLabel = ariaLabel || label || 'Checkbox';
+  
+  $: errorId = `${id}-error`;
 </script>
 
 <div class="checkbox-field">
   <label for={id} class="checkbox-row" class:disabled>
     <input
-      {id}
+      id={id}
       {disabled}
       type="checkbox"
       bind:checked
       on:change
+      aria-label={computedAriaLabel}
+      aria-invalid={error ? 'true' : 'false'}
+      aria-describedby={error ? errorId : undefined}
     />
-    <div class="box" class:checked>
+    
+    <div class="box" class:checked aria-hidden="true">
       {#if checked}
         <IconCheck size={18} color="white" style="position: relative; z-index: 1;" />
       {/if}
     </div>
+    
     <span class="label-text">
       {#if label}{label}{/if}
       <slot />
@@ -29,7 +39,7 @@
   </label>
 
   {#if error}
-    <span class="error-text">{error}</span>
+    <span id={errorId} class="error-text">{error}</span>
   {/if}
 </div>
 
@@ -111,6 +121,6 @@
     display: block;
     font-size: 12px;
     font-weight: 600;
-    color: var(--alert-error-text);
+    color: var(--alert-error-bg-text);
   }
 </style>

@@ -172,7 +172,7 @@
   }
 
   .error-text {
-    color: var(--alert-error-text);
+    color: var(--alert-error-bg-text);
   }
 
   .counter {

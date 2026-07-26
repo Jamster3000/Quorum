@@ -32,6 +32,6 @@
 <Story name="Transparent" args={{ variant: 'transparent', fontSize: 'medium' }} {template} />
 <Story name="Disabled" args={{ variant: 'primary', fontSize: 'medium', disabled: true }} {template} />
 <Story name="Anchor Link" args={{ variant: 'primary', fontSize: 'medium', href: "https:www.example.com" }} {template} />
-<Story name="Icon Only" args={{ variant: 'transparent', iconOnly: true }} template={icon_template} />
+<Story name="Icon Only" args={{ variant: 'transparent', iconOnly: true, ariaLabel: "Test Icon" }} template={icon_template} />
 
 <!--Font isn't loaded for storybook-->

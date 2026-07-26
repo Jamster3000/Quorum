@@ -156,7 +156,7 @@ console.log(
           required
         />
 
-        <Checkbox bind:checked={agreedToTerms} error={errors.terms}>
+        <Checkbox bind:checked={agreedToTerms} error={errors.terms} ariaLabel="I agree to the Terms of Service">
           I agree to the <a href="/terms">Terms of Service</a>
         </Checkbox>
 

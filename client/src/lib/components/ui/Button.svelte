@@ -5,14 +5,15 @@
   export let disabled: boolean = false;
   export let fontSize: 'xsmall' | 'small' | 'medium' | 'large' | 'xlarge' = 'medium';
   export let iconOnly: boolean = false;
+  export let ariaLabel: string = '';
 </script>
 
 {#if href}
-  <a {href} class="btn {variant} {fontSize}" class:disabled class:iconOnly>
+  <a {href} class="btn {variant} {fontSize}" class:disabled class:iconOnly aria-label={ariaLabel || 'Link'}>
     <span class="btn-text"><slot /></span>
   </a>
 {:else}
-  <button {type} {disabled} class="btn {variant} {fontSize}" class:iconOnly on:click>
+  <button {type} {disabled} class="btn {variant} {fontSize}" class:iconOnly on:click aria-label={ariaLabel || 'Button'}>
     <span class="btn-text"><slot /></span>
   </button>
 {/if}
