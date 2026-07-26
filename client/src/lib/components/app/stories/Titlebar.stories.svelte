@@ -4,6 +4,7 @@
 
     const { Story } = defineMeta({
         title: 'App/Titlebar',
+        tags: ['autodocs'],
         component: Titlebar,
     });
 </script>

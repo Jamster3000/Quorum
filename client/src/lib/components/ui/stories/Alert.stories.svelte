@@ -4,6 +4,7 @@
 
     const { Story } = defineMeta({
         title: 'UI/Alert',
+        tags: ['autodocs'],
         component: Alert,
     });
 </script>

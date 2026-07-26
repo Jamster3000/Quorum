@@ -4,6 +4,7 @@
 
     const { Story } = defineMeta({
         title: 'App/Header',
+        tags: ['autodocs'],
         component: Header,
     });
 </script>

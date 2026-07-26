@@ -5,6 +5,7 @@
 
     const { Story } = defineMeta({
         title: 'UI/Checkbox',
+        tags: ['autodocs'],
         component: Checkbox,
     });
 </script>

@@ -6,6 +6,7 @@
 
     const { Story } = defineMeta({
         title: 'UI/Button',
+        tags: ['autodocs'],
         component: Button,
     });
 </script>
