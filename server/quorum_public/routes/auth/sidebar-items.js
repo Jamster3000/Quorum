@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["delete_account","extract_user_id","get_user_data","login","logout","refresh_token","signup","update_user_profile","verify_user_credentials"],"struct":["RefreshTokenRequest"]};
+window.SIDEBAR_ITEMS = {"fn":["delete_account","extract_user_id","get_user_data","login","logout","refresh_token","signup","update_user_profile","verify_user_credentials"],"struct":["RefreshTokenRequest","SignupResponse"]};
