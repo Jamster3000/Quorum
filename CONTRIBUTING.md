@@ -1,15 +1,4 @@
-
 # Contribution
-  
-## Project Structure
-
-```
-quorum/
-├── client/        # Tauri 2 + SvelteKit frontend
-└── server/        # Rust + Axum backend
-```
-
----
 
 ## Getting Started
 
@@ -17,8 +6,8 @@ quorum/
 
 | Tool | Purpose |
 |---|---|
-| Rust (stable) | Backend (`server/`) |
-| Node.js + npm/npx | Frontend (`client/`) |
+| Rust | Server(`Axum`) + Client (`Tauri`) |
+| Node.js + npm/npx | Client (`Tauri`) |
 
 ### Running Locally
 
@@ -27,8 +16,11 @@ quorum/
    cd server
    cargo run -p quorum-private
    ```
-   > Use `cargo run -p quorum-private --release` for production mode.
-   > Or use `cargo run -p quorum-public` to build the public server.
+The server is split into two seperate parts. Private and public server.
+By default `cargo run ...` will run in debug. Use `--release` flag to build the release version.
+
+   - **Private Server** - `cargo run -p quorum-private`
+   - **Public Server** - `cargo run -p quorum-public`
 
 2. **Start the frontend**:
    ```bash
@@ -36,12 +28,13 @@ quorum/
    npm install
    npm run tauri dev
    ```
+> npm install is only required to run once just to install node based packages.
 
 ---
 
 ## Submitting Changes
 
-Contributions are submitted via **GitHub pull requests**. There is no requirement to open an issue first before a pull request is made.
+Contributions are submitted via **GitHub pull requests**.
 
 1. Fork the repository and create a branch from `main`.
 2. Make your changes.
@@ -54,18 +47,27 @@ Branch naming is flexible, but something descriptive is appreciated — e.g. `fi
 
 ## Code Style
 
-### Rust (`server/`)
+### Rust
 
-Formatting is enforced with `rustfmt`. Before committing, run:
+Formatting is enforced with `rustfmt`. Before making a PR, run:
 
 ```bash
 cargo fmt --all
 ```
 
-Linting with Clippy is also expected:
+Linting with Clippy is also expected. Before making a PR, run:
 
 ```bash
 cargo clippy -- -W warnings
+```
+Please ensure that you fix any warnings clippy produces in this command **before** making submitting your PR.
+
+### TypeScript
+
+Formatting is handled by SvelteKit and Vite. Before committing, run:
+
+```bash
+npm run check
 ```
 
 ### SurrealQL (`initial.surql`)
@@ -106,7 +108,7 @@ DEFINE INDEX IF NOT EXISTS idx_email ON TABLE users COLUMNS email UNIQUE;
 
 ## Documentation Comments
 
-Documentation comments are required for all Rust code. They are not enforced in Svelte/JS files — comment where it helps, but there is no mandatory format there.
+Documentation comments are required for all Rust and TypeScript code. They are not enforced in Svelte/HTML files — comment where it helps, but there is no mandatory format there.
 
 ### Rust — File Headers
 
@@ -164,7 +166,7 @@ pub fn verify_token(token: &str, secret: &[u8]) -> Result<Claims, AuthError> {
 }
 ```
 
-**Private functions** follow the same structure but omit `# Example` (and `# Safety` unless the function is `unsafe`):
+**Private functions** follow the same structure but omit `# Example`:
 
 ```rust
 /// Strip the `Bearer ` prefix from a raw Authorization header value.
@@ -191,14 +193,90 @@ fn extract_bearer(header: &str) -> Result<&str, AuthError> {
 
 | Section | `pub` fn | private fn |
 |---|---|---|
-| One-line summary | ✅ always | ✅ always |
+| One-line summary | always | always |
 | Extended description | where helpful | where helpful |
 | `# Errors` | if returns `Result` | if returns `Result` |
 | `# Panics` | if can panic | if can panic |
-| `# Safety` | if `unsafe` | if `unsafe` |
-| `# Arguments` | ✅ always | ✅ always |
-| `# Return` | ✅ always | ✅ always |
-| `# Example` | ✅ always | ❌ omit |
+| `# Arguments` | always | always |
+| `# Return` | always | always |
+| `# Example` | always | omit |
+
+### TypeScript — File Headers
+
+Every `.ts` file must begin with a `/**` doc comment block. The first line is a short one-line description. Leave a blank line in the comment, then expand with more detail.
+
+```typescript
+/**
+ * Auth token management and validation.
+ *
+ * Provides utilities for storing, retrieving, and validating JWT tokens.
+ * Handles token refresh logic, expiry checks with a 5-minute buffer, and
+ * secure storage via the Tauri Store plugin.
+ */
+```
+
+> Svelte component files (`.svelte`) do not require file headers unless they export utility functions.
+
+### TypeScript — Functions
+
+Every exported function must have a `/**` doc comment with all applicable sections. Use imperative mood in the one-liner ("Get", "Validate", "Retrieve").
+
+**Public functions** require all applicable sections:
+
+```typescript
+/**
+ * Retrieve the currently stored access token.
+ *
+ * Returns null if no token is stored or if the store operation fails.
+ * Does not validate expiry; use `isTokenValid()` to ensure the token is still active.
+ *
+ * @param username - The username or email to authenticate.
+ * @param password - The user's password.
+ * @returns The access token string, or null if not found.
+ * @throws {Error} If the store operation fails.
+ *
+ * @example
+ * ```typescript
+ * const token = await getAccessToken();
+ * if (token) {
+ *   console.log('Token exists');
+ * }
+ * ```
+ */
+export async function getAccessToken(): Promise<string | null> {
+  // ...
+}
+```
+
+**Private functions** follow the same structure but omit `@example`:
+
+```typescript
+/**
+ * Decode a JWT token string without verification.
+ *
+ * Extracts and parses the payload segment of a JWT, returning the decoded
+ * claims object. This function does not validate the signature or expiry—
+ * use `isTokenValid()` for security-critical checks.
+ *
+ * @param token - The raw JWT string.
+ * @returns The decoded claims object, or null if the token is malformed.
+ * @throws {Error} If the payload is not valid JSON.
+ */
+function decodeToken(token: string): Record<string, unknown> | null {
+  // ...
+}
+```
+
+**Section reference:**
+
+| Section | `export` fn | private fn |
+|---|---|---|
+| One-line summary | always | always |
+| Extended description | always | always |
+| `@param` | always | always |
+| `@returns` | always | always |
+| `@throws` | when applicable | when applicable |
+| `@example` | always | omit |
 
 ---
 
