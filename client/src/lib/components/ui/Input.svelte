@@ -37,6 +37,7 @@
       {disabled}
       {required}
       maxlength={maxLength}
+      data-testid="input-field"
       bind:value
       on:input
       on:blur
@@ -46,6 +47,7 @@
       <button
         type="button"
         class="eye-toggle"
+        data-testid="password-toggle"
         on:click={() => showPassword = !showPassword}
         aria-label={showPassword ? 'Hide password' : 'Show password'}
         {disabled}

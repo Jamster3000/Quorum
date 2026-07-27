@@ -1,5 +1,6 @@
 <script module>
     import { defineMeta } from '@storybook/addon-svelte-csf';
+    import { userEvent, expect, within } from 'storybook/test';
     import Input from '../Input.svelte';
     import Card from '../Card.svelte'
 
@@ -24,3 +25,35 @@
 <Story name="Required" args={{ label: "Please input the meaning of life", placeholder: "The answer isn't what you expect", required: true }} {template}/>
 <Story name="Password Input" args={{ label: "Enter your password", required: true, password: true }} {template}/>
 <Story name="Character Count" args={{ label: "Enter the entire works of shakespere", counter: true}} {template}/>
+
+<Story 
+  name="Max Character" 
+  args={{ 
+      type: 'text', 
+      max: 5,
+      label: "Max character input",
+  }}
+  play={async ({ canvas, userEvent }) => {
+    const input = canvas.getByTestId('input-field');
+    await userEvent.clear(input);
+    await userEvent.type(input, 'hello');
+    expect(input.value).toBe('hello');
+  }}
+/>
+
+<Story 
+  name="Password Toggle" 
+  args={{ 
+      type: 'password', 
+      password: true,
+      label: "Password input with toggle",
+  }}
+  play={async ({ canvas, userEvent }) => {
+    const input = canvas.getByTestId('input-field');
+    const toggle = canvas.getByTestId('password-toggle');
+    
+    expect(input).toHaveAttribute('type', 'password');
+    await userEvent.click(toggle);
+    expect(input).toHaveAttribute('type', 'text');
+  }}
+/>

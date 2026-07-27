@@ -25,6 +25,7 @@
       class="dialog-backdrop"
       class:fullscreen
       on:click={handleBackdropClick}
+      data-testid="popup-backdrop"
       role="presentation"
       tabindex="-1"
       transition:fade={{ duration: 500 }}

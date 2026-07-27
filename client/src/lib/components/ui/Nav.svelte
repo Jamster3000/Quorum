@@ -8,6 +8,7 @@
     <a 
       href={link.href}
       class="nav-link"
+      data-testid={`nav-link-${link.href.replace('/', '')}`}
       on:click={(e) => {
         if (onLinkClick) {
           e.preventDefault();

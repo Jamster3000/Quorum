@@ -3,16 +3,19 @@
   import { IconMinus, IconSquares, IconX, IconHexagonFilled, IconCircleArrowLeft, IconCircleArrowRight  } from '@tabler/icons-svelte-runes';
   import Button from '$lib/components/ui/Button.svelte';
 
-  const appWindow = getCurrentWindow();
+  let window;
+  if (typeof window !== 'undefined' && '__TAURI__' in window) {
+    window = getCurrentWindow();
+  }
 </script>
 
 <div class="titlebar" data-tauri-drag-region>
   <div class="titlebar-title" data-tauri-drag-region>
-    <Button variant="transparent" iconOnly={true} on:click={() => window.history.back()}>
+    <Button variant="transparent" iconOnly={true} on:click={() => window.history.back()} ariaLabel="Back Button">
       <IconCircleArrowLeft size={24} color="var(--text-colour)" />
     </Button>
 
-    <Button variant="transparent" iconOnly={true} on:click={() => window.history.forward()}>
+    <Button variant="transparent" iconOnly={true} on:click={() => window.history.forward()} ariaLabel="Forward Button">
       <IconCircleArrowRight size={24} color="var(--text-colour)" />
     </Button>
     
@@ -21,15 +24,15 @@
   </div>
 
   <div class="titlebar-controls">
-    <button class="minimise" type="button" on:click={() => appWindow.minimize()}>
+    <button class="minimise" type="button" on:click={() => window.minimize()} aria-label="Minimise Button">
         <IconMinus size={16} color="white" />
     </button>
 
-    <button class="maximise" type="button" on:click={() => appWindow.toggleMaximize()}>
+    <button class="maximise" type="button" on:click={() => window.toggleMaximize()} aria-label="Maximise Button">
         <IconSquares size={16} color="white" />
     </button>
 
-    <button class="close" type="button" on:click={() => appWindow.close()}>
+    <button class="close" type="button" on:click={() => window.close()} aria-label="Close Button">
         <IconX size={16} color="white" />
     </button>
   </div>

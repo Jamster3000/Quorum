@@ -1,5 +1,6 @@
 <script module>
     import { defineMeta } from '@storybook/addon-svelte-csf';
+    import { userEvent, within, expect, fn } from 'storybook/test';
     import Popup from '../Popup.svelte';
     import Card from '../Card.svelte';
 
@@ -21,3 +22,17 @@
 <Story name="Popup" args={{ isOpen: true }} {template}/>
 <Story name="Fullscreen" args={{ isOpen: true, fullscreen: true }} {template}/>
 <Story name="Close on backdrop click" args={{ isOpen: true, closeOnBackdrop: true }} {template}/>
+
+<Story 
+  name="Backdrop Close" 
+  args={{ 
+    isOpen: true, 
+    closeOnBackdrop: true,
+    onClose: fn()
+  }}
+  play={async ({ canvas, userEvent, args }) => {
+    const backdrop = canvas.getByTestId('popup-backdrop');
+    await userEvent.click(backdrop);
+    expect(args.onClose).toHaveBeenCalled();
+  }}
+/>
