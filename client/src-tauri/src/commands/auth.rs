@@ -12,8 +12,10 @@ pub struct AuthSuccess {
 }
 
 #[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct SignupSuccess {
     pub message: String,
+    pub account_has_email: bool,
 }
 
 #[derive(Deserialize)]
@@ -65,25 +67,29 @@ pub async fn signup(
         return Err("Passwords do not match.".to_string());
     }
 
-    let mut new_payload = json!({
-        "username": payload.username,
-        "email": payload.email,
-        "password": payload.password,
-    });
+    let has_email = payload
+    .email
+    .as_ref()
+    .is_some_and(|email| !email.trim().is_empty());
 
-    if let Some(ref email) = payload.email {
-        if email.is_empty() {
-            new_payload = json!({
-                "username": payload.username,
-                "password": payload.password,
-            });
-        }
-    }
+    let new_payload = if has_email {
+        json!({
+            "username": &payload.username,
+            "email": payload.email.as_deref().map(str::trim),
+              "password": &payload.password,
+        })
+    } else {
+        json!({
+            "username": &payload.username,
+            "password": &payload.password,
+        })
+    };
 
     make_auth_request(&app, "/auth/signup", &new_payload, 201).await?;
 
     Ok(SignupSuccess {
         message: "Account created successfully.".to_string(),
+        account_has_email: has_email,
     })
 }
 

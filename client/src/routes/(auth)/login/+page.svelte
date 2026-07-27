@@ -9,6 +9,9 @@
   import Button from '$lib/components/ui/Button.svelte';
   import { IconHexagonFilled, IconArrowLeft } from '@tabler/icons-svelte-runes';
   import { setTokens } from '$lib/stores/authStore';
+  import { onMount } from 'svelte';
+  import Dialog from '$lib/components/ui/Popup.svelte';
+
 
   interface AuthSuccess {
     access_token: string;
@@ -26,6 +29,7 @@
   let errorMessage = '';
   let showAlert = false;
   let alertType = 'error';
+  let showNoEmailPopup = false;
 
   $: fromSignup = $page.url.searchParams.get('created') === '1';
   $: fromPage = $page.url.searchParams.get('from') || null;
@@ -38,6 +42,17 @@
     terms: '',
     form: '',
   };
+
+  onMount(() => {
+  const accountWasCreated =
+    $page.url.searchParams.get('created') === '1';
+
+  const accountHasNoEmail =
+    $page.url.searchParams.get('noEmail') === '1';
+
+  showNoEmailPopup =
+    accountWasCreated && accountHasNoEmail;
+});
 
   async function handleSubmit() {
     formError = '';
@@ -76,6 +91,24 @@
 </script>
 
 <main class="page">
+
+  <Dialog
+  bind:isOpen={showNoEmailPopup}
+  fullscreen={true}
+  closeOnBackdrop={true}
+>
+  <div class="test-popup">
+    <p>Yup, this worked.</p>
+
+    <button
+      type="button"
+      on:click={() => showNoEmailPopup = false}
+    >
+      Close
+    </button>
+  </div>
+</Dialog>
+
   <a href="/" class="back-link">
     <IconArrowLeft size={20} />
       Back to home

@@ -10,6 +10,7 @@
 
   interface SignupSuccess {
     message: string;
+    accountHasEmail: boolean;
   }
 
   let username = '';
@@ -40,14 +41,18 @@
       const result = await invoke<SignupSuccess>('signup', {
         payload: {
           username,
-          email: email || null,
+          email: email.trim() || null,
           password,
           confirm_password: confirmPassword,
         }
       });
 
       handleSignupSuccess(result.message);
-      goto("/login?created=1");
+      const loginUrl = result.accountHasEmail
+      ? '/login?created=1'
+      : '/login?created=1&noEmail=1';
+
+      await goto(loginUrl);
     } catch (e) {
       handleSignupFailure(e as string);
     } finally {
