@@ -1,12 +1,14 @@
 <script lang="ts">
   import { getCurrentWindow } from '@tauri-apps/api/window';
+  import { onMount } from 'svelte';
   import { IconMinus, IconSquares, IconX, IconHexagonFilled, IconCircleArrowLeft, IconCircleArrowRight  } from '@tabler/icons-svelte-runes';
   import Button from '$lib/components/ui/Button.svelte';
 
-  let window;
-  if (typeof window !== 'undefined' && '__TAURI__' in window) {
-    window = getCurrentWindow();
-  }
+  let appWindow: any;
+
+  onMount(async () => {
+    appWindow = await getCurrentWindow();
+  });
 </script>
 
 <div class="titlebar" data-tauri-drag-region>
@@ -24,15 +26,15 @@
   </div>
 
   <div class="titlebar-controls">
-    <button class="minimise" type="button" on:click={() => window.minimize()} aria-label="Minimise Button">
+    <button class="minimise" type="button" on:click={() => appWindow.minimize()} aria-label="Minimise Button">
         <IconMinus size={16} color="white" />
     </button>
 
-    <button class="maximise" type="button" on:click={() => window.toggleMaximize()} aria-label="Maximise Button">
+    <button class="maximise" type="button" on:click={() => appWindow.toggleMaximize()} aria-label="Maximise Button">
         <IconSquares size={16} color="white" />
     </button>
 
-    <button class="close" type="button" on:click={() => window.close()} aria-label="Close Button">
+    <button class="close" type="button" aria-label="Close Button" on:click={() => appWindow.close()}>
         <IconX size={16} color="white" />
     </button>
   </div>
