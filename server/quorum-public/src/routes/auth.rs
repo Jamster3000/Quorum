@@ -16,12 +16,20 @@ use quorum_core::models::server::AuditEvent;
 use quorum_core::utility::config::Config;
 
 use chrono;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Deserialize)]
 pub struct RefreshTokenRequest {
     pub user_id: String,
     pub refresh_token: String,
+}
+
+#[derive(Debug, Serialize)]
+pub struct SignupResponse {
+    #[serde(flatten)]
+    pub auth: AuthTokenResponse,
+
+    pub backup_codes: Option<Vec<String>>,
 }
 
 /// Verifies user credentials (username/email and password) against the database
@@ -90,14 +98,14 @@ fn extract_user_id(user: &User) -> Result<String, String> {
 pub async fn signup(
     State(db): State<DB>,
     Json(payload): Json<SignupRequest>,
-) -> (StatusCode, Json<AuthTokenResponse>) {
-    let mut _plain_backup_codes = None;
+) -> (StatusCode, Json<SignupResponse>) {
+    let mut plain_backup_codes = None;
     let mut hash_backup_codes = None;
 
     if payload.email.is_none() {
         let backup_codes = Some(generate_backup_codes());
 
-        _plain_backup_codes = Some(
+        plain_backup_codes = Some(
             backup_codes
                 .as_ref()
                 .unwrap()
@@ -151,11 +159,14 @@ pub async fn signup(
 
         return (
             status,
-            Json(AuthTokenResponse {
-                success: false,
-                user: None,
-                tokens: None,
-                message: formatted,
+            Json(SignupResponse {
+                auth: AuthTokenResponse {
+                    success: false,
+                    user: None,
+                    tokens: None,
+                    message: formatted,
+                },
+                backup_codes: None,
             }),
         );
     }
@@ -167,11 +178,14 @@ pub async fn signup(
         Err(e) => {
             return (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(AuthTokenResponse {
-                    success: false,
-                    user: None,
-                    tokens: None,
-                    message: e,
+                Json(SignupResponse {
+                    auth: AuthTokenResponse {
+                        success: false,
+                        user: None,
+                        tokens: None,
+                        message: e,
+                    },
+                    backup_codes: None,
                 }),
             );
         }
@@ -182,11 +196,14 @@ pub async fn signup(
         Err(_) => {
             return (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(AuthTokenResponse {
-                    success: false,
-                    user: None,
-                    tokens: None,
-                    message: "Failed to generate access token".to_string(),
+                Json(SignupResponse {
+                    auth: AuthTokenResponse {
+                        success: false,
+                        user: None,
+                        tokens: None,
+                        message: "Failed to generate access token".to_string(),
+                    },
+                    backup_codes: None,
                 }),
             );
         }
@@ -198,11 +215,14 @@ pub async fn signup(
         Err(_) => {
             return (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(AuthTokenResponse {
-                    success: false,
-                    user: None,
-                    tokens: None,
-                    message: "Failed to generate refresh token".to_string(),
+                Json(SignupResponse {
+                    auth: AuthTokenResponse {
+                        success: false,
+                        user: None,
+                        tokens: None,
+                        message: "Failed to generate refresh token".to_string(),
+                    },
+                    backup_codes: None,
                 }),
             );
         }
@@ -210,17 +230,21 @@ pub async fn signup(
 
     let config = quorum_core::utility::config::Config::get();
     let expires_at = chrono::Utc::now().timestamp() + (config.jwt_refresh_days * 86400);
+
     if auth::store_refresh_token(&db, &user_id, &refresh_token, expires_at)
         .await
         .is_err()
     {
         return (
             StatusCode::INTERNAL_SERVER_ERROR,
-            Json(AuthTokenResponse {
-                success: false,
-                user: None,
-                tokens: None,
-                message: "Failed to store refresh token".to_string(),
+            Json(SignupResponse {
+                auth: AuthTokenResponse {
+                    success: false,
+                    user: None,
+                    tokens: None,
+                    message: "Failed to store refresh token".to_string(),
+                },
+                backup_codes: None,
             }),
         );
     }
@@ -239,15 +263,18 @@ pub async fn signup(
 
     (
         StatusCode::CREATED,
-        Json(AuthTokenResponse {
-            success: true,
-            user: Some(user.to_response()),
-            tokens: Some(TokenResponse {
-                access_token,
-                refresh_token,
-                expires_in: quorum_core::utility::config::Config::get().jwt_access_minutes * 60,
-            }),
-            message: "User created successfully".to_string(),
+        Json(SignupResponse {
+            auth: AuthTokenResponse {
+                success: true,
+                user: Some(user.to_response()),
+                tokens: Some(TokenResponse {
+                    access_token,
+                    refresh_token,
+                    expires_in: quorum_core::utility::config::Config::get().jwt_access_minutes * 60,
+                }),
+                message: "User created successfully".to_string(),
+            },
+            backup_codes: plain_backup_codes,
         }),
     )
 }

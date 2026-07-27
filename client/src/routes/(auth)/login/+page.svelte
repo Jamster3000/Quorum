@@ -30,6 +30,7 @@
   let showAlert = false;
   let alertType = 'error';
   let showNoEmailPopup = false;
+  let backupCodes: string[] = [];
 
   $: fromSignup = $page.url.searchParams.get('created') === '1';
   $: fromPage = $page.url.searchParams.get('from') || null;
@@ -50,8 +51,44 @@
   const accountHasNoEmail =
     $page.url.searchParams.get('noEmail') === '1';
 
-  showNoEmailPopup =
-    accountWasCreated && accountHasNoEmail;
+  console.log('Login accountWasCreated:', accountWasCreated);
+  console.log('Login accountHasNoEmail:', accountHasNoEmail);
+
+  if (!accountWasCreated || !accountHasNoEmail) {
+    return;
+  }
+
+  const storedCodes =
+    sessionStorage.getItem('newAccountBackupCodes');
+
+  console.log('Login storedCodes:', storedCodes);
+
+  if (!storedCodes) {
+    return;
+  }
+
+  try {
+    const parsedCodes: unknown = JSON.parse(storedCodes);
+
+    console.log('Login parsedCodes:', parsedCodes);
+
+    if (
+      Array.isArray(parsedCodes) &&
+      parsedCodes.length > 0 &&
+      parsedCodes.every((code) => typeof code === 'string')
+    ) {
+      backupCodes = parsedCodes;
+      showNoEmailPopup = true;
+
+
+      console.log('Popup state:', showNoEmailPopup);
+    }
+  } catch (error) {
+    console.error('Could not parse backup codes:', error);
+
+    backupCodes = [];
+    showNoEmailPopup = false;
+  }
 });
 
   async function handleSubmit() {
@@ -88,6 +125,12 @@
     alertType = 'success';
     showAlert = true;
   }
+
+  function closeBackupCodesPopup() {
+  sessionStorage.removeItem('newAccountBackupCodes');
+  backupCodes = [];
+  showNoEmailPopup = false;
+}
 </script>
 
 <main class="page">
@@ -95,16 +138,33 @@
   <Dialog
   bind:isOpen={showNoEmailPopup}
   fullscreen={true}
-  closeOnBackdrop={true}
+  closeOnBackdrop={false}
 >
-  <div class="test-popup">
-    <p>Yup, this worked.</p>
+  <div
+    class="backup-popup"
+    role="dialog"
+    aria-labelledby="backup-codes-title"
+    aria-describedby="backup-codes-description"
+  >
+    <h2 id="backup-codes-title">Save your backup codes</h2>
+
+    <p id="backup-codes-description">
+      These codes can be used to recover your account.
+      Store them somewhere safe because they will not be shown again.
+    </p>
+
+    <div class="backup-codes">
+      {#each backupCodes as code}
+        <code>{code}</code>
+      {/each}
+    </div>
 
     <button
+      class="backup-popup-button"
       type="button"
-      on:click={() => showNoEmailPopup = false}
+      on:click={closeBackupCodesPopup}
     >
-      Close
+      I have saved these codes
     </button>
   </div>
 </Dialog>
@@ -241,4 +301,73 @@
   font-weight: 700;
   color: var(--text-colour);
 }
+
+
+
+
+
+
+
+
+
+.backup-popup {
+  width: min(480px, 100%);
+  max-height: 80vh;
+  overflow-y: auto;
+  padding: 2rem;
+  border-radius: 12px;
+  background: var(--card-colour, Canvas);
+  color: var(--text-colour, CanvasText);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+  text-align: center;
+}
+
+.backup-popup h2 {
+  margin: 0 0 0.75rem;
+  font-size: var(--font-xlarge);
+}
+
+.backup-popup p {
+  margin: 0;
+  line-height: 1.5;
+}
+
+.backup-codes {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin: 1.5rem 0;
+}
+
+.backup-codes code {
+  display: block;
+  padding: 0.75rem;
+  border: 1px solid color-mix(
+    in srgb,
+    var(--text-colour) 20%,
+    transparent
+  );
+  border-radius: 8px;
+  overflow-wrap: anywhere;
+  font-family: monospace;
+  text-align: center;
+}
+
+.backup-popup-button {
+  padding: 0.75rem 1.25rem;
+  border: none;
+  border-radius: 8px;
+  background: var(--primary-colour);
+  color: white;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+@media (max-width: 500px) {
+  .backup-codes {
+    grid-template-columns: 1fr;
+  }
+}
+
 </style>

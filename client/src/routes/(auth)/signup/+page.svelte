@@ -11,6 +11,7 @@
   interface SignupSuccess {
     message: string;
     accountHasEmail: boolean;
+    backupCodes: string[] | null;
   }
 
   let username = '';
@@ -46,6 +47,26 @@
           confirm_password: confirmPassword,
         }
       });
+
+
+console.log('Full signup result:', result);
+console.log('accountHasEmail:', result.accountHasEmail);
+console.log('backupCodes:', result.backupCodes);
+
+      sessionStorage.removeItem('newAccountBackupCodes');
+
+      if (!result.accountHasEmail && result.backupCodes?.length) {
+  sessionStorage.setItem(
+    'newAccountBackupCodes',
+    JSON.stringify(result.backupCodes)
+  );
+}
+
+console.log(
+  'Stored before redirect:',
+  sessionStorage.getItem('newAccountBackupCodes')
+);
+
 
       handleSignupSuccess(result.message);
       const loginUrl = result.accountHasEmail

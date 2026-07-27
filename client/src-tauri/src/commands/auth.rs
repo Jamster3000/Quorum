@@ -16,6 +16,7 @@ pub struct AuthSuccess {
 pub struct SignupSuccess {
     pub message: String,
     pub account_has_email: bool,
+    pub backup_codes: Option<Vec<String>>,
 }
 
 #[derive(Deserialize)]
@@ -68,9 +69,9 @@ pub async fn signup(
     }
 
     let has_email = payload
-    .email
-    .as_ref()
-    .is_some_and(|email| !email.trim().is_empty());
+        .email
+        .as_ref()
+        .is_some_and(|email| !email.trim().is_empty());
 
     let new_payload = if has_email {
         json!({
@@ -84,12 +85,20 @@ pub async fn signup(
             "password": &payload.password,
         })
     };
+    // "The unexamined life is not worth living." - Socrates. Yeah this block of code took me way more than i'd like to admit. First easter egg! cheers Jamie
+    let auth_response = make_auth_request(&app, "/auth/signup", &new_payload, 201).await?;
 
-    make_auth_request(&app, "/auth/signup", &new_payload, 201).await?;
+    let backup_codes = auth_response["backup_codes"].as_array().map(|codes| {
+        codes
+            .iter()
+            .filter_map(|code| code.as_str().map(str::to_string))
+            .collect::<Vec<String>>()
+    });
 
     Ok(SignupSuccess {
         message: "Account created successfully.".to_string(),
         account_has_email: has_email,
+        backup_codes,
     })
 }
 
