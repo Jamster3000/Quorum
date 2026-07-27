@@ -8,7 +8,7 @@
   import Checkbox from '$lib/components/ui/Checkbox.svelte';
   import Button from '$lib/components/ui/Button.svelte';
   import { IconHexagonFilled, IconArrowLeft } from '@tabler/icons-svelte-runes';
-  import { setTokens } from '$lib/stores/authStore';
+  import { setAuthStoreValues } from '$lib/stores/authStore';
   import { onMount } from 'svelte';
   import Dialog from '$lib/components/ui/Popup.svelte';
 
@@ -121,7 +121,7 @@
       });
 
       handleLoginSuccess('Logged in successfully');
-      await setTokens(result.access_token, result.refresh_token, result.user_id, result.username);
+      await setAuthStoreValues(result.access_token, result.refresh_token, result.user_id, result.username);
       goto("/home");
     } catch (e) {
       handleLoginFailure(e as string);

@@ -7,16 +7,18 @@
   export let onClose: (() => void) | undefined = undefined;
   export let closeOnBackdrop = false;
 
+  /**
+   * Handles user clicking on the popup backdrop
+   * 
+   * If closeOnBackdrop is true, clicking on the backdrop will close the popup.
+   * 
+   * @param e - The mouse event triggered by the click
+   */
   function handleBackdropClick(e: MouseEvent) {
     if (closeOnBackdrop && e.target === e.currentTarget) {
       isOpen = false;
       onClose?.();
     }
-  }
-
-  function handleClose() {
-    isOpen = false;
-    onClose?.();
   }
 </script>
 

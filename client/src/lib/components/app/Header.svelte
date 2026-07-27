@@ -14,6 +14,14 @@
     { label: 'Contact Us', href: '/contact_us' },
   ];
 
+  /**
+   * Handles the nav links click events
+   * 
+   * For the nav links that are external URLs instead of client side pages
+   * we use the Tauri openUrl function to open the link in the default browser.
+   * 
+   * @param link - The link object containing the label and href
+   */
   async function handleNavClick(link: { label: string; href: string }) {
     if (link.label === 'GitHub' || link.label == 'Documentation') {
       await openUrl(link.href);
