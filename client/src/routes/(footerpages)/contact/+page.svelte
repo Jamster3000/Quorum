@@ -16,7 +16,13 @@
   let showAlert = false;
   let alertType: 'success' | 'error' = 'error';
   let alertMessage = '';
-
+/**
+ * Gets a tier of user's device performance
+ *
+ * This invokes a Tauri command to rust to get a calculated tier for the user's device.
+ *
+ * @return A promise that resolves to a string representing the device performance tier: 'low', 'medium', or 'high'.
+ */
   async function getDevicePerformanceTier(): Promise<'low' | 'medium' | 'high'> {
     try {
       const tier = await invoke('get_performance_tier') as string;
@@ -26,6 +32,14 @@
     }
   }
 
+  /**
+   * Displays confetti animation using Confetti.js library.
+   *
+   * This makes use of the getDevicePerformanceTier function to determine the number of confetti
+   * particles to display based on the user's device performance tier.
+   *
+   * This is a helper function.
+   */
   async function showConfetti() {
     const root = document.documentElement;
     const primary = getComputedStyle(root).getPropertyValue('--primary-colour').trim();
@@ -55,6 +69,12 @@
     });
   }
 
+  /**
+   * Handles the form submission for the contact form.
+   *
+   * This function validates the input fields, shows a confetti animation, and displays an alert message
+   * based on the success or failure of the submission.
+   */
   async function handleSubmit() {
     if (!email || !message) {
       alertMessage = 'Please fill in all fields.';
