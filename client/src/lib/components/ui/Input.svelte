@@ -12,6 +12,7 @@
   export let password: boolean = false;
   export let counter: boolean = false;
   export let maxLength: number | undefined = undefined;
+  export let multiline: boolean = false;
   export let id: string = crypto.randomUUID();
 
   let showPassword = false;
@@ -29,35 +30,50 @@
     </label>
   {/if}
 
-  <div class="input-wrap" class:error={!!error} class:disabled>
-    <input
-      {id}
-      type={inputType}
-      {placeholder}
-      {disabled}
-      {required}
-      maxlength={maxLength}
-      data-testid="input-field"
-      bind:value
-      on:input
-      on:blur
-      on:focus
-    />
-    {#if password}
-      <button
-        type="button"
-        class="eye-toggle"
-        data-testid="password-toggle"
-        on:click={() => showPassword = !showPassword}
-        aria-label={showPassword ? 'Hide password' : 'Show password'}
+  <div class="input-wrap" class:error={!!error} class:disabled class:multiline>
+    {#if multiline}
+      <textarea
+        {id}
+        {placeholder}
         {disabled}
-      >
-        {#if showPassword}
-          <IconEyeOff size={16} />
-        {:else}
-          <IconEye size={16} />
-        {/if}
-      </button>
+        {required}
+        maxlength={maxLength}
+        data-testid="textarea-field"
+        bind:value
+        on:input
+        on:blur
+        on:focus
+      ></textarea>
+    {:else}
+      <input
+        {id}
+        type={inputType}
+        {placeholder}
+        {disabled}
+        {required}
+        maxlength={maxLength}
+        data-testid="input-field"
+        bind:value
+        on:input
+        on:blur
+        on:focus
+      />
+      {#if password}
+        <button
+          type="button"
+          class="eye-toggle"
+          data-testid="password-toggle"
+          on:click={() => showPassword = !showPassword}
+          aria-label={showPassword ? 'Hide password' : 'Show password'}
+          {disabled}
+        >
+          {#if showPassword}
+            <IconEyeOff size={16} />
+          {:else}
+            <IconEye size={16} />
+          {/if}
+        </button>
+      {/if}
     {/if}
   </div>
 
@@ -103,6 +119,11 @@
     transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
   }
 
+  .input-wrap.multiline {
+    align-items: flex-start;
+    padding: 0;
+  }
+
   .input-wrap:focus-within {
     border-color: var(--primary-colour);
     box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary-colour) 15%, transparent);
@@ -119,7 +140,8 @@
     cursor: not-allowed;
   }
 
-  input {
+  input,
+  textarea {
     flex: 1;
     background: transparent;
     border: none;
@@ -131,12 +153,19 @@
     width: 100%;
   }
 
-  input::placeholder {
+  textarea {
+    resize: vertical;
+    min-height: 160px;
+  }
+
+  input::placeholder,
+  textarea::placeholder {
     color: var(--text-colour);
     opacity: 0.6;
   }
 
-  input:disabled {
+  input:disabled,
+  textarea:disabled {
     cursor: not-allowed;
   }
 
