@@ -25,6 +25,7 @@
 <Story name="Required" args={{ label: "Please input the meaning of life", placeholder: "The answer isn't what you expect", required: true }} {template}/>
 <Story name="Password Input" args={{ label: "Enter your password", required: true, password: true }} {template}/>
 <Story name="Character Count" args={{ label: "Enter the entire works of shakespere", counter: true}} {template}/>
+<Story name="Multiline" args={{ label: "Enter the entire works of shakespere", multiline: true}} {template}/>
 
 <Story 
   name="Max Character" 
