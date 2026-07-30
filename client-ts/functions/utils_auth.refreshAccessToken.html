@@ -16,9 +16,24 @@
 <li class="">
 <div class="tsd-signature tsd-anchor-link" id="refreshaccesstoken"><span class="tsd-kind-call-signature">refreshAccessToken</span><span class="tsd-signature-symbol">()</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">&gt;</span><a href="#refreshaccesstoken" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
 <div class="tsd-description">
-<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">&gt;</span></h4><aside class="tsd-sources">
+<div class="tsd-comment tsd-typography"><p>Refresh the access token using the stored refresh token.</p>
+<p>Makes an async request to the Tauri backend's <code>refresh_token</code> command.
+On success, updates both the access token and refresh token in the store
+(as per JWT rotation strategy). Returns false on any error without throwing.</p>
+</div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">&gt;</span></h4><p>true if the token was successfully refreshed, false otherwise.</p>
+
+<div class="tsd-comment tsd-typography">
+<div class="tsd-tag-throws">
+<h4 class="tsd-anchor-link" id="throws">Throws<a href="#throws" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h4><p>Does not throw; errors are logged and false is returned.</p>
+</div>
+<div class="tsd-tag-example">
+<h4 class="tsd-anchor-link" id="example">Example<a href="#example" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h4><pre><code class="typescript"><span class="hl-4">const</span><span class="hl-1"> </span><span class="hl-5">success</span><span class="hl-1"> = </span><span class="hl-3">await</span><span class="hl-1"> </span><span class="hl-0">refreshAccessToken</span><span class="hl-1">();</span><br/><span class="hl-3">if</span><span class="hl-1"> (!</span><span class="hl-6">success</span><span class="hl-1">) {</span><br/><span class="hl-1">  </span><span class="hl-7">// Token refresh failed; redirect to login</span><br/><span class="hl-1">  </span><span class="hl-3">await</span><span class="hl-1"> </span><span class="hl-0">clearAuthStore</span><span class="hl-1">();</span><br/><span class="hl-1">  </span><span class="hl-3">goto</span><span class="hl-1">(</span><span class="hl-2">&#39;/login&#39;</span><span class="hl-1">);</span><br/><span class="hl-1">}</span>
+</code><button type="button">Copy</button></pre>
+
+</div></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/Jamster3000/Quorum/blob/9d5b898e9365380358d89fc95074b4c2368a467d/client/src/lib/utils/auth.ts#L23">utils/auth.ts:23</a></li></ul></aside></div></li></ul></section></div>
+<li>Defined in <a href="https://github.com/Jamster3000/Quorum/blob/24c6aa3313df62e9bef8fe2a9070056fc329c3e9/client/src/lib/utils/auth.ts#L89">utils/auth.ts:89</a></li></ul></aside></div></li></ul></section></div>
 <div class="col-sidebar">
 <div class="page-menu">
 <div class="tsd-navigation settings">

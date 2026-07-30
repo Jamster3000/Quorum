@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["get_performance_tier"],"static":["CACHED_TIER"],"struct":["CachedPerformanceTier"]};

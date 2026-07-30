@@ -16,9 +16,22 @@
 <li class="">
 <div class="tsd-signature tsd-anchor-link" id="reinitializeauthstore"><span class="tsd-kind-call-signature">reinitializeAuthStore</span><span class="tsd-signature-symbol">()</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">&gt;</span><a href="#reinitializeauthstore" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
 <div class="tsd-description">
-<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">&gt;</span></h4><aside class="tsd-sources">
+<div class="tsd-comment tsd-typography"><p>Reinitialize the authentication store</p>
+<p>Reinitializes the authentication store by setting the store instance to null
+and then loading the store from the file again.</p>
+<p>Loading the store in on most low-medium to high devices will cause
+an unnoticable delay. This is ideal for when the store needs to be cleared from memory and reloaded again.</p>
+</div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">&gt;</span></h4><p>Promise<void> - Resolves when the store is successfully reinitialized.</p>
+
+<div class="tsd-comment tsd-typography">
+<div class="tsd-tag-example">
+<h4 class="tsd-anchor-link" id="example">Example<a href="#example" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h4><pre><code class="typescript"><span class="hl-3">await</span><span class="hl-1"> </span><span class="hl-0">reinitializeAuthStore</span><span class="hl-1">();</span>
+</code><button type="button">Copy</button></pre>
+
+</div></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/Jamster3000/Quorum/blob/9d5b898e9365380358d89fc95074b4c2368a467d/client/src/lib/stores/authStore.ts#L83">stores/authStore.ts:83</a></li></ul></aside></div></li></ul></section></div>
+<li>Defined in <a href="https://github.com/Jamster3000/Quorum/blob/24c6aa3313df62e9bef8fe2a9070056fc329c3e9/client/src/lib/stores/authStore.ts#L206">stores/authStore.ts:206</a></li></ul></aside></div></li></ul></section></div>
 <div class="col-sidebar">
 <div class="page-menu">
 <div class="tsd-navigation settings">

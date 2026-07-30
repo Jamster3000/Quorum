@@ -1,0 +1,1 @@
+rd_("AoReturns the argument unchanged.0000CbInitializes the SERVER_URL with a hardcoded value.BaCalls <code>U::from(self)</code>.0000BeGets the url of the public SERVER_URLBlUsed to get an understanding of device power")

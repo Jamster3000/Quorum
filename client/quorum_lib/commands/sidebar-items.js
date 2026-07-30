@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":["auth"]};
+window.SIDEBAR_ITEMS = {"mod":["auth","device_performance"]};

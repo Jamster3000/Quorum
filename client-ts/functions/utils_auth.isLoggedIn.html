@@ -16,9 +16,23 @@
 <li class="">
 <div class="tsd-signature tsd-anchor-link" id="isloggedin"><span class="tsd-kind-call-signature">isLoggedIn</span><span class="tsd-signature-symbol">()</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">&gt;</span><a href="#isloggedin" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></div>
 <div class="tsd-description">
-<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">&gt;</span></h4><aside class="tsd-sources">
+<div class="tsd-comment tsd-typography"><p>Check if the user is currently logged in.</p>
+<p>Retrieves the access token from the Tauri Store and returns true if it exists.
+Does not validate token expiry or signature—use <code>isTokenValid()</code> for that.</p>
+</div>
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">&gt;</span></h4><p>true if an access token is stored, false otherwise.</p>
+
+<div class="tsd-comment tsd-typography">
+<div class="tsd-tag-throws">
+<h4 class="tsd-anchor-link" id="throws">Throws<a href="#throws" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h4><p>If the store operation fails (e.g., I/O error).</p>
+</div>
+<div class="tsd-tag-example">
+<h4 class="tsd-anchor-link" id="example">Example<a href="#example" aria-label="Permalink" class="tsd-anchor-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="../assets/icons.svg#icon-anchor"></use></svg></a></h4><pre><code class="typescript"><span class="hl-3">if</span><span class="hl-1"> (</span><span class="hl-3">await</span><span class="hl-1"> </span><span class="hl-0">isLoggedIn</span><span class="hl-1">()) {</span><br/><span class="hl-1">  </span><span class="hl-3">goto</span><span class="hl-1">(</span><span class="hl-2">&#39;/home&#39;</span><span class="hl-1">);</span><br/><span class="hl-1">} </span><span class="hl-3">else</span><span class="hl-1"> {</span><br/><span class="hl-1">  </span><span class="hl-3">goto</span><span class="hl-1">(</span><span class="hl-2">&#39;/login&#39;</span><span class="hl-1">);</span><br/><span class="hl-1">}</span>
+</code><button type="button">Copy</button></pre>
+
+</div></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/Jamster3000/Quorum/blob/9d5b898e9365380358d89fc95074b4c2368a467d/client/src/lib/utils/auth.ts#L7">utils/auth.ts:7</a></li></ul></aside></div></li></ul></section></div>
+<li>Defined in <a href="https://github.com/Jamster3000/Quorum/blob/24c6aa3313df62e9bef8fe2a9070056fc329c3e9/client/src/lib/utils/auth.ts#L37">utils/auth.ts:37</a></li></ul></aside></div></li></ul></section></div>
 <div class="col-sidebar">
 <div class="page-menu">
 <div class="tsd-navigation settings">
