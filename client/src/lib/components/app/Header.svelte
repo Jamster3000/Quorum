@@ -11,7 +11,7 @@
     { label: 'Self-host', href: '/selfhost' },
     { label: 'Documentation', href: 'https://jamster3000.github.io/Quorum/' },
     { label: 'GitHub', href: 'https://github.com/Jamster3000/Quorum' },
-    { label: 'Contact Us', href: '/contact_us' },
+    { label: 'Contact Us', href: '/contact' },
   ];
 
   /**

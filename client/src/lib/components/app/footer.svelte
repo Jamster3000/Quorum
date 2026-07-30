@@ -8,7 +8,7 @@
   const footerLinks = [
     { label: 'Privacy', href:'/privacy' },
     { label: 'Terms', href:'/terms' },
-    { label: 'Contact', href:'/contact' },
+    { label: 'Contact Us', href:'/contact' },
     { label: 'Documentation', href: 'https://jamster3000.github.io/Quorum/' },
     { label: 'GitHub', href:'https://github.com/Jamster3000/Quorum' },
     { label: 'Status Page', href:'/status' },
