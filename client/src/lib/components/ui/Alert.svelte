@@ -38,12 +38,11 @@
     align-items: center;
     gap: 0.75rem;
     padding: 0.75rem 1rem;
-    margin: 0.5rem 0;
+    margin: 0.5rem auto;
     border-radius: 8px;
     font-family: var(--font-primary);
     font-size: var(--font-small);
     width: 100%;
-    max-width: 600px;
     border: 1px solid;
   }
 

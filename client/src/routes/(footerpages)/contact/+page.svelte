@@ -7,6 +7,7 @@
   import Button from '$lib/components/ui/Button.svelte';
   import Alert from '$lib/components/ui/Alert.svelte';
   import { IconHexagonFilled } from '@tabler/icons-svelte-runes';
+  import confetti from "@hiseb/confetti";
 
   let email = '';
   let message = '';
@@ -14,6 +15,19 @@
   let showAlert = false;
   let alertType: 'success' | 'error' = 'error';
   let alertMessage = '';
+
+  function showConfetti() {
+    const root = document.documentElement;
+    const primary = getComputedStyle(root).getPropertyValue('--primary-colour').trim();
+    const secondary = getComputedStyle(root).getPropertyValue('--secondary-colour').trim();
+    const text = getComputedStyle(root).getPropertyValue('--text-colour').trim();
+
+    confetti({
+      count: 200,
+      fade: true,
+      color: [primary, secondary, text],
+    });
+  }
 
   async function handleSubmit() {
     if (!email || !message) {
@@ -24,6 +38,7 @@
     }
 
     loading = true;
+    showConfetti();
     alertMessage = 'Thank you for your message. We will get back to you soon.';
     alertType = 'success';
     showAlert = true;
@@ -84,7 +99,7 @@
     width: 100%;
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
+    gap: 6.5rem;
   }
 
   .contact-header {
