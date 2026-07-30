@@ -28,7 +28,8 @@
   let loading = false;
   let errorMessage = '';
   let showAlert = false;
-  let alertType = 'error';
+    let alertType: 'error' | 'success' | 'info' | 'warning' | undefined = 'error';
+
   let showNoEmailPopup = false;
   let backupCodes: string[] = [];
   let copyButtonText = 'Copy';
