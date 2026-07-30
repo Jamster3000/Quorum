@@ -81,7 +81,9 @@ jobs:
 
       - name: Type check TypeScript
         working-directory: client
-        run: npm run check
+        run: |
+            npx svelte-kit sync
+            npm run check
 
       - name: Run Storybook tests
         working-directory: client
