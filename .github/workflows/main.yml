@@ -3,13 +3,13 @@ on:
   push:
     paths:
       - 'server/**'
-      - 'client/src-tauri/**'
-      - '.github/workflows/rust-backend-ci.yml'
+      - 'client/**'
+      - '.github/workflows/main.yml'
   pull_request:
     paths:
       - 'server/**'
-      - 'client/src-tauri/**'
-      - '.github/workflows/rust-backend-ci.yml'
+      - 'client/**'
+      - '.github/workflows/main.yml'
 permissions:
   contents: write
   pages: write
@@ -57,29 +57,57 @@ jobs:
         working-directory: server
         run: cargo clippy --all-targets --all-features -- -W warnings
 
+      - name: Run server cargo check
+        working-directory: server
+        run: cargo check --all-targets
+
+      # ===== CLIENT RUST CI =====
+      - name: Check client Rust formatting
+        working-directory: client/src-tauri
+        run: cargo fmt --all -- --check
+
+      - name: Run client Rust Clippy
+        working-directory: client/src-tauri
+        run: cargo clippy --all-targets --all-features -- -W warnings
+
+      - name: Run client cargo check
+        working-directory: client/src-tauri
+        run: cargo check --all-targets
+
+      # ===== CLIENT TYPESCRIPT CI =====
+      - name: Install client dependencies
+        working-directory: client
+        run: npm ci
+
+      - name: Type check TypeScript
+        working-directory: client
+        run: npm run check
+
+      - name: Run Storybook tests
+        working-directory: client
+        run: npm run test:storybook
+
+      # ===== BUILDS =====
+      - name: Build server
+        working-directory: server
+        run: cargo build --release
+
+      - name: Build client (Tauri)
+        working-directory: client
+        run: npm run tauri build
+
+      # ===== DOCUMENTATION =====
       - name: Generate server docs
         working-directory: server
         run: cargo doc --no-deps --document-private-items --workspace
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
-      # ===== CLIENT CI =====
-      - name: Check client formatting
-        working-directory: client/src-tauri
-        run: cargo fmt --all -- --check
-
-      - name: Run client Clippy
-        working-directory: client/src-tauri
-        run: cargo clippy --all-targets --all-features -- -W warnings
-
       - name: Generate TypeScript docs
         working-directory: client
-        run: |
-          npm ci
-          npx svelte-kit sync
-          npx typedoc --out ../docs-client --entryPointStrategy expand --tsconfig tsconfig.typedoc.json --skipErrorChecking src/lib
+        run: npx typedoc --out ../docs-client --entryPointStrategy expand --tsconfig tsconfig.typedoc.json --skipErrorChecking src/lib
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
-      - name: Generate client docs
+      - name: Generate client Rust docs
         working-directory: client/src-tauri
         run: cargo doc --no-deps --document-private-items --lib
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
