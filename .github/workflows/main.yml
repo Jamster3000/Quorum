@@ -85,6 +85,10 @@ jobs:
             npx svelte-kit sync
             npm run check
 
+      - name: Install Playwright browsers
+        working-directory: client
+        run: npx playwright install --with-deps
+
       - name: Run Storybook tests
         working-directory: client
         run: npm run test:storybook
