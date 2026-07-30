@@ -148,6 +148,37 @@
   backupCodes = [];
   showNoEmailPopup = false;
   }
+
+  function downloadBackupCodes() {
+    if (backupCodes.length === 0) {
+      return;
+    }
+
+    const csvRows = [
+      'backup_code',
+      ...backupCodes.map((code) => `"${code.replace(/"/g, '""')}"`)
+    ];
+
+    const csvContent = csvRows.join('\n');
+
+    const csvFile = new Blob(
+      [csvContent],
+      { type: 'text/csv;charset=utf-8' }
+    );
+
+    const downloadUrl = URL.createObjectURL(csvFile);
+
+    const downloadLink = document.createElement('a');
+    downloadLink.href = downloadUrl;
+    downloadLink.download = 'quorum-backup-codes.csv';
+
+    document.body.appendChild(downloadLink);
+    downloadLink.click();
+    downloadLink.remove();
+
+    URL.revokeObjectURL(downloadUrl);
+  }
+
 </script>
 
 <main class="page">
@@ -187,13 +218,23 @@
   </div>
 </div>
 
-    <button
-      class="backup-popup-button"
-      type="button"
-      on:click={closeBackupCodesPopup}
-    >
-      I have saved these codes
-    </button>
+    <div class="backup-popup-actions">
+      <button
+        class="download-backup-codes-button"
+        type="button"
+        on:click={downloadBackupCodes}
+      >
+        Download backup codes
+      </button>
+
+      <button
+        class="backup-popup-button"
+        type="button"
+        on:click={closeBackupCodesPopup}
+      >
+        I have saved these codes
+      </button>
+    </div>
   </div>
 </Dialog>
 
@@ -344,6 +385,37 @@
     margin-bottom: 1.25rem;
   }
 
+  .backup-popup-actions {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 1.25rem;
+  }
+
+  .download-backup-codes-button {
+    padding: 0.75rem 1.25rem;
+    border: 1px solid var(--primary-colour);
+    border-radius: 8px;
+    background: transparent;
+    color: var(--text-colour);
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .download-backup-codes-button:hover {
+    background: color-mix(
+      in srgb,
+      var(--primary-colour) 15%,
+      transparent
+    );
+  }
+
+  .download-backup-codes-button:active {
+    transform: translateY(1px);
+  }
+
   .copy-backup-codes-button {
     padding: 0.5rem 0.9rem;
     border: 1px solid color-mix(
@@ -395,14 +467,6 @@
   .backup-popup p {
     margin: 0;
     line-height: 1.5;
-  }
-
-  .backup-codes {
-    display: inline-grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    column-gap: 5.25rem;
-    row-gap:3rem;
-    margin: 2rem;
   }
 
   .backup-codes {
