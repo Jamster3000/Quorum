@@ -8,6 +8,7 @@
   import Alert from '$lib/components/ui/Alert.svelte';
   import { IconHexagonFilled } from '@tabler/icons-svelte-runes';
   import confetti from "@hiseb/confetti";
+  import { invoke } from '@tauri-apps/api/core';
 
   let email = '';
   let message = '';
@@ -16,16 +17,41 @@
   let alertType: 'success' | 'error' = 'error';
   let alertMessage = '';
 
-  function showConfetti() {
+  async function getDevicePerformanceTier(): Promise<'low' | 'medium' | 'high'> {
+    try {
+      const tier = await invoke('get_performance_tier') as string;
+      return tier as 'low' | 'medium' | 'high';
+    } catch {
+      return 'low';
+    }
+  }
+
+  async function showConfetti() {
     const root = document.documentElement;
     const primary = getComputedStyle(root).getPropertyValue('--primary-colour').trim();
     const secondary = getComputedStyle(root).getPropertyValue('--secondary-colour').trim();
     const text = getComputedStyle(root).getPropertyValue('--text-colour').trim();
 
-    confetti({
-      count: 200,
-      fade: true,
-      color: [primary, secondary, text],
+    await getDevicePerformanceTier().then(tier => {
+      if (tier === 'low') {
+        confetti({
+          count: 50,
+          fade: true,
+          color: [primary, secondary, text],
+        });
+      } else if (tier === 'medium') {
+        confetti({
+          count: 150,
+          fade: true,
+          color: [primary, secondary, text],
+        });
+      } else {
+        confetti({
+          count: 250,
+          fade: true,
+          color: [primary, secondary, text],
+        });
+      }
     });
   }
 
@@ -38,7 +64,7 @@
     }
 
     loading = true;
-    showConfetti();
+    await showConfetti();
     alertMessage = 'Thank you for your message. We will get back to you soon.';
     alertType = 'success';
     showAlert = true;

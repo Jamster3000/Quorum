@@ -20,6 +20,7 @@ pub fn run() {
             commands::auth::signup,
             commands::auth::login,
             commands::auth::refresh_token,
+            commands::device_performance::get_performance_tier,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
