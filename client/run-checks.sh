@@ -1,27 +1,38 @@
 #!/bin/bash
 set -e
 
+total=5
+current=0
+
 echo "Running checks..."
 
 # FMT
+((current++))
 echo ""
-echo "[1/4] Formatting Rust code (src-tauri FMT)"
+echo "[$current/$total] Formatting Rust code (src-tauri FMT)"
 cd src-tauri
 cargo fmt --all
 cd ..
 
 # Clippy
-echo "[2/4] Linting Rust code (src-tauri Clippy)"
-cd src-tauri
+((current++))
+echo "[$current/$total] Linting Rust code (src-tauri Clippy)"
 cargo clippy -- -W warnings
-cd ..
+
+# Cargo check
+((current++))
+echo "[$current/$total] Cargo check..."
+cargo check
 
 # TypeScript checking
-echo "[3/4] Type checking..."
+((current++))
+cd client
+echo "[$current/$total] Type checking..."
 npm run check
 
 # Storybook tests
-echo "[4/4] Storybook tests..."
+((current++))
+echo "[$current/$total] Storybook tests..."
 npm run test:storybook
 
 echo ""
