@@ -8,7 +8,6 @@ const config = {
         }),
         alias: {
             $lib: "src/lib",
-            $app: ".svelte-kit/runtime/app",
         },
     },
 };

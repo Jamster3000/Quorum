@@ -9,7 +9,8 @@
     "skipLibCheck": true,
     "sourceMap": false,
     "strict": true,
-    "moduleResolution": "bundler"
+    "moduleResolution": "bundler",
+    "types": [ "vite/client", "@sveltejs/kit" ]
   },
   "include": [ "src/**/*.ts", "src/**/*.svelte" ]
 }
