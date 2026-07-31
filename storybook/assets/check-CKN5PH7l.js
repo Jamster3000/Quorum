@@ -1,0 +1,1 @@
+import{d as n,r as s}from"./iframe-CMUQcgBj.js";import{I as c}from"./Icon-mzNJGl0N.js";var l=new Set(["$$slots","$$events","$$legacy","children"]);function d(r,e){let t=s(e,l);const o=[["path",{d:"M5 12l5 5l10 -10"}]];c(r,n({type:"outline",name:"check"},()=>t,{get iconNode(){return o},get children(){return e.children}}))}export{d as C};
