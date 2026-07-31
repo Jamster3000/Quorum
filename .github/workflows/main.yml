@@ -118,6 +118,10 @@ jobs:
         run: cargo doc --no-deps --document-private-items --lib
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
+      - name: Build Storybook
+        working-directory: client
+        run: npm run build-storybook
+
       # ===== DOCUMENTATION DEPLOYMENT =====
       - name: Prepare docs directory
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -125,9 +129,11 @@ jobs:
           mkdir -p docs-out/server
           mkdir -p docs-out/client
           mkdir -p docs-out/client-ts
+          mkdir -p docs-out/storybook
           cp -r server/target/doc/* docs-out/server/ || true
           cp -r client/src-tauri/target/doc/* docs-out/client/ || true
           cp -r docs-client/* docs-out/client-ts/ || true
+          cp -r client/storybook-static/* docs-out/storybook/ || true
 
       - name: Create root index page
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -165,11 +171,11 @@ jobs:
                 color: var(--text-colour);
                 font-family: var(--font-primary);
                 line-height: 1.6;
-                overflow-y: hidden;
+                height: 100%;
+                overflow: hidden;
               }
           
               body {
-                min-height: 100vh;
                 display: flex;
                 flex-direction: column;
               }
@@ -179,14 +185,11 @@ jobs:
                 display: flex;
                 align-items: center;
                 justify-content: space-between;
-                position: fixed;
-                top: 0;
-                left: 0;
-                right: 0;
                 background: var(--primary-colour);
                 color: var(--text-colour);
                 z-index: 100000;
                 padding: 0 8px;
+                flex-shrink: 0;
               }
           
               .titlebar-title {
@@ -199,50 +202,45 @@ jobs:
           
               main {
                 flex: 1;
-                padding: 3rem 2rem 3rem;
-                max-width: 1200px;
-                margin: 0 auto;
-                width: 100%;
+                padding: 1.5rem;
+                overflow-y: auto;
+                overflow-x: hidden;
               }
           
               header {
                 text-align: center;
-                margin-bottom: 3rem;
-                animation: fadeInUp 0.6s ease forwards;
+                margin-bottom: 1.5rem;
               }
           
               h1 {
-                font-size: 2.5rem;
+                font-size: 1.75rem;
                 font-weight: 700;
-                margin-bottom: 0.75rem;
+                margin-bottom: 0.5rem;
                 color: var(--text-colour);
               }
           
               header p {
-                font-size: 1.1rem;
+                font-size: 0.95rem;
                 color: var(--text-muted-colour);
-                max-width: 600px;
-                margin: 0 auto;
               }
           
               .section {
-                margin-bottom: 4rem;
+                margin-bottom: 2rem;
               }
           
               .section-title {
-                font-size: 0.875rem;
+                font-size: 0.75rem;
                 font-weight: 700;
                 text-transform: uppercase;
                 letter-spacing: 0.5px;
                 color: var(--secondary-colour);
-                margin-bottom: 1.5rem;
-                animation: fadeInUp 0.5s ease forwards;
+                margin-bottom: 1rem;
               }
           
               .grid {
                 display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-                gap: 1.5rem;
+                grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+                gap: 1rem;
                 width: 100%;
               }
           
@@ -250,21 +248,14 @@ jobs:
                 background: var(--card-colour);
                 border: 1px solid var(--border-colour);
                 border-radius: 12px;
-                padding: 1.75rem;
+                padding: 1.25rem;
                 text-decoration: none;
                 color: var(--text-colour);
                 transition: border-color 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
                 display: flex;
                 flex-direction: column;
-                gap: 0.75rem;
-                animation: fadeInUp 0.5s ease forwards;
+                gap: 0.5rem;
               }
-          
-              .grid .card:nth-child(1) { animation-delay: 0.05s; }
-              .grid .card:nth-child(2) { animation-delay: 0.15s; }
-              .grid .card:nth-child(3) { animation-delay: 0.25s; }
-              .grid .card:nth-child(4) { animation-delay: 0.35s; }
-              .grid .card:nth-child(5) { animation-delay: 0.45s; }
           
               .card:hover {
                 border-color: var(--secondary-colour);
@@ -273,15 +264,15 @@ jobs:
               }
           
               .card-title {
-                font-size: 1.1rem;
+                font-size: 1rem;
                 font-weight: 700;
                 color: var(--secondary-colour);
               }
           
               .card p {
                 color: var(--text-muted-colour);
-                font-size: 0.95rem;
-                line-height: 1.6;
+                font-size: 0.85rem;
+                line-height: 1.5;
                 flex: 1;
               }
           
@@ -289,7 +280,7 @@ jobs:
                 display: inline-flex;
                 align-items: center;
                 gap: 6px;
-                font-size: 0.9rem;
+                font-size: 0.8rem;
                 color: var(--secondary-colour);
                 font-weight: 600;
                 transition: transform 0.2s ease;
@@ -302,11 +293,11 @@ jobs:
           
               footer {
                 text-align: center;
-                padding:0.5rem;
+                padding: 0.75rem;
                 color: var(--text-muted-colour);
-                font-size: 0.875rem;
+                font-size: 0.75rem;
                 border-top: 1px solid color-mix(in srgb, var(--primary-colour) 30%, transparent);
-                margin-top: auto;
+                flex-shrink: 0;
               }
           
               footer a {
@@ -320,28 +311,17 @@ jobs:
                 text-decoration: underline;
               }
           
-              @keyframes fadeInUp {
-                from {
-                  opacity: 0;
-                  transform: translateY(12px);
-                }
-                to {
-                  opacity: 1;
-                  transform: translateY(0);
-                }
-              }
-          
               @media (max-width: 768px) {
-                main {
-                  padding: 2rem 1rem;
-                }
-          
                 h1 {
-                  font-size: 2rem;
+                  font-size: 1.5rem;
                 }
           
                 .grid {
                   grid-template-columns: 1fr;
+                }
+          
+                main {
+                  padding: 1rem;
                 }
               }
             </style>
@@ -354,7 +334,7 @@ jobs:
             <main>
               <header>
                 <h1>Quorum Documentation</h1>
-                <p>Complete documentation for Quorum server and client frontend</p>
+                <p>Complete documentation for Quorum server and client</p>
               </header>
           
               <section class="section">
@@ -362,17 +342,17 @@ jobs:
                 <div class="grid">
                   <a class="card" href="server/quorum_core/index.html">
                     <span class="card-title">Quorum Core</span>
-                    <p>Shared library containing code used by both public and private servers, including database abstraction and configuration management.</p>
+                    <p>Shared library containing code used by both public and private servers.</p>
                     <span class="card-link">View docs →</span>
                   </a>
                   <a class="card" href="server/quorum_public/index.html">
                     <span class="card-title">Quorum Public</span>
-                    <p>Public server implementation with full feature set including user accounts, authentication, direct messages, and federation support.</p>
+                    <p>Public server implementation with user accounts, authentication, and federation.</p>
                     <span class="card-link">View docs →</span>
                   </a>
                   <a class="card" href="server/quorum_private/index.html">
                     <span class="card-title">Quorum Private</span>
-                    <p>Lightweight private server for self-hosted deployments, handling groups, channels, and messages without authentication overhead.</p>
+                    <p>Lightweight private server for self-hosted deployments.</p>
                     <span class="card-link">View docs →</span>
                   </a>
                 </div>
@@ -382,13 +362,18 @@ jobs:
                 <div class="section-title">Desktop Client</div>
                 <div class="grid">
                   <a class="card" href="client/quorum_lib/index.html">
-                    <span class="card-title">Quorum Client Backend</span>
-                    <p>Tauri Rust backend documentation. Complete reference for all server-side Rust code powering the desktop client.</p>
+                    <span class="card-title">Client Backend</span>
+                    <p>Tauri Rust backend documentation for the desktop client.</p>
                     <span class="card-link">View docs →</span>
                   </a>
                   <a class="card" href="client-ts/index.html">
-                    <span class="card-title">Quorum Client Frontend</span>
-                    <p>TypeScript frontend documentation. Reference for SvelteKit components, store management, and UI implementation.</p>
+                    <span class="card-title">Client Frontend</span>
+                    <p>TypeScript frontend documentation for SvelteKit components.</p>
+                    <span class="card-link">View docs →</span>
+                  </a>
+                  <a class="card" href="storybook/index.html">
+                    <span class="card-title">Storybook</span>
+                    <p>Interactive component library and UI documentation.</p>
                     <span class="card-link">View docs →</span>
                   </a>
                 </div>
