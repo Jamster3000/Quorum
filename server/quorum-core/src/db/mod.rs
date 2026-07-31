@@ -2,7 +2,7 @@ use crate::utility::config::Config;
 use std::error::Error;
 use std::path::Path;
 use surrealdb::Surreal;
-use surrealdb::engine::local::RocksDb;
+use surrealdb::engine::local::SurrealKv;
 
 pub mod queries;
 
@@ -19,7 +19,7 @@ pub async fn init() -> Result<DB, Box<dyn Error>> {
             .map(|m| !m.permissions().readonly())
             .unwrap_or(false);
 
-    let db = Surreal::new::<RocksDb>(path).await.map_err(|e| {
+    let db = Surreal::new::<SurrealKv>(path).await.map_err(|e| {
         let mut hint = String::new();
         if !parent_exists {
             hint.push_str("Parent directory does not exist. ");
