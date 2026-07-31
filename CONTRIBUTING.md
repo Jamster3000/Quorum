@@ -47,28 +47,40 @@ Branch naming is flexible, but something descriptive is appreciated — e.g. `fi
 
 ## Code Style
 
-### Rust
+Several commands are used to ensure server and client code is clean, formatted and contains no linting errors.
+These commands are automated in the CI pipeline triggered on each push. But we advice you run the commands and fix the commands before pushing.
 
-Formatting is enforced with `rustfmt`. Before making a PR, run:
+### Running checks for client
+There are a lot more commands used for client to ensure code is clean and consistent.
+Rather than remembering each command, please run:
+```bash
+npm run checks
+```
+> Please note this command runs a file `run-checks.bat` by default, which will ONLY work on windows.
+> 
+> To run these checks on Linux or MacOS, please execute the accompanying file `run-checks.sh` instead.
 
+The following commands are ran as part of the run-checks script:
+- `cargo fmt --all`
+- `cargo clippy -- -W warnings`
+- `cargo check`
+- `npm run check`
+- `npm run test:storybook`
+
+The script will terminate if any of the above commands fail (that it runs sequentially).
+If any errors or warnings crop up from any these commands, please fix them before pushing your changes or submitting a pull request.
+
+> If you want or need a visual UI for storybook run `npm run storybook` and it will open a browser window with the storybook UI.
+
+### Running checks for client
+For server, there are less commands to run.
+Please run the following commands to ensure code is clean and consistent:
 ```bash
 cargo fmt --all
-```
-
-Linting with Clippy is also expected. Before making a PR, run:
-
-```bash
 cargo clippy -- -W warnings
 ```
-Please ensure that you fix any warnings clippy produces in this command **before** making submitting your PR.
 
-### TypeScript
-
-Formatting is handled by SvelteKit and Vite. Before committing, run:
-
-```bash
-npm run check
-```
+--- 
 
 ### SurrealQL (`initial.surql`)
 
