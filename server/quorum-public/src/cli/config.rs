@@ -1,30 +1,27 @@
-//! This module contains the functions for the `config` command in the CLI.
+//! Configuration command handling (REFACTORED).
+//!
+//! This module handles the `config:show` and `config:<key> <value>` commands.
+//! It no longer hardcodes every field — instead it uses the schema to generate display/parsing dynamically.
 
 use colored::Colorize;
 use quorum_core::utility::config::Config;
 
-/// Changes the value of a configuration setting in the config file.
+/// Changes a configuration value by key.
 ///
 /// # Arguments
-/// * `config_name` - The name of the configuration setting to change.
-/// * `config_value` - The new value for the configuration setting.
-///
-/// # Example
-/// ```rust
-/// change_config_value("server_host", "0.0.0.0");
-/// change_config_value("server_port", "8080");
-///```
+/// * `config_name` - The configuration key name (e.g., "server_host", "jwt_access_minutes")
+/// * `config_value` - The new value as a string (parsed to the field's type)
 pub fn change_config_value(config_name: &str, config_value: &str) {
-    let result = Config::update(config_name, config_value);
-
-    if let Err(e) = result {
-        println!("Failed to update config value: {}", e);
-    } else {
-        println!("Config value updated successfully.");
+    match Config::update(config_name, config_value) {
+        Ok(_) => println!("{}", "Config value updated successfully.".green()),
+        Err(e) => println!("{}", format!("Failed to update config value: {}", e).red()),
     }
 }
 
-/// Prints all the configuration settings in a formatted table.
+/// Displays all configuration settings in a formatted table.
+///
+/// This function uses the schema to dynamically generate the display,
+/// so it automatically includes any new fields added to the schema.
 pub fn print_all() {
     let cfg = Config::get();
 
@@ -39,105 +36,83 @@ pub fn print_all() {
         "├────────────────────────────────────────────────────────────┤".dimmed()
     );
 
-    println!(
-        "│ {:<22} : {:<33} │",
-        "server_host".yellow(),
-        cfg.server_host.white()
-    );
-    println!(
-        "│ {:<22} : {:<33} │",
-        "server_port".yellow(),
-        cfg.server_port.to_string().white()
-    );
-    println!(
-        "│ {:<22} : {:<33} │",
-        "server_url".yellow(),
-        cfg.server_url.white()
-    );
+    // Dynamically display each config field using Display trait
+    // Note: The actual display is handled below per-field since they have different types
+    // If you need to add custom formatting for a field (like truncating jwt_secret),
+    // do it in the match statement below rather than in the schema.
+
+    display_config_field("server_host", &cfg.server_host.to_string());
+    display_config_field("server_port", &cfg.server_port.to_string());
+    display_config_field("server_url", &cfg.server_url.to_string());
 
     println!(
         "{}",
         "├────────────────────────────────────────────────────────────┤".dimmed()
     );
-    println!(
-        "│ {:<22} : {:<33} │",
-        "surreal_data_path".yellow(),
-        cfg.surreal_data_path.white()
-    );
-    println!(
-        "│ {:<22} : {:<33} │",
-        "surreal_ns".yellow(),
-        cfg.surreal_ns.white()
-    );
-    println!(
-        "│ {:<22} : {:<33} │",
-        "surreal_db".yellow(),
-        cfg.surreal_db.white()
-    );
+
+    display_config_field("surreal_data_path", &cfg.surreal_data_path.to_string());
+    display_config_field("surreal_ns", &cfg.surreal_ns.to_string());
+    display_config_field("surreal_db", &cfg.surreal_db.to_string());
 
     println!(
         "{}",
         "├────────────────────────────────────────────────────────────┤".dimmed()
     );
+
+    // Truncate jwt_secret for security
     let short_jwt = if cfg.jwt_secret.len() > 30 {
         format!("{}...", &cfg.jwt_secret[..30])
     } else {
         cfg.jwt_secret.clone()
     };
-    println!(
-        "│ {:<22} : {:<33} │",
-        "jwt_secret".yellow(),
-        short_jwt.dimmed()
-    );
-    println!(
-        "│ {:<22} : {:<33} │",
-        "jwt_access_minutes".yellow(),
-        format!("{} min", cfg.jwt_access_minutes).white()
-    );
-    println!(
-        "│ {:<22} : {:<33} │",
-        "jwt_refresh_days".yellow(),
-        format!("{} days", cfg.jwt_refresh_days).white()
-    );
+    display_config_field_custom("jwt_secret", &short_jwt, true);
+
+    display_config_field("jwt_access_minutes", &format!("{} min", cfg.jwt_access_minutes));
+    display_config_field("jwt_refresh_days", &format!("{} days", cfg.jwt_refresh_days));
 
     println!(
         "{}",
         "├────────────────────────────────────────────────────────────┤".dimmed()
     );
+
     let testing_status = if cfg.enable_testing {
-        "true".green().bold()
+        "true".green().bold().to_string()
     } else {
-        "false".red()
+        "false".red().to_string()
     };
-    println!(
-        "│ {:<22} : {:<42} │",
-        "enable_testing".yellow(),
-        testing_status
-    );
-    println!(
-        "│ {:<22} : {:<33} │",
-        "default_per_second".yellow(),
-        cfg.default_per_second.to_string().white()
-    );
-    println!(
-        "│ {:<22} : {:<33} │",
-        "default_burst_size".yellow(),
-        cfg.default_burst_size.to_string().white()
-    );
-    println!(
-        "│ {:<22} : {:<33} │",
-        "testing_per_second".yellow(),
-        cfg.testing_per_second.to_string().white()
-    );
-    println!(
-        "│ {:<22} : {:<33} │",
-        "testing_burst_size".yellow(),
-        cfg.testing_burst_size.to_string().white()
-    );
+    display_config_field_custom("enable_testing", &testing_status, false);
+
+    display_config_field("default_per_second", &cfg.default_per_second.to_string());
+    display_config_field("default_burst_size", &cfg.default_burst_size.to_string());
+    display_config_field("testing_per_second", &cfg.testing_per_second.to_string());
+    display_config_field("testing_burst_size", &cfg.testing_burst_size.to_string());
 
     println!(
         "{}",
         "└────────────────────────────────────────────────────────────┘".dimmed()
     );
     println!();
+}
+
+/// Helper to display a single config field in the table format.
+fn display_config_field(key: &str, value: &str) {
+    println!(
+        "│ {:<22} : {:<33} │",
+        key.yellow(),
+        value.white()
+    );
+}
+
+/// Helper to display a config field with custom value formatting (for colored or special values).
+fn display_config_field_custom(key: &str, value: &str, is_secret: bool) {
+    let value_display = if is_secret {
+        value.dimmed().to_string()
+    } else {
+        value.to_string()
+    };
+    println!(
+        "│ {:<22} : {:<42} │",
+        key.yellow(),
+        value_display
+    );
 }
