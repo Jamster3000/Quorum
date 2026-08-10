@@ -101,68 +101,31 @@ macro_rules! define_config_schema {
     };
 }
 
+#[rustfmt::skip]
 define_config_schema!(
     // Server
-    server_port,
-    u16,
-    3000,
-    "HTTP port the server binds to (e.g. 3000)",
-    server_host,
-    String,
-    "127.0.0.1".to_string(),
-    "IP address the server binds to (e.g. 127.0.0.1 or 0.0.0.0)",
-    server_url,
-    String,
-    "http://127.0.0.1:3000".to_string(),
-    "Full server URL including protocol and port",
+    server_port, u16, 3000, "HTTP port the server binds to (e.g. 3000)",
+    server_host, String, "127.0.0.1".to_string(), "IP address the server binds to (e.g. 127.0.0.1 or 0.0.0.0)",
+    server_url, String, "http://127.0.0.1:3000".to_string(), "Full server URL including protocol and port",
+
     // Database
-    surreal_data_path,
-    String,
-    "./data/db".to_string(),
-    "Path to the directory where SurrealDB stores its on-disk data",
-    surreal_ns,
-    String,
-    "quorum".to_string(),
-    "SurrealDB namespace to use",
-    surreal_db,
-    String,
-    "quorum".to_string(),
-    "SurrealDB database name within the namespace",
+    surreal_data_path, String, "./data/db".to_string(), "Path to the directory where SurrealDB stores its on-disk data",
+    surreal_ns, String, "quorum".to_string(), "SurrealDB namespace to use",
+    surreal_db, String, "quorum".to_string(), "SurrealDB database name within the namespace",
+
     // JWT
-    jwt_secret,
-    String,
-    "default-insecure-secret".to_string(),
-    "Secret key used to sign and verify JWT tokens",
-    jwt_access_minutes,
-    i64,
-    15,
-    "How long an access token remains valid, in minutes",
-    jwt_refresh_days,
-    i64,
-    7,
-    "How long a refresh token remains valid, in days",
+    jwt_secret, String, "default-insecure-secret".to_string(), "Secret key used to sign and verify JWT tokens",
+    jwt_access_minutes, i64, 15, "How long an access token remains valid, in minutes",
+    jwt_refresh_days, i64, 7, "How long a refresh token remains valid, in days",
+
     // testing features
-    enable_testing,
-    bool,
-    false,
-    "Whether to run the test suite on server startup",
+    enable_testing, bool, false, "Whether to run the test suite on server startup",
+
     // Rate Limiting
-    default_per_second,
-    u64,
-    100,
-    "Rate limit: sustained request rate for standard endpoints",
-    default_burst_size,
-    u32,
-    200,
-    "Rate limit: maximum burst size for standard endpoints",
-    testing_per_second,
-    u64,
-    1000,
-    "Rate limit: sustained request rate for test/dev endpoints",
-    testing_burst_size,
-    u32,
-    2000,
-    "Rate limit: maximum burst size for test/dev endpoints"
+    default_per_second, u64, 100, "Rate limit: sustained request rate for standard endpoints",
+    default_burst_size, u32, 200, "Rate limit: maximum burst size for standard endpoints",
+    testing_per_second, u64, 1000, "Rate limit: sustained request rate for test/dev endpoints",
+    testing_burst_size, u32, 2000, "Rate limit: maximum burst size for test/dev endpoints"
 );
 
 pub type SerializableConfig = ConfigFields;
