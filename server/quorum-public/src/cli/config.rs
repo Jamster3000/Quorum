@@ -67,8 +67,14 @@ pub fn print_all() {
     };
     display_config_field_custom("jwt_secret", &short_jwt, true);
 
-    display_config_field("jwt_access_minutes", &format!("{} min", cfg.jwt_access_minutes));
-    display_config_field("jwt_refresh_days", &format!("{} days", cfg.jwt_refresh_days));
+    display_config_field(
+        "jwt_access_minutes",
+        &format!("{} min", cfg.jwt_access_minutes),
+    );
+    display_config_field(
+        "jwt_refresh_days",
+        &format!("{} days", cfg.jwt_refresh_days),
+    );
 
     println!(
         "{}",
@@ -96,11 +102,7 @@ pub fn print_all() {
 
 /// Helper to display a single config field in the table format.
 fn display_config_field(key: &str, value: &str) {
-    println!(
-        "│ {:<22} : {:<33} │",
-        key.yellow(),
-        value.white()
-    );
+    println!("│ {:<22} : {:<33} │", key.yellow(), value.white());
 }
 
 /// Helper to display a config field with custom value formatting (for colored or special values).
@@ -110,9 +112,5 @@ fn display_config_field_custom(key: &str, value: &str, is_secret: bool) {
     } else {
         value.to_string()
     };
-    println!(
-        "│ {:<22} : {:<42} │",
-        key.yellow(),
-        value_display
-    );
+    println!("│ {:<22} : {:<42} │", key.yellow(), value_display);
 }

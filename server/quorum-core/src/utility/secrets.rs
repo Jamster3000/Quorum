@@ -6,8 +6,8 @@
 //! for necessary configurations and generates secure defaults.
 
 use crate::startup;
-use crate::utility::std::{press_enter_to_continue, typewriter_println};
 use crate::utility::config_schema::SerializableConfig;
+use crate::utility::std::{press_enter_to_continue, typewriter_println};
 use aes_gcm::{
     Aes256Gcm, Nonce,
     aead::{Aead, AeadCore, KeyInit},
