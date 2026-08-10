@@ -46,8 +46,8 @@ debug = 0
 incremental = true
 
 [profile.release]
-opt-level = "z"
-lto = "fat"
 codegen-units = 1
+lto = true
+opt-level = 3
+panic = 'abort'
 strip = true
-panic = "abort"
