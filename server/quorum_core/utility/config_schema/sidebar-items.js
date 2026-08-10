@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["CONFIG_SCHEMA"],"fn":["default_config_fields","field_names","parse_config_field"],"struct":["ConfigFieldMeta","ConfigFields"],"type":["SerializableConfig","SerializableConfigFields"]};

@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":["config","secrets","std"]};
+window.SIDEBAR_ITEMS = {"mod":["config","config_schema","secrets","std"]};

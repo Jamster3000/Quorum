@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":["cli","db","models","routes","startup","utility"]};
+window.SIDEBAR_ITEMS = {"macro":[["define_config_schema",1]],"mod":["cli","db","models","routes","startup","utility"]};

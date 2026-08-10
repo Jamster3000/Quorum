@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["change_config_value","print_all"]};
+window.SIDEBAR_ITEMS = {"fn":["change_config_value","display_config_field","display_config_field_custom","print_all"]};

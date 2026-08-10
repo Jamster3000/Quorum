@@ -2,7 +2,7 @@
 <a href=#2 id=2 data-nosnippet>2</a><span class="kw">use </span>std::error::Error;
 <a href=#3 id=3 data-nosnippet>3</a><span class="kw">use </span>std::path::Path;
 <a href=#4 id=4 data-nosnippet>4</a><span class="kw">use </span>surrealdb::Surreal;
-<a href=#5 id=5 data-nosnippet>5</a><span class="kw">use </span>surrealdb::engine::local::RocksDb;
+<a href=#5 id=5 data-nosnippet>5</a><span class="kw">use </span>surrealdb::engine::local::SurrealKv;
 <a href=#6 id=6 data-nosnippet>6</a>
 <a href=#7 id=7 data-nosnippet>7</a><span class="kw">pub mod </span>queries;
 <a href=#8 id=8 data-nosnippet>8</a>
@@ -19,7 +19,7 @@
 <a href=#19 id=19 data-nosnippet>19</a>            .map(|m| !m.permissions().readonly())
 <a href=#20 id=20 data-nosnippet>20</a>            .unwrap_or(<span class="bool-val">false</span>);
 <a href=#21 id=21 data-nosnippet>21</a>
-<a href=#22 id=22 data-nosnippet>22</a>    <span class="kw">let </span>db = Surreal::new::&lt;RocksDb&gt;(path).<span class="kw">await</span>.map_err(|e| {
+<a href=#22 id=22 data-nosnippet>22</a>    <span class="kw">let </span>db = Surreal::new::&lt;SurrealKv&gt;(path).<span class="kw">await</span>.map_err(|e| {
 <a href=#23 id=23 data-nosnippet>23</a>        <span class="kw">let </span><span class="kw-2">mut </span>hint = String::new();
 <a href=#24 id=24 data-nosnippet>24</a>        <span class="kw">if </span>!parent_exists {
 <a href=#25 id=25 data-nosnippet>25</a>            hint.push_str(<span class="string">"Parent directory does not exist. "</span>);
