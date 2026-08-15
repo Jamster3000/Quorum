@@ -1,3 +1,5 @@
+> This project is under development. It was and is primarily a learning project and there are currently no plans for hosting or making this publicly usable.
+
 # Quorum
 Quorum was inspired by Discord, born from community feedback about privacy concerns, security, and performance. This project focuses on three core goals:
 
