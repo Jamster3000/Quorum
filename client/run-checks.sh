@@ -1,25 +1,13 @@
 #!/bin/bash
 set -e
 
-# This script lives in client/
 CLIENT_DIR="$(cd "$(dirname "$0")" && pwd)"
-
-# src-tauri is either inside client/ (usual Tauri layout) or next to it
-if [ -d "$CLIENT_DIR/src-tauri" ]; then
-    TAURI_DIR="$CLIENT_DIR/src-tauri"
-elif [ -d "$CLIENT_DIR/../src-tauri" ]; then
-    TAURI_DIR="$(cd "$CLIENT_DIR/../src-tauri" && pwd)"
-else
-    echo "Could not find src-tauri in $CLIENT_DIR or its parent folder."
-    exit 1
-fi
+TAURI_DIR="$CLIENT_DIR/src-tauri"
 
 total=5
 current=0
 
 echo "Running checks..."
-echo "Tauri dir: $TAURI_DIR"
-echo "Client dir: $CLIENT_DIR"
 
 # FMT
 current=$((current + 1))
