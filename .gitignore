@@ -2,3 +2,4 @@ target
 secrets.enc
 data
 backups
+.svelte-kit
