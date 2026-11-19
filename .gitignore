@@ -3,3 +3,8 @@ secrets.enc
 data
 backups
 .svelte-kit
+.idea
+node_modules
+acl-manifests.json
+desktop-schema.json
+windows-schema.json
