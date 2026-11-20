@@ -33,7 +33,7 @@ pub async fn store_refresh_token(
 ) -> Result<(), Box<dyn Error + Send + Sync>> {
     let token_hash = hash_token(refresh_token);
 
-    let query = "CREATE refresh_token
+    let query = "CREATE refresh_tokens
          SET user_id = $user_id,
              token_hash = $token_hash,
              expires_at = $expires_at,
@@ -70,7 +70,7 @@ pub async fn revoke_refresh_token(
     refresh_token: &str,
 ) -> Result<(), Box<dyn Error + Send + Sync>> {
     let token_hash = hash_token(refresh_token);
-    let query = "UPDATE refresh_token SET is_revoked = true WHERE token_hash = $token_hash";
+    let query = "UPDATE refresh_tokens SET is_revoked = true WHERE token_hash = $token_hash";
 
     db.query(query).bind(("token_hash", token_hash)).await?;
 
@@ -98,7 +98,7 @@ pub async fn delete_all_user_tokens(
     db: &DB,
     user_id: &str,
 ) -> Result<(), Box<dyn Error + Send + Sync>> {
-    let query = "DELETE FROM refresh_token WHERE user_id = $user_id";
+    let query = "DELETE FROM refresh_tokens WHERE user_id = $user_id";
 
     db.query(query)
         .bind(("user_id", format!("users:{}", user_id)))
@@ -133,7 +133,7 @@ pub async fn validate_refresh_token(
 ) -> Result<(), Box<dyn Error + Send + Sync>> {
     let token_hash = hash_token(refresh_token);
 
-    let query = "SELECT VALUE count() > 0 FROM refresh_token
+    let query = "SELECT VALUE count() > 0 FROM refresh_tokens
          WHERE user_id = $user_id
          AND token_hash = $token_hash
          AND is_revoked = false LIMIT 1";
