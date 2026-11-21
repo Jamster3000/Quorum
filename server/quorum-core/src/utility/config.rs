@@ -1,4 +1,3 @@
-// config.rs (REFACTORED)
 //! Centralized configuration management.
 //!
 //! Configuration is loaded once at startup from an AES-256-GCM encrypted file (`secrets.enc`),
@@ -13,6 +12,7 @@
 //! **All configuration fields are defined in `config_schema.rs`** using the `define_config_schema!` macro.
 //! This file now handles only the runtime logic (loading, reloading, parsing) — it never duplicates field definitions.
 
+use crate::utility::config_schema::{ConfigFields, parse_config_field};
 use crate::utility::secrets::{SECRETS_BACKUP_PATH, SECRETS_PATH};
 use crate::utility::secrets::{
     load_encrypted_config, prompt_passphrase, prompt_passphrase_new, run_setup,
@@ -26,21 +26,12 @@ use std::sync::Arc;
 use std::sync::OnceLock;
 use zeroize::Zeroizing;
 
-// Import the generated types and functions from the schema macro
-use crate::utility::config_schema::{ConfigFields, parse_config_field};
-
-/// The global configuration singleton.
 static CONFIG: OnceLock<ArcSwap<ConfigFields>> = OnceLock::new();
 
-// ===================================================================
-// PUBLIC API (Config methods)
-// ===================================================================
-
-/// Server-wide configuration, loaded from the encrypted `secrets.enc` file at startup.
 pub struct Config;
 
 impl Config {
-    /// Loads configuration from `secrets.enc` and initializes the global singleton.
+    /// Loads configuration from `secrets.enc` and initialises the global singleton.
     ///
     /// On first run (no `secrets.enc` exists), walks the admin through the interactive setup
     /// wizard, prompts for a passphrase, encrypts the config, saves it, then loads it.
@@ -143,7 +134,7 @@ impl Config {
     /// Returns an error if:
     /// - The key is unknown
     /// - The value cannot be parsed to the field's type
-    /// - Config is not initialized
+    /// - Config is not initialised
     pub fn update(config_key: &str, config_value: &str) -> Result<(), Box<dyn std::error::Error>> {
         let existing = CONFIG
             .get()
@@ -155,13 +146,13 @@ impl Config {
         // Try to parse the field
         match parse_config_field(&mut new_fields, config_key, config_value) {
             Ok(true) => {
-                // Field was recognized and parsed successfully
+                // Field was recognised and parsed successfully
                 save_encrypted_config(&new_fields, "correct horse battery staple")?;
                 existing.store(Arc::new(new_fields));
                 Ok(())
             }
             Ok(false) => {
-                // Field name not recognized
+                // Field name not recognised
                 Err(format!("Unknown config key: {}", config_key).into())
             }
             Err(e) => {

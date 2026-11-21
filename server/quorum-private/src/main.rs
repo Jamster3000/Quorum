@@ -7,9 +7,9 @@ mod cli;
 mod db;
 mod routes;
 
-use colored::Colorize;
 //use reqwest::Client;
 use crate::db::schema;
+use colored::Colorize;
 use quorum_core::db as core_db;
 use quorum_core::startup;
 use routes::route::create_router;
@@ -40,7 +40,7 @@ async fn main() {
 
     // Load up and connect to the database
     let timer = startup::create_timer();
-    let _db = match core_db::init().await {
+    let _db = match core_db::init::init().await {
         Ok(db) => {
             startup::print_step("Opening database", true, startup::elapsed(timer));
             db

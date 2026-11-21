@@ -10,7 +10,7 @@ pub mod registry;
 pub mod server;
 
 use crate::cli::registry::CommandDef;
-use crate::db::DB;
+use crate::db::init::DB;
 use colored::Colorize;
 use std::io::{self, Write};
 use std::sync::{Arc, Mutex};

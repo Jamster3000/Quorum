@@ -5,7 +5,7 @@ use axum::{
     routing::{get, post},
 };
 use http::header::{HeaderName, HeaderValue};
-use quorum_core::db::DB;
+use quorum_core::db::init::DB;
 use quorum_core::routes::{echo::echo, health::health};
 use tower::ServiceBuilder;
 use tower_http::cors::{Any, CorsLayer};

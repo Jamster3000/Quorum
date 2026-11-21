@@ -3,7 +3,7 @@
 //! This module defines functions to log different types of server events (startup, shutdown, errors) into the database.
 //! It uses a caching mechanism to minimize database queries for event type IDs, ensuring efficient logging.
 
-use crate::db::DB;
+use crate::db::init::DB;
 use std::error::Error;
 use std::sync::OnceLock;
 use surrealdb_types::{RecordId, SurrealValue};

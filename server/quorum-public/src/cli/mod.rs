@@ -10,7 +10,7 @@ pub mod test;
 pub mod user;
 
 use quorum_core::cli::registry::{self, CommandDef};
-use quorum_core::db::DB;
+use quorum_core::db::init::DB;
 use std::time::Instant;
 use tokio::sync::watch;
 

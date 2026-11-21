@@ -1,5 +1,4 @@
-//! Server startup printing initiliation
-
+//! Server startup printing initialisation
 //! Provides public functions to be used for neat and pretty output during server startup.
 //! Including the ASCII banner, step-by-step progress logging, and timing information.
 
@@ -10,7 +9,7 @@ use std::time::{Duration, Instant};
 /// Display the ASCII art banner
 ///
 /// Prints a centered, coloured ASCII art banner.
-/// The banner is used at the very start of initializing the server to give it a unique and identifiable look in the terminal.
+/// The banner is used at the very start of initialising the server to give it a unique and identifiable look in the terminal.
 /// The ASCII art is generated from https://patorjk.com/software/taag/#p=display
 ///
 /// # Example
@@ -41,7 +40,7 @@ pub fn print_banner() {
     }
 }
 
-/// Display the "Initializing..." startup message
+/// Display the "Initialising..." startup message
 ///
 /// Displays the text in bold yellow text waiting 300ms before continuing.
 ///
@@ -54,13 +53,13 @@ pub fn print_initializing() {
     thread::sleep(Duration::from_millis(300));
 }
 
-/// Display a single initialization step with status and timing
+/// Display a single initialisation step with status and timing
 ///
 /// Prints a formatted line showing a step name, success/failure status,
 /// and elapsed tim in milliseconds.
 ///
 /// # Arguments
-/// * `step` - A string describing the initialization step being performed.
+/// * `step` - A string describing the initialisation step being performed.
 /// * `success` - A boolean indicating whether the step succeeded (true) or failed (false).
 /// * `duration_ms` - The time taken to complete the step, in milliseconds.
 ///
@@ -76,12 +75,12 @@ pub fn print_step(step: &str, success: bool, duration: Duration) {
     thread::sleep(Duration::from_millis(200));
 }
 
-/// Display the final initialization step with status and timing
+/// Display the final initialisation step with status and timing
 ///
 /// Similar to `print_step` but uses a different end tree character.
 ///
 /// # Arguments
-/// * `step` - A string describing the final initialization step being performed.
+/// * `step` - A string describing the final initialisation step being performed.
 /// * `success` - A boolean indicating whether the step succeeded (true) or failed (false).
 /// * `duration_ms` - The time taken to complete the step, in milliseconds.
 ///
@@ -125,7 +124,7 @@ pub fn print_ready(port: u16) {
 /// Create a timer for measuring elapsed time
 ///
 /// # Returns
-/// An `Instant` representing the current time, which can be used to measure elapsed time for initialization steps.
+/// An `Instant` representing the current time, which can be used to measure elapsed time for initialisation steps.
 ///
 /// # Example
 /// ```rust

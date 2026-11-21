@@ -8,7 +8,7 @@
 //! `audit logs` specificly for user triggered events. This is used for basically anything the user does which reaches the server.
 //! This can include API endpoints being called, logins, signups, and other triggered events.
 
-use crate::db::DB;
+use crate::db::init::DB;
 use std::error::Error;
 
 pub struct ServerLogEntry {

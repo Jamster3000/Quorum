@@ -21,7 +21,7 @@ use std::error::Error;
 ///     Ok(())
 /// }
 ///```
-pub async fn init(db: &quorum_core::db::DB) -> Result<(), Box<dyn Error>> {
+pub async fn init(db: &quorum_core::db::init::DB) -> Result<(), Box<dyn Error>> {
     let schema = include_str!("../../initial.surql");
 
     db.query(schema).await?.check()?;

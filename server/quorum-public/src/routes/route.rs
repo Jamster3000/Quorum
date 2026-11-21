@@ -4,7 +4,7 @@ use axum::{
     Router,
     routing::{get, post},
 };
-use quorum_core::db::DB;
+use quorum_core::db::init::DB;
 use quorum_core::routes::{echo::echo, health::health};
 use quorum_core::utility::config::Config;
 use std::sync::Arc;

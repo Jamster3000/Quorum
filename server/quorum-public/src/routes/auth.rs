@@ -10,7 +10,7 @@ use crate::models::user::{
     TokenResponse, UpdateUserProfileRequest, UserDataResponse,
 };
 use crate::utility::auth_common::generate_backup_codes;
-use quorum_core::db::DB;
+use quorum_core::db::init::DB;
 use quorum_core::db::queries::audit_logs::log_audit_event;
 use quorum_core::models::server::AuditEvent;
 use quorum_core::utility::config::Config;

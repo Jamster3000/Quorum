@@ -42,7 +42,7 @@ async fn main() {
 
     // Load up and connect to the database
     let timer = startup::create_timer();
-    let _db = match core_db::init().await {
+    let _db = match core_db::init::init().await {
         Ok(db) => {
             startup::print_step("Opening database", true, startup::elapsed(timer));
             db

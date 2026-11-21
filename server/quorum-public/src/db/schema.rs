@@ -1,6 +1,7 @@
 //! Database schema management.
 //! This module provides functions to initialize and manage the database schema.
 
+use quorum_core::db::init::DB;
 use std::error::Error;
 
 /// Initializes the database schema by executing the initial schema script.
@@ -21,7 +22,7 @@ use std::error::Error;
 ///     Ok(())
 /// }
 ///```
-pub async fn init(db: &quorum_core::db::DB) -> Result<(), Box<dyn Error>> {
+pub async fn init(db: &DB) -> Result<(), Box<dyn Error>> {
     let schema = include_str!("../../initial.surql");
 
     db.query(schema).await?.check()?;

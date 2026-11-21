@@ -11,7 +11,7 @@
 //! [`CmdCtx`], so handlers carry no lifetimes.
 
 use super::AdminSession;
-use crate::db::DB;
+use crate::db::init::DB;
 use colored::Colorize;
 use std::future::Future;
 use std::pin::Pin;

@@ -7,7 +7,7 @@ use crate::models::user::UpdateUserProfileRequest;
 use crate::models::user::User;
 use crate::utility::auth_common::check_email_address;
 use axum::http::StatusCode;
-use quorum_core::db::DB;
+use quorum_core::db::init::DB;
 use std::error::Error;
 
 /// Creates a new user account in the database

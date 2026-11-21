@@ -6,7 +6,7 @@ use quorum_core::utility::std::typewriter_println;
 use zeroize::Zeroizing;
 
 use crate::db::schema;
-use quorum_core::db::{self as core_db, DB};
+use quorum_core::db::{self as core_db, init::DB};
 use quorum_core::startup;
 
 /// Re-initializes the database schema.

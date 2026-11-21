@@ -1,7 +1,7 @@
 //! Functions for managing refresh tokens in the database.
 //! This includes storing, validating, revoking, and deleting refresh tokens.
 
-use quorum_core::db::DB;
+use quorum_core::db::init::DB;
 use sha2::{Digest, Sha256};
 use std::error::Error;
 

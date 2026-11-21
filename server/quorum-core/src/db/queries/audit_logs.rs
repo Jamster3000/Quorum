@@ -5,7 +5,7 @@
 //!
 //! `log_audit_event` is the only required public function here that is importable to other files.
 
-use crate::db::DB;
+use crate::db::init::DB;
 use crate::models::server::AuditEvent;
 use std::collections::HashMap;
 use std::error::Error;
