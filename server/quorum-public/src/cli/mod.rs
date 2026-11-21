@@ -14,6 +14,8 @@ use quorum_core::db::init::DB;
 use std::time::Instant;
 use tokio::sync::watch;
 
+//TODO: need to move stuff from here to a new file
+
 /// Source of truth for commands
 ///
 /// The commands are formatted as follows

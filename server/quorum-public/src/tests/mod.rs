@@ -7,7 +7,7 @@ use futures::future::BoxFuture;
 use quorum_core::startup;
 use std::time::Duration;
 
-// 1. Define Type Aliases to dramatically simplify the code
+//TODO: need to move stuff from here to a new file
 type FunctionalTestFn = fn() -> BoxFuture<'static, Result<TestResult, String>>;
 type RobustnessTestFn = fn() -> BoxFuture<'static, Result<RobustnessTestResult, String>>;
 

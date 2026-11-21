@@ -15,7 +15,6 @@ use quorum_core::db::queries::audit_logs::log_audit_event;
 use quorum_core::models::server::AuditEvent;
 use quorum_core::utility::config::Config;
 
-use chrono;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Deserialize)]
@@ -32,9 +31,45 @@ pub struct SignupResponse {
     pub backup_codes: Option<Vec<String>>,
 }
 
+/// Builds the standard failure response that is usually returned by most auth endpoints
+fn auth_error(
+    status: StatusCode,
+    message: impl Into<String>,
+) -> (StatusCode, Json<AuthTokenResponse>) {
+    (
+        status,
+        Json(AuthTokenResponse {
+            success: false,
+            user: None,
+            tokens: None,
+            message: message.into(),
+        }),
+    )
+}
+
+/// Writes an audit event in the background so the response isn't held up by the write.
+/// Failures are ignored, matching the previous `let _ = log_audit_event(...)` behaviour.
+fn audit(db: &DB, event: AuditEvent) {
+    let db = db.clone();
+    tokio::spawn(async move {
+        let _ = log_audit_event(&db, event).await;
+    });
+}
+
+/// Logs a failure audit event and returns the standard failure response
+fn audited_failure(
+    db: &DB,
+    event: AuditEvent,
+    status: StatusCode,
+    message: impl Into<String>,
+) -> (StatusCode, Json<AuthTokenResponse>) {
+    audit(db, event);
+    auth_error(status, message)
+}
+
 /// Verifies user credentials (username/email and password) against the database
 ///
-// # Arguments
+/// # Arguments
 /// * `db` - A reference to the database connection
 /// * `username_or_email` - The username or email provided by the user
 /// * `password` - The password provided by the user
@@ -80,12 +115,12 @@ fn extract_user_id(user: &User) -> Result<String, String> {
 /// * `Json(payload)` - The signup request payload containing username, email, and password
 ///
 /// # Returns
-/// * `(StatusCode, Json<AuthTokenResponse>)` - The HTTP status code and JSON response containing the authentication token or error message
+/// * `(StatusCode, Json<SignupResponse>)` - The HTTP status code and JSON response containing the authentication token, backup codes if applicable, or an error message
 ///
 /// # Error
 /// * `StatusCode::INTERNAL_SERVER_ERROR` - If there is an error processing the password, creating the user, generating tokens, or storing the refresh token
 /// * `StatusCode::CONFLICT` - If the username already exists
-/// * `StatusCode::BAD_REQUEST` - If there is a user ID mismatch during account deletion
+/// * `StatusCode::BAD_REQUEST` - If the password length is invalid or the email already exists
 ///
 /// # Example
 /// ```rust
@@ -128,50 +163,49 @@ pub async fn signup(
         &payload.username,
         payload.email.as_deref(),
         &payload.password,
-        hash_backup_codes.clone(),
+        hash_backup_codes,
     )
     .await;
 
-    if let Err(e) = signup_result {
-        let message = e.to_string();
-        let formatted = format!("Failed to create user: {}", message);
+    let user = match signup_result {
+        Ok(user) => user,
+        Err(e) => {
+            let message = e.to_string();
+            let formatted = format!("Failed to create user: {}", message);
 
-        let status = if message.contains("Invalid password length")
-            || message.contains("idx_username")
-            || message.contains("idx_email")
-        {
-            StatusCode::BAD_REQUEST
-        } else if message.contains("idx_username") || message.contains("UNIQUE") {
-            StatusCode::CONFLICT
-        } else {
-            StatusCode::INTERNAL_SERVER_ERROR
-        };
+            let status = if message.contains("Invalid password length")
+                || message.contains("idx_username")
+                || message.contains("idx_email")
+            {
+                StatusCode::BAD_REQUEST
+            } else if message.contains("idx_username") || message.contains("UNIQUE") {
+                StatusCode::CONFLICT
+            } else {
+                StatusCode::INTERNAL_SERVER_ERROR
+            };
 
-        let _ = log_audit_event(
-            &db,
-            AuditEvent {
-                log_type: "signup_failed".to_string(),
-                action: Some(message.clone()),
-                ..Default::default()
-            },
-        )
-        .await;
-
-        return (
-            status,
-            Json(SignupResponse {
-                auth: AuthTokenResponse {
-                    success: false,
-                    user: None,
-                    tokens: None,
-                    message: formatted,
+            audit(
+                &db,
+                AuditEvent {
+                    log_type: "signup_failed".to_string(),
+                    action: Some(message),
+                    ..Default::default()
                 },
-                backup_codes: None,
-            }),
-        );
-    }
+            );
 
-    let user = signup_result.unwrap();
+            let (status, Json(auth)) = auth_error(status, formatted);
+
+            return (
+                status,
+                Json(SignupResponse {
+                    auth,
+                    backup_codes: None,
+                }),
+            );
+        }
+    };
+
+    let config = Config::get();
 
     let user_id = match extract_user_id(&user) {
         Ok(id) => id,
@@ -228,7 +262,6 @@ pub async fn signup(
         }
     };
 
-    let config = quorum_core::utility::config::Config::get();
     let expires_at = chrono::Utc::now().timestamp() + (config.jwt_refresh_days * 86400);
 
     if auth::store_refresh_token(&db, &user_id, &refresh_token, expires_at)
@@ -249,17 +282,16 @@ pub async fn signup(
         );
     }
 
-    let _ = log_audit_event(
+    audit(
         &db,
         AuditEvent {
             log_type: "signup_success".to_string(),
             target_type_table: Some("users".to_string()),
             target_type_table_id: Some(user_id.clone()),
-            user_id: Some(user_id.clone()),
+            user_id: Some(user_id),
             ..Default::default()
         },
-    )
-    .await;
+    );
 
     (
         StatusCode::CREATED,
@@ -270,7 +302,7 @@ pub async fn signup(
                 tokens: Some(TokenResponse {
                     access_token,
                     refresh_token,
-                    expires_in: quorum_core::utility::config::Config::get().jwt_access_minutes * 60,
+                    expires_in: config.jwt_access_minutes * 60,
                 }),
                 message: "User created successfully".to_string(),
             },
@@ -306,55 +338,33 @@ pub async fn login(
     let user =
         match verify_user_credentials(&db, &payload.username_or_email, &payload.password).await {
             Ok(user) => user,
-            Err((status, message)) => {
-                return (
-                    status,
-                    Json(AuthTokenResponse {
-                        success: false,
-                        user: None,
-                        tokens: None,
-                        message,
-                    }),
-                );
-            }
+            Err((status, message)) => return auth_error(status, message),
         };
 
     let user_id = match extract_user_id(&user) {
         Ok(id) => id,
         Err(e) => {
-            let _ = log_audit_event(
+            return audited_failure(
                 &db,
                 AuditEvent {
                     log_type: "login_failed".to_string(),
                     action: Some(e.clone()),
                     ..Default::default()
                 },
-            )
-            .await;
-
-            return (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(AuthTokenResponse {
-                    success: false,
-                    user: None,
-                    tokens: None,
-                    message: e,
-                }),
+                e,
             );
         }
     };
 
+    let config = Config::get();
+
     let access_token = match crate::utility::jwt::generate_access_token(&user_id, &user.username) {
         Ok(token) => token,
         Err(_) => {
-            return (
+            return auth_error(
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(AuthTokenResponse {
-                    success: false,
-                    user: None,
-                    tokens: None,
-                    message: "Failed to generate access token".to_string(),
-                }),
+                "Failed to generate access token",
             );
         }
     };
@@ -363,45 +373,34 @@ pub async fn login(
     {
         Ok(token) => token,
         Err(_) => {
-            return (
+            return auth_error(
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(AuthTokenResponse {
-                    success: false,
-                    user: None,
-                    tokens: None,
-                    message: "Failed to generate refresh token".to_string(),
-                }),
+                "Failed to generate refresh token",
             );
         }
     };
 
-    let expires_at = chrono::Utc::now().timestamp() + (Config::get().jwt_refresh_days * 86400);
+    let expires_at = chrono::Utc::now().timestamp() + (config.jwt_refresh_days * 86400);
     if auth::store_refresh_token(&db, &user_id, &refresh_token, expires_at)
         .await
         .is_err()
     {
-        return (
+        return auth_error(
             StatusCode::INTERNAL_SERVER_ERROR,
-            Json(AuthTokenResponse {
-                success: false,
-                user: None,
-                tokens: None,
-                message: "Failed to store refresh token".to_string(),
-            }),
+            "Failed to store refresh token",
         );
     }
 
-    let _ = log_audit_event(
+    audit(
         &db,
         AuditEvent {
             log_type: "login_success".to_string(),
             target_type_table: Some("users".to_string()),
             target_type_table_id: Some(user_id.clone()),
-            user_id: Some(user_id.clone()),
+            user_id: Some(user_id),
             ..Default::default()
         },
-    )
-    .await;
+    );
 
     (
         StatusCode::OK,
@@ -411,7 +410,7 @@ pub async fn login(
             tokens: Some(TokenResponse {
                 access_token,
                 refresh_token,
-                expires_in: Config::get().jwt_access_minutes * 60,
+                expires_in: config.jwt_access_minutes * 60,
             }),
             message: "Login successful".to_string(),
         }),
@@ -445,7 +444,7 @@ pub async fn delete_account(
         {
             Ok(user) => user,
             Err((status, message)) => {
-                let _ = log_audit_event(
+                return audited_failure(
                     &db,
                     AuditEvent {
                         log_type: "delete_account_failed".to_string(),
@@ -454,17 +453,8 @@ pub async fn delete_account(
                         target_type_table_id: Some(payload.user_id.clone()),
                         ..Default::default()
                     },
-                )
-                .await;
-
-                return (
                     status,
-                    Json(AuthTokenResponse {
-                        success: false,
-                        user: None,
-                        tokens: None,
-                        message,
-                    }),
+                    message,
                 );
             }
         };
@@ -473,25 +463,19 @@ pub async fn delete_account(
         .await
         .is_err()
     {
-        return (
+        return auth_error(
             StatusCode::INTERNAL_SERVER_ERROR,
-            Json(AuthTokenResponse {
-                success: false,
-                user: None,
-                tokens: None,
-                message: "Failed to delete account".to_string(),
-            }),
+            "Failed to delete account",
         );
     }
 
-    let _ = log_audit_event(
+    audit(
         &db,
         AuditEvent {
             log_type: "delete_account_success".to_string(),
             ..Default::default()
         },
-    )
-    .await;
+    );
 
     (
         StatusCode::OK,
@@ -530,7 +514,7 @@ pub async fn get_user_data(
         match verify_user_credentials(&db, &payload.username_or_email, &payload.password).await {
             Ok(user) => user,
             Err((status, message)) => {
-                let _ = log_audit_event(
+                audit(
                     &db,
                     AuditEvent {
                         log_type: "get_user_data_failed".to_string(),
@@ -540,8 +524,7 @@ pub async fn get_user_data(
                         user_id: Some(payload.user_id),
                         ..Default::default()
                     },
-                )
-                .await;
+                );
 
                 return (
                     status,
@@ -559,10 +542,9 @@ pub async fn get_user_data(
     for field in &payload.fields {
         match field.as_str() {
             "id" => {
-                user_data.insert(
-                    "id".to_string(),
-                    serde_json::Value::String(format!("{:?}", user.id.key)),
-                );
+                // Bare ID, falling back to Debug only for unexpected key types
+                let id = extract_user_id(&user).unwrap_or_else(|_| format!("{:?}", user.id.key));
+                user_data.insert("id".to_string(), serde_json::Value::String(id));
             }
             "username" => {
                 user_data.insert(
@@ -588,7 +570,7 @@ pub async fn get_user_data(
         }
     }
 
-    let _ = log_audit_event(
+    audit(
         &db,
         AuditEvent {
             log_type: "get_user_data_success".to_string(),
@@ -597,8 +579,7 @@ pub async fn get_user_data(
             user_id: Some(payload.user_id),
             ..Default::default()
         },
-    )
-    .await;
+    );
 
     (
         StatusCode::OK,
@@ -614,7 +595,7 @@ pub async fn get_user_data(
 /// This endpoint allows clients to obtain a new access token using a valid refresh token. It verifies the refresh token, checks its validity in the database, and generates a new access token if everything is valid. The refresh token is not rotated in this implementation, but it can be easily modified to do so if desired.
 ///
 /// # Arguments
-/// * `State(_db)` - Shared state containing the database connection (not used but required by Axum)
+/// * `State(db)` - Shared state containing the database connection
 /// * `Json(payload)` - The refresh token request payload containing the refresh token
 ///
 /// # Returns
@@ -627,6 +608,7 @@ pub async fn get_user_data(
 /// # Example
 /// ```rust
 /// let payload = RefreshTokenRequest {
+///     user_id: "user_id".to_string(),
 ///     refresh_token: "valid_refresh_token".to_string(),
 /// };
 /// ```
@@ -638,22 +620,14 @@ pub async fn refresh_token(
     let claims = match crate::utility::jwt::verify_token(&payload.refresh_token) {
         Ok(claims) => {
             if claims.token_type != "refresh" {
-                return (
-                    StatusCode::UNAUTHORIZED,
-                    Json(AuthTokenResponse {
-                        success: false,
-                        user: None,
-                        tokens: None,
-                        message: "Invalid token type".to_string(),
-                    }),
-                );
+                return auth_error(StatusCode::UNAUTHORIZED, "Invalid token type");
             }
             claims
         }
         Err(_) => {
-            let user_id = payload.user_id.clone();
+            let user_id = payload.user_id;
 
-            let _ = log_audit_event(
+            return audited_failure(
                 &db,
                 AuditEvent {
                     log_type: "refresh_token_failed".to_string(),
@@ -662,17 +636,8 @@ pub async fn refresh_token(
                     user_id: Some(user_id),
                     ..Default::default()
                 },
-            )
-            .await;
-
-            return (
                 StatusCode::UNAUTHORIZED,
-                Json(AuthTokenResponse {
-                    success: false,
-                    user: None,
-                    tokens: None,
-                    message: "Invalid or expired refresh token".to_string(),
-                }),
+                "Invalid or expired refresh token",
             );
         }
     };
@@ -683,48 +648,34 @@ pub async fn refresh_token(
         .await
         .is_err()
     {
-        let _ = log_audit_event(
+        return audited_failure(
             &db,
             AuditEvent {
                 log_type: "refresh_token_failed".to_string(),
                 action: Some("Refresh token not found or revoked".to_string()),
                 target_type_table: Some("users".to_string()),
                 target_type_table_id: Some(user_id.clone()),
-                user_id: Some(user_id.clone()),
+                user_id: Some(user_id),
                 ..Default::default()
             },
-        )
-        .await;
-
-        return (
             StatusCode::UNAUTHORIZED,
-            Json(AuthTokenResponse {
-                success: false,
-                user: None,
-                tokens: None,
-                message: "Invalid or expired refresh token".to_string(),
-            }),
+            "Invalid or expired refresh token",
         );
     }
 
-    //Generate access token
+    // Generate access token
     let access_token =
         match crate::utility::jwt::generate_access_token(&claims.sub, &claims.username) {
             Ok(token) => token,
             Err(_) => {
-                return (
+                return auth_error(
                     StatusCode::INTERNAL_SERVER_ERROR,
-                    Json(AuthTokenResponse {
-                        success: false,
-                        user: None,
-                        tokens: None,
-                        message: "Failed to generate access token".to_string(),
-                    }),
+                    "Failed to generate access token",
                 );
             }
         };
 
-    let _ = log_audit_event(
+    audit(
         &db,
         AuditEvent {
             log_type: "refresh_token_success".to_string(),
@@ -733,8 +684,7 @@ pub async fn refresh_token(
             user_id: Some(user_id),
             ..Default::default()
         },
-    )
-    .await;
+    );
 
     (
         StatusCode::OK,
@@ -756,11 +706,11 @@ pub async fn refresh_token(
 /// effectively invalidating it and preventing any further use for obtaining new access tokens.
 ///
 /// # Arguments
-/// * `State(db)` - Shared state containing the database connection and JWT configuration (JWT config is not used in this handler)
+/// * `State(db)` - Shared state containing the database connection
 /// * `Json(payload)` - The logout request payload containing the refresh token to be revoked
 ///
 /// # Returns
-/// * `(StatusCode, Json<AuthResponse>)` - The HTTP status code and JSON response indicating success or failure of the logout operation
+/// * `(StatusCode, Json<AuthTokenResponse>)` - The HTTP status code and JSON response indicating success or failure of the logout operation
 ///
 /// # Error
 /// * `StatusCode::INTERNAL_SERVER_ERROR` - If there is an error revoking the refresh token
@@ -768,6 +718,7 @@ pub async fn refresh_token(
 /// # Example
 /// ```rust
 /// let payload = RefreshTokenRequest {
+///     user_id: "user_id".to_string(),
 ///     refresh_token: "valid_refresh_token".to_string(),
 /// };
 /// ```
@@ -776,27 +727,16 @@ pub async fn logout(
     Json(payload): Json<RefreshTokenRequest>,
 ) -> (StatusCode, Json<AuthTokenResponse>) {
     if crate::utility::jwt::verify_token(&payload.refresh_token).is_err() {
-        let user_id = payload.user_id.clone();
-
-        let _ = log_audit_event(
+        return audited_failure(
             &db,
             AuditEvent {
                 log_type: "logout_failed".to_string(),
                 action: Some("Invalid or expired refresh token".to_string()),
-                user_id: Some(user_id),
+                user_id: Some(payload.user_id),
                 ..Default::default()
             },
-        )
-        .await;
-
-        return (
             StatusCode::UNAUTHORIZED,
-            Json(AuthTokenResponse {
-                success: false,
-                user: None,
-                tokens: None,
-                message: "Invalid or expired refresh token".to_string(),
-            }),
+            "Invalid or expired refresh token",
         );
     }
 
@@ -804,39 +744,27 @@ pub async fn logout(
         .await
         .is_err()
     {
-        let user_id = payload.user_id.clone();
-
-        let _ = log_audit_event(
+        return audited_failure(
             &db,
             AuditEvent {
                 log_type: "logout_failed".to_string(),
                 action: Some("Failed to revoke refresh token".to_string()),
-                user_id: Some(user_id),
+                user_id: Some(payload.user_id),
                 ..Default::default()
             },
-        )
-        .await;
-
-        return (
             StatusCode::INTERNAL_SERVER_ERROR,
-            Json(AuthTokenResponse {
-                success: false,
-                user: None,
-                tokens: None,
-                message: "Failed to logout".to_string(),
-            }),
+            "Failed to logout",
         );
     }
 
-    let _ = log_audit_event(
+    audit(
         &db,
         AuditEvent {
             log_type: "logout_success".to_string(),
             user_id: Some(payload.user_id),
             ..Default::default()
         },
-    )
-    .await;
+    );
 
     (
         StatusCode::OK,
@@ -873,21 +801,13 @@ pub async fn update_user_profile(
     Json(payload): Json<UpdateUserProfileRequest>,
 ) -> (StatusCode, Json<AuthTokenResponse>) {
     if payload.username.trim().is_empty() {
-        return (
-            StatusCode::BAD_REQUEST,
-            Json(AuthTokenResponse {
-                success: false,
-                user: None,
-                tokens: None,
-                message: "Username cannot be empty".to_string(),
-            }),
-        );
+        return auth_error(StatusCode::BAD_REQUEST, "Username cannot be empty");
     }
 
     let user = match auth::update_user_profile(&db, &payload).await {
         Ok(user) => user,
         Err((status, message)) => {
-            let _ = log_audit_event(
+            return audited_failure(
                 &db,
                 AuditEvent {
                     log_type: "update_user_profile_failed".to_string(),
@@ -897,22 +817,13 @@ pub async fn update_user_profile(
                     user_id: Some(payload.user_id),
                     ..Default::default()
                 },
-            )
-            .await;
-
-            return (
                 status,
-                Json(AuthTokenResponse {
-                    success: false,
-                    user: None,
-                    tokens: None,
-                    message,
-                }),
+                message,
             );
         }
     };
 
-    let _ = log_audit_event(
+    audit(
         &db,
         AuditEvent {
             log_type: "update_user_profile_success".to_string(),
@@ -921,8 +832,7 @@ pub async fn update_user_profile(
             user_id: Some(payload.user_id),
             ..Default::default()
         },
-    )
-    .await;
+    );
 
     (
         StatusCode::OK,

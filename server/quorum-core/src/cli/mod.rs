@@ -8,7 +8,7 @@ pub mod db;
 pub mod help;
 pub mod registry;
 pub mod server;
-
+//TODO: Most of this code needs to be moved into a new file not mod.rs
 use crate::cli::registry::CommandDef;
 use crate::db::init::DB;
 use colored::Colorize;
