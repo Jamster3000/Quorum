@@ -1,10 +1,15 @@
-//! Main entry point for the server cli Commands
-//! This is where commands are defined properly, and where command functions are called.
+//! Main entry point for the server CLI.
+//!
+//! Owns the admin session, input parsing and the blocking input loop.
+//! Commands themselves are defined in `registry.rs` and implemented in
+//! `server.rs`, `db.rs` and `help.rs`.
 
 pub mod db;
 pub mod help;
+pub mod registry;
 pub mod server;
 
+use crate::cli::registry::CommandDef;
 use crate::db::DB;
 use colored::Colorize;
 use std::io::{self, Write};
@@ -12,20 +17,13 @@ use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 use tokio::sync::watch;
 
-const SESSION_TIMEOUT_MINS: u64 = 20;
+pub const SESSION_TIMEOUT_MINS: u64 = 20;
 
 pub struct AdminSession {
     pub logged_in: bool,
     pub last_active: Instant,
     pub username: Option<String>,
     pub is_admin: bool,
-}
-
-struct Command {
-    parts: Vec<String>,
-    #[allow(dead_code)]
-    params: Vec<String>,
-    raw: String,
 }
 
 impl Default for AdminSession {
@@ -67,69 +65,163 @@ impl AdminSession {
     }
 }
 
-/// Parses a command string into a Command struct.
+/// Source of truth for commands
 ///
-/// Commands use colon between the command category and the actual command,
+/// The commands are formatted as follows
+/// `name` - name of the command
+/// `Summary` - Short summary of what the command is
+/// `description` - the full length of the description
+/// `usage` - How to use the command
+/// `requires_auth` - true if it requires to be authenticated or not
+/// `requires_admin` - true if it requires user to be the administrator
+/// `params` - parameters that the command takes along with the meaning/description of that parameter
+/// `handler` - the function that it should run when the command is entered
+pub static CORE_COMMANDS: &[CommandDef] = &[
+    crate::cmd!(
+        "help",
+        "Lists all available commands for the server.",
+        "With no arguments, prints a summary of every available command, grouped by namespace. \
+         With a command name, prints the full description, usage, parameters, and auth requirement.",
+        "help [command]",
+        false,
+        false,
+        &[("command", "Optional command to look up, e.g. server:status")],
+        help::help
+    ),
+    crate::cmd!(
+        "server:status",
+        "Shows uptime and basic server info.",
+        "Prints how long the server has been running, what address it is listening on, and whether testing mode is active.",
+        "server:status",
+        false,
+        false,
+        &[],
+        server::status
+    ),
+    crate::cmd!(
+        "server:logout",
+        "Ends the current operator session.",
+        "Clears the authenticated session immediately. Any subsequent write commands will require logging in again.",
+        "server:logout",
+        true,
+        false,
+        &[],
+        server::logout
+    ),
+    crate::cmd!(
+        "server:shutdown",
+        "Gracefully shuts the server down.",
+        "Signals the server to stop accepting new requests, waits for in-flight requests to complete, flushes logs, and exits cleanly.",
+        "server:shutdown",
+        true,
+        true,
+        &[],
+        server::shutdown
+    ),
+    crate::cmd!(
+        "server:logs",
+        "Displays recent server logs.",
+        "Prints logs in order from most recent to oldest, allowing for optional filter for last X days.",
+        "server:logs [days]",
+        false,
+        false,
+        &[("days", "Optional number of days to display logs for")],
+        server::logs
+    ),
+    crate::cmd!(
+        "server:audit",
+        "Displays recent audit logs.",
+        "Prints audit logs in order from most recent to oldest, allowing for optional filter for last X days.",
+        "server:audit [days]",
+        false,
+        false,
+        &[("days", "Optional number of days to display audit logs for")],
+        server::audit
+    ),
+    crate::cmd!(
+        "db:stats",
+        "Displays database statistics.",
+        "Prints the number of rows in each table, total row count, and estimated size of each table and database.",
+        "db:stats",
+        false,
+        false,
+        &[],
+        db::stats
+    ),
+    crate::cmd!(
+        "db:table",
+        "Displays records from a specific table.",
+        "Prints the records from the specified table, with an option to view a specific page of results.",
+        "db:table <name>, <page>",
+        false,
+        false,
+        &[
+            ("name", "The name of the table to display"),
+            ("page", "The page of results to display")
+        ],
+        db::table
+    ),
+];
+
+/// Parses an input line into the command name and its raw arguments.
+///
+/// Commands use a colon between the command category and the actual command,
 /// making parsing very simple and easy to do.
 ///
 /// # Arguments
 /// * `input` - A string slice that holds the command input.
 ///
-/// # Returns
-/// * `Option<Command>` - Returns Some(Command) if parsing is successful, or None if the input is empty.
-fn parse(input: &str) -> Option<Command> {
+/// # Return
+/// Returns `Some((name, raw_args))` such as `("db:table", "users, 2")`, or
+/// `None` if the input is empty.
+fn parse(input: &str) -> Option<(String, &str)> {
     let trimmed = input.trim();
     if trimmed.is_empty() {
         return None;
     }
 
-    let (cmd_part, params_part) = match trimmed.split_once(' ') {
-        Some((cmd, params)) => (cmd, params.trim()),
-        None => (trimmed, ""),
-    };
+    let (name_part, raw) = trimmed.split_once(' ').unwrap_or((trimmed, ""));
 
-    let parts: Vec<String> = cmd_part
+    let name = name_part
         .split(':')
         .map(|s| s.trim().to_lowercase())
         .filter(|s| !s.is_empty())
-        .collect();
+        .collect::<Vec<_>>()
+        .join(":");
 
-    let params: Vec<String> = if params_part.is_empty() {
-        vec![]
-    } else {
-        params_part
-            .split(", ")
-            .map(|s| s.trim().to_string())
-            .filter(|s| !s.is_empty())
-            .collect()
-    };
+    if name.is_empty() {
+        return None;
+    }
 
-    Some(Command {
-        parts,
-        params,
-        raw: trimmed.to_string(),
-    })
+    Some((name, raw.trim()))
 }
 
-/// Spawns the CLI in a separate asynchronous task.
+/// Spawns the CLI in a separate blocking task.
 ///
-/// The server sits on the main thread/task, whilst the CLI runs on a seperate task to avoid holding the server from handling requests.
+/// The server sits on the main thread/task, whilst the CLI runs on a separate
+/// task to avoid holding the server from handling requests. Commands are
+/// resolved against `registry::CORE_COMMANDS` combined with `extra_commands`,
+/// which is how each server binary registers its own commands on top of the
+/// shared ones.
 ///
 /// # Arguments
+/// * `extra_commands` - Commands specific to this server binary, on top of the core commands.
 /// * `db` - A reference to the database connection.
 /// * `server_start` - The instant when the server started, used for uptime calculations.
 /// * `shutdown_tx` - A watch channel sender to signal server shutdown.
-///
-/// # Example
-/// ```rust
-/// let db = DB::new("sqlite:memory:").await.unwrap();
-/// let server_start = Instant::now();
-/// let (shutdown_tx, shutdown_rx) = watch::channel(false);
-/// spawn_cli(db, server_start, shutdown_tx);
-///```
-pub async fn spawn_cli(db: DB, server_start: Instant, shutdown_tx: watch::Sender<bool>) {
+pub async fn spawn_cli(
+    extra_commands: &'static [CommandDef],
+    db: DB,
+    server_start: Instant,
+    shutdown_tx: watch::Sender<bool>,
+) {
     let session = Arc::new(Mutex::new(AdminSession::new()));
     let handle = tokio::runtime::Handle::current();
+
+    let commands: Vec<&'static CommandDef> =
+        CORE_COMMANDS.iter().chain(extra_commands.iter()).collect();
+
+    let commands: &'static [&'static CommandDef] = Box::leak(commands.into_boxed_slice());
 
     tokio::task::spawn_blocking(move || {
         std::thread::sleep(Duration::from_millis(600));
@@ -157,77 +249,24 @@ pub async fn spawn_cli(db: DB, server_start: Instant, shutdown_tx: watch::Sender
                 }
             }
 
-            let cmd = match parse(&input) {
-                Some(c) => c,
-                None => continue,
+            let Some((name, raw)) = parse(&input) else {
+                continue;
             };
 
-            //Uses OS thread, where block_on is safe. This is used to ensure server commands work whilst accepting requests
-            handle.block_on(dispatch(&cmd, &db, server_start, &session, &shutdown_tx));
+            handle.block_on(registry::dispatch(
+                commands,
+                &name,
+                raw,
+                &db,
+                &session,
+                server_start,
+                &shutdown_tx,
+            ));
         }
     });
 }
 
-/// Dispatches the parsed command to the appropriate handler function.
-///
-/// # Arguments
-/// * `cmd` - A reference to the parsed Command struct.
-/// * `db` - A reference to the database connection.
-/// * `server_start` - The instant when the server started, used for uptime calculations.
-/// * `session` - A reference to the admin session, wrapped in Arc<Mutex<>> for thread-safe access.
-/// * `shutdown_tx` - A watch channel sender to signal server shutdown.
-async fn dispatch(
-    cmd: &Command,
-    db: &DB,
-    server_start: Instant,
-    session: &Arc<Mutex<AdminSession>>,
-    shutdown_tx: &watch::Sender<bool>,
-) {
-    match cmd.parts.as_slice() {
-        // -- help --
-        [ns] if ns == "help" => {
-            help::print_all();
-        }
-        [ns, command] if ns == "help" => {
-            help::print_command(command);
-        }
-
-        // -- server --
-        [ns, command] if ns == "server" => match command.as_str() {
-            "status" => server::status(server_start).await,
-            "logout" => server::logout(session),
-            "shutdown" => {
-                if !require_admin(session) {
-                    return;
-                }
-                server::shutdown(db, server_start, shutdown_tx).await;
-            }
-            "logs" => {
-                let params = cmd.raw.split_once(' ').map(|x| x.1).unwrap_or("");
-                server::logs(db, params).await;
-            }
-            "audit" => {
-                let params = cmd.raw.split_once(' ').map(|x| x.1).unwrap_or("");
-                server::audit(db, params).await;
-            }
-            _ => unknown(&cmd.raw),
-        },
-
-        // -- Database --
-        [ns, command] if ns == "db" => match command.as_str() {
-            "stats" => db::stats(db).await,
-            "table" => {
-                let params = cmd.raw.split_once(' ').map(|x| x.1).unwrap_or("");
-                db::table(db, params).await;
-            }
-            _ => unknown(&cmd.raw),
-        },
-
-        _ => unknown(&cmd.raw),
-    }
-}
-
-/// Checks if a command required admin privileges.
+/// Checks if a command requires admin privileges.
 ///
 /// Uses the `AdminSession` built struct to determine if the current session is valid and has admin privileges.
 /// If not, it prints an error message and returns false, stopping the command from executing.
@@ -239,7 +278,7 @@ async fn dispatch(
 /// # Arguments
 /// * `session` - A reference to the admin session, wrapped in Arc<Mutex<>> for thread-safe access.
 ///
-/// # Returns
+/// # Return
 /// * `bool` - Returns true if the session is valid and has admin privileges, false otherwise.
 ///
 /// # Example
@@ -247,7 +286,7 @@ async fn dispatch(
 /// if !require_admin(session) {
 ///     return;
 /// }
-///```
+/// ```
 pub fn require_admin(session: &Arc<Mutex<AdminSession>>) -> bool {
     let sess = session.lock().unwrap();
     if !sess.is_valid() {
@@ -262,17 +301,4 @@ pub fn require_admin(session: &Arc<Mutex<AdminSession>>) -> bool {
         return false;
     }
     true
-}
-
-/// Prints an error message for unknown commands.
-///
-/// # Arguments
-/// * `raw` - The raw command string that was not recognized.
-fn unknown(raw: &str) {
-    println!(
-        "{} {} {}",
-        "Unknown command:".red(),
-        raw.white(),
-        "- type `help` to see available commands.".dimmed()
-    );
 }

@@ -1,34 +1,62 @@
-use crate::cli::AdminSession;
+use super::registry::CmdCtx;
 use colored::Colorize;
 use dialoguer::Input;
 use quorum_core::utility::secrets::prompt_passphrase;
 use quorum_core::utility::std::typewriter_println;
-use std::sync::{Arc, Mutex};
 use zeroize::Zeroizing;
 
 use crate::db::schema;
 use quorum_core::db::{self as core_db, DB};
 use quorum_core::startup;
 
+/// Re-initializes the database schema.
+///
+/// Re-runs the schema definitions from initial.surql against the database.
+///
+/// # Errors
+///
+/// Returns an error when the schema initialization fails.
+///
+/// # Arguments
+/// * `db` - A reference to the database connection.
 pub async fn reinitialize_schema(db: &DB) -> Result<(), String> {
     let timer = startup::create_timer();
 
-    match schema::init(db).await {
-        Ok(()) => {
+    // The schema error is converted to a string immediately: it arrives boxed as
+    // `Box<dyn std::error::Error>`, which is not `Send`, so it must not be held
+    // across any await inside this future (the command handlers below require
+    // `Send` futures). Only the `String` message crosses the awaits.
+    let result = schema::init(db).await.err().map(|error| error.to_string());
+
+    match result {
+        Some(message) => {
+            startup::print_step("Re-initializing schema", false, startup::elapsed(timer));
+
+            eprintln!("{}", format!("  Error: {}", message).red());
+
+            let _ = core_db::queries::server_logs::log_error(db, message.clone(), 0).await;
+
+            Err(message)
+        }
+
+        None => {
             startup::print_step("Re-initializing schema", true, startup::elapsed(timer));
 
             Ok(())
         }
+    }
+}
 
-        Err(error) => {
-            startup::print_step("Re-initializing schema", false, startup::elapsed(timer));
-
-            eprintln!("{}", format!("  Error: {}", error).red());
-
-            let _ = core_db::queries::server_logs::log_error(db, error.to_string(), 0).await;
-
-            Err(error.to_string())
-        }
+/// Handler for `server:update-database`.
+///
+/// # Arguments
+/// * `ctx` - The command context, providing the database connection.
+pub async fn update_database(ctx: CmdCtx) {
+    if let Err(error) = reinitialize_schema(&ctx.db).await {
+        eprintln!(
+            "{}",
+            format!("Failed to reinitialize schema: {error}").red()
+        );
     }
 }
 
@@ -39,15 +67,15 @@ pub async fn reinitialize_schema(db: &DB) -> Result<(), String> {
 /// The session expires after 20 minutes of inactivity as normal.
 ///
 /// # Arguments
-/// * `session` - A reference to the admin session, used to track login state.
+/// * `ctx` - The command context, providing the admin session.
 ///
 /// # Example
-/// ```rust
+/// ```rust,ignore
 /// login(&session);
 /// ```
-pub fn login(session: &Arc<Mutex<AdminSession>>) {
+pub async fn login(ctx: CmdCtx) {
     {
-        let sess = session.lock().unwrap();
+        let sess = ctx.session.lock().unwrap();
         if sess.is_valid() {
             println!("{}", "Already logged in. Run server:logout first.".yellow());
             return;
@@ -64,14 +92,14 @@ pub fn login(session: &Arc<Mutex<AdminSession>>) {
 
     match quorum_core::utility::secrets::load_encrypted_config(&passphrase) {
         Ok(_) => {
-            let mut sess = session.lock().unwrap();
+            let mut sess = ctx.session.lock().unwrap();
             sess.login("admin".to_string(), true);
             println!("{}", "  Authenticated.".green().bold());
             println!(
                 "{}",
                 format!(
                     "  Session will expire after {} minutes of inactivity.",
-                    crate::cli::SESSION_TIMEOUT_MINS
+                    quorum_core::cli::SESSION_TIMEOUT_MINS
                 )
                 .dimmed()
             );
@@ -98,7 +126,7 @@ pub fn login(session: &Arc<Mutex<AdminSession>>) {
 /// * `shutdown_tx` - A watch channel sender used to signal server shutdown after a successful reset.
 ///
 /// # Example
-/// ```rust
+/// ```rust,ignore
 /// confirm_and_delete(&shutdown_tx).await;
 /// ```
 pub async fn confirm_and_delete(shutdown_tx: &tokio::sync::watch::Sender<bool>) {
@@ -107,7 +135,7 @@ pub async fn confirm_and_delete(shutdown_tx: &tokio::sync::watch::Sender<bool>) 
         "{}",
         "WARNING: This will delete all data and shut down the server.\nYou must restart it manually after.\n\nContinue? (y/n)".yellow()
     ))
-    .map_err(|e| e.to_string());
+        .map_err(|e| e.to_string());
 
     let mut confirm = Input::<String>::new()
         .with_prompt(" ")
@@ -146,6 +174,14 @@ pub async fn confirm_and_delete(shutdown_tx: &tokio::sync::watch::Sender<bool>) 
             eprintln!("Failed to read passphrase: {}", e);
         }
     }
+}
+
+/// Handler for `db:delete`.
+///
+/// # Arguments
+/// * `ctx` - The command context, providing the shutdown channel.
+pub async fn db_delete(ctx: CmdCtx) {
+    confirm_and_delete(&ctx.shutdown_tx).await;
 }
 
 /// Deletes and reinitializes the database with an empty schema.

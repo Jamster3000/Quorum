@@ -1,301 +1,76 @@
-//! Main entry point for the server cli Commands
-//! This is where commands are defined properly, and where command functions are called.
+//! Main entry point for the server cli Commands.
+//!
+//! Commands shared by every Quorum server are defined in `quorum_core`'s
+//! command registry; the table below registers the commands that only the
+//! private (self-hosted) server has.
 
 pub mod config;
-pub mod help;
 pub mod server;
 
-use crate::cli::config::{change_config_value, print_all};
-use crate::cli::server::confirm_and_delete;
-use colored::Colorize;
-use quorum_core::cli::AdminSession;
-use quorum_core::cli::db;
-use quorum_core::cli::server::{audit, logout, logs, shutdown, status};
+use quorum_core::cli::registry::{self, CommandDef};
 use quorum_core::db::DB;
-use std::io::{self, Write};
-use std::sync::{Arc, Mutex};
-use std::time::{Duration, Instant};
+use std::time::Instant;
 use tokio::sync::watch;
 
-const SESSION_TIMEOUT_MINS: u64 = 20;
-
-struct Command {
-    parts: Vec<String>,
-    #[allow(dead_code)]
-    params: Vec<String>,
-    raw: String,
-}
-
-macro_rules! config_match_arms {
-    ($session:expr, $cmd:expr, $command:expr, $($field:ident),*) => {
-        match $command.as_str() {
-            "show" => {
-                if !require_admin($session) {
-                    return;
-                }
-                print_all();
-            }
-            $(
-                stringify!($field) => {
-                    if !require_admin($session) {
-                        return;
-                    }
-                    let value = $cmd.raw.split_once(' ').map(|x| x.1).unwrap_or("");
-                    change_config_value(stringify!($field), value);
-                }
-            )*
-            _ => unknown(&$cmd.raw),
-        }
-    };
-}
-
-/// Parses a command string into a Command struct.
+/// Source of truth for commands
 ///
-/// Commands use colon between the command category and the actual command,
-/// making parsing very simple and easy to do.
-///
-/// # Arguments
-/// * `input` - A string slice that holds the command input.
-///
-/// # Returns
-/// * `Option<Command>` - Returns Some(Command) if parsing is successful, or None if the input is empty.
-fn parse(input: &str) -> Option<Command> {
-    let trimmed = input.trim();
-    if trimmed.is_empty() {
-        return None;
-    }
+/// The commands are formatted as follows
+/// `name` - name of the command
+/// `Summary` - Short summary of what the command is
+/// `description` - the full length of the description
+/// `usage` - How to use the command
+/// `requires_auth` - true if it requires to be authenticated or not
+/// `requires_admin` - true if it requires user to be the administrator
+/// `params` - parameters that the command takes along with the meaning/description of that parameter
+/// `handler` - the function that it should run when the command is entered
+pub static PRIVATE_COMMANDS: &[CommandDef] = &[
+    quorum_core::cmd!(
+        "config:config",
+        "Views or updates the server configuration.",
+        "With `show`, prints the full configuration. With a key and a value, updates that setting and persists it to secrets.enc.",
+        "config [show | <key> <value>]",
+        false,
+        true,
+        &[
+            ("show", "Prints the full configuration"),
+            ("key", "The config key to update, e.g. server_host"),
+            ("value", "The new value for the key"),
+        ],
+        config::config
+    ),
+    quorum_core::cmd!(
+        "server:login",
+        "Authenticates an operator session in the terminal.",
+        "Prompts for the server passphrase and verifies it against secrets.enc. On success, grants access to write/destructive commands for the next 20 minutes of inactivity.",
+        "server:login",
+        false,
+        false,
+        &[],
+        server::login
+    ),
+    quorum_core::cmd!(
+        "db:delete",
+        "Deletes ALL database data after confirmation.",
+        "Prompts for confirmation, then requires the server passphrase to verify authority. Deletes the entire database directory and recreates it empty, then shuts the server down for a manual restart.",
+        "db:delete",
+        true,
+        true,
+        &[],
+        server::db_delete
+    ),
+];
 
-    let (cmd_part, params_part) = match trimmed.split_once(' ') {
-        Some((cmd, params)) => (cmd, params.trim()),
-        None => (trimmed, ""),
-    };
-
-    let parts: Vec<String> = cmd_part
-        .split(':')
-        .map(|s| s.trim().to_lowercase())
-        .filter(|s| !s.is_empty())
-        .collect();
-
-    let params: Vec<String> = if params_part.is_empty() {
-        vec![]
-    } else {
-        params_part
-            .split(", ")
-            .map(|s| s.trim().to_string())
-            .filter(|s| !s.is_empty())
-            .collect()
-    };
-
-    Some(Command {
-        parts,
-        params,
-        raw: trimmed.to_string(),
-    })
-}
-
-/// Spawns the CLI in a separate blocking thread.
-///
-/// Runs an interactive command loop that listens for user input and dispatches commands
-/// to their respective handlers. The CLI operates on a dedicated thread to avoid blocking
-/// the async Tokio runtime, allowing the server to continue handling HTTP requests
-/// concurrently.
-///
-/// Session expiry is enforced—after 20 minutes of inactivity, users must re-authenticate
-/// with `server:login` before executing protected commands.
-///
-/// The CLI automatically exits when a shutdown signal is received via `shutdown_tx`.
+/// Spawns the CLI with the core commands plus `PRIVATE_COMMANDS`.
 ///
 /// # Arguments
-/// * `db` - A reference to the database connection, passed to all command handlers.
-/// * `server_start` - The instant when the server started, used for uptime calculations in `server:status`.
-/// * `shutdown_tx` - A watch channel sender that signals the CLI to exit when the server is shutting down.
+/// * `db` - A reference to the database connection.
+/// * `server_start` - The instant when the server started, used for uptime calculations.
+/// * `shutdown_tx` - A watch channel sender to signal server shutdown.
 ///
 /// # Example
-/// ```rust
-/// let (shutdown_tx, shutdown_rx) = tokio::sync::watch::channel(false);
+/// ```rust,ignore
 /// cli::spawn_cli(db, server_start, shutdown_tx).await;
 /// ```
 pub async fn spawn_cli(db: DB, server_start: Instant, shutdown_tx: watch::Sender<bool>) {
-    let session = Arc::new(Mutex::new(AdminSession::new()));
-    let handle = tokio::runtime::Handle::current();
-    let shutdown_rx = shutdown_tx.subscribe();
-
-    tokio::task::spawn_blocking(move || {
-        std::thread::sleep(Duration::from_millis(600));
-
-        loop {
-            // Check if shutdown was signaled
-            if shutdown_rx.has_changed().unwrap_or(false) {
-                break;
-            }
-
-            print!("{} ", ">".cyan().bold());
-            io::stdout().flush().unwrap();
-
-            let mut input = String::new();
-            match io::stdin().read_line(&mut input) {
-                Ok(0) => break, // EOF
-                Ok(_) => {}
-                Err(_) => break,
-            }
-
-            {
-                let mut sess = session.lock().unwrap();
-                if sess.logged_in && !sess.is_valid() {
-                    println!(
-                        "{}",
-                        "Session expired after 20 minutes of inactivity. Please run server:login again."
-                            .yellow()
-                    );
-                    sess.logout();
-                }
-            }
-
-            let cmd = match parse(&input) {
-                Some(c) => c,
-                None => continue,
-            };
-
-            handle.block_on(dispatch(&cmd, &db, server_start, &session, &shutdown_tx));
-        }
-    });
-}
-
-/// Dispatches the parsed command to the appropriate handler function.
-///
-/// # Arguments
-/// * `cmd` - A reference to the parsed Command struct.
-/// * `db` - A reference to the database connection.
-/// * `server_start` - The instant when the server started, used for uptime calculations.
-/// * `session` - A reference to the admin session, wrapped in Arc<Mutex<>> for thread-safe access.
-/// * `shutdown_tx` - A watch channel sender to signal server shutdown.
-async fn dispatch(
-    cmd: &Command,
-    db: &DB,
-    server_start: Instant,
-    session: &Arc<Mutex<AdminSession>>,
-    shutdown_tx: &watch::Sender<bool>,
-) {
-    match cmd.parts.as_slice() {
-        // -- help --
-        [ns] if ns == "help" => {
-            help::print_all();
-        }
-        [ns, command] if ns == "help" => {
-            help::print_command(command);
-        }
-
-        // -- Server --
-        [ns, command] if ns == "server" => match command.as_str() {
-            "login" => server::login(session),
-            "status" => status(server_start).await,
-            "logout" => logout(session),
-            "shutdown" => {
-                if !require_admin(session) {
-                    return;
-                }
-                shutdown(db, server_start, shutdown_tx).await;
-            }
-            "logs" => {
-                let params = cmd.raw.split_once(' ').map(|x| x.1).unwrap_or("");
-                logs(db, params).await;
-            }
-            "audit" => {
-                let params = cmd.raw.split_once(' ').map(|x| x.1).unwrap_or("");
-                audit(db, params).await;
-            }
-            _ => unknown(&cmd.raw),
-        },
-
-        // -- Database --
-        [ns, command] if ns == "db" => match command.as_str() {
-            "stats" => db::stats(db).await,
-            "table" => {
-                let params = cmd.raw.split_once(' ').map(|x| x.1).unwrap_or("");
-                db::table(db, params).await;
-            }
-            "delete" => {
-                if !require_admin(session) {
-                    return;
-                }
-                confirm_and_delete(shutdown_tx).await;
-            }
-            _ => unknown(&cmd.raw),
-        },
-
-        // -- config --
-        [ns, command] if ns == "config" => {
-            config_match_arms!(
-                session,
-                cmd,
-                command,
-                server_port,
-                server_url,
-                server_host,
-                surreal_data_path,
-                surreal_ns,
-                surreal_db,
-                jwt_secret,
-                jwt_access_minutes,
-                jwt_refresh_days,
-                enable_testing,
-                default_per_second,
-                default_burst_size,
-                testing_per_second,
-                testing_burst_size
-            );
-        }
-
-        _ => unknown(&cmd.raw),
-    }
-}
-
-/// Checks if a command required admin privileges.
-///
-/// Uses the `AdminSession` built struct to determine if the current session is valid and has admin privileges.
-/// If not, it prints an error message and returns false, stopping the command from executing.
-///
-/// The intention of this functionality is so that if someone was to have gotten unauthorised access to the actively running server
-/// and try to run a command, this safeguards against them running anything dangerous or destructive without first authenticating as an admin user.
-/// Which without the correct account information of the admin user, they are unable to do any serious harm.
-///
-/// # Arguments
-/// * `session` - A reference to the admin session, wrapped in Arc<Mutex<>> for thread-safe access.
-///
-/// # Returns
-/// * `bool` - Returns true if the session is valid and has admin privileges, false otherwise.
-///
-/// # Example
-/// ```rust
-/// if !require_admin(session) {
-///     return;
-/// }
-///```
-pub fn require_admin(session: &Arc<Mutex<AdminSession>>) -> bool {
-    let sess = session.lock().unwrap();
-    if !sess.is_valid() {
-        println!(
-            "{}",
-            "This command requires authentication. Please run server:login first.".red()
-        );
-        return false;
-    }
-    if !sess.is_admin {
-        println!("{}", "This command requires admin privileges.".red());
-        return false;
-    }
-    true
-}
-
-/// Prints an error message for unknown commands.
-///
-/// # Arguments
-/// * `raw` - The raw command string that was not recognized.
-fn unknown(raw: &str) {
-    println!(
-        "{} {} {}",
-        "Unknown command:".red(),
-        raw.white(),
-        "- type `help` to see available commands.".dimmed()
-    );
+    quorum_core::cli::spawn_cli(PRIVATE_COMMANDS, db, server_start, shutdown_tx).await;
 }

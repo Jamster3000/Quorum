@@ -1,11 +1,7 @@
 //! Main file for server related commands
 
-use crate::cli::AdminSession;
-use crate::db::DB;
+use super::registry::CmdCtx;
 use colored::Colorize;
-use std::sync::{Arc, Mutex};
-use std::time::Instant;
-use tokio::sync::watch;
 
 /// Displays server logs
 ///
@@ -14,24 +10,23 @@ use tokio::sync::watch;
 /// By default, shows 100 of the most recent logs.
 ///
 /// # Arguments
-/// * `db` - A reference to the database connection.
-/// * `raw` - The raw input string, which may contain the number of days to filter logs by.
+/// * `ctx` - The command context; `ctx.raw` may contain the number of days to filter logs by.
 ///
 /// # Example
-/// ```rust
+/// ```rust,ignore
 /// logs(&db, "").await; // Shows the latest 100 logs
 /// logs(&db, "7").await; // Shows logs from the last 7 days
 /// logs(&db, "invalid").await; // Shows usage message
 /// ```
-pub async fn logs(db: &DB, raw: &str) {
-    let days: Option<u32> = raw.trim().parse().ok();
+pub async fn logs(ctx: CmdCtx) {
+    let days: Option<u32> = ctx.raw.trim().parse().ok();
 
-    if !raw.trim().is_empty() && days.is_none() {
+    if !ctx.raw.trim().is_empty() && days.is_none() {
         println!("{}", "Usage: server:logs OR server:logs <days>".red());
         return;
     }
 
-    match crate::db::queries::logs::get_server_logs(db, days).await {
+    match crate::db::queries::logs::get_server_logs(&ctx.db, days).await {
         Err(e) => println!("{}", format!("  Failed to get logs: {}", e).red()),
         Ok(entries) => {
             println!();
@@ -43,7 +38,7 @@ pub async fn logs(db: &DB, raw: &str) {
             }
             println!(
                 "{}",
-                "  ─────────────────────────────────────────────────────".dimmed()
+                "  ──────────────────────────────────────────────────────────────".dimmed()
             );
 
             if entries.is_empty() {
@@ -63,7 +58,7 @@ pub async fn logs(db: &DB, raw: &str) {
                     if let Some(code) = e.error_code {
                         parts.push(format!("code:{}", code).red().to_string());
                     }
-                    println!("  {}", parts.join("  ·  "));
+                    println!("  {}", parts.join("  -  "));
                 }
             }
             println!();
@@ -78,24 +73,23 @@ pub async fn logs(db: &DB, raw: &str) {
 /// By default, shows 100 of the most recent logs.
 ///
 /// # Arguments
-/// * `db` - A reference to the database connection.
-/// * `raw` - The raw input string, which may contain the number of days to filter logs by.
+/// * `ctx` - The command context; `ctx.raw` may contain the number of days to filter audit logs by.
 ///
 /// # Example
-/// ```rust
+/// ```rust,ignore
 /// audit(&db, "").await; // Shows the latest 100 audit logs
 /// audit(&db, "7").await; // Shows audit logs from the last 7 days
 /// audit(&db, "invalid").await; // Shows usage message
 /// ```
-pub async fn audit(db: &DB, raw: &str) {
-    let days: Option<u32> = raw.trim().parse().ok();
+pub async fn audit(ctx: CmdCtx) {
+    let days: Option<u32> = ctx.raw.trim().parse().ok();
 
-    if !raw.trim().is_empty() && days.is_none() {
+    if !ctx.raw.trim().is_empty() && days.is_none() {
         println!("{}", "Usage: server:audit OR server:audit <days>".red());
         return;
     }
 
-    match crate::db::queries::logs::get_audit_logs(db, days).await {
+    match crate::db::queries::logs::get_audit_logs(&ctx.db, days).await {
         Err(e) => println!("{}", format!("  Failed to get audit logs: {}", e).red()),
         Ok(entries) => {
             println!();
@@ -107,7 +101,7 @@ pub async fn audit(db: &DB, raw: &str) {
             }
             println!(
                 "{}",
-                "  ─────────────────────────────────────────────────────".dimmed()
+                "  ──────────────────────────────────────────────────────────────".dimmed()
             );
 
             if entries.is_empty() {
@@ -140,14 +134,14 @@ pub async fn audit(db: &DB, raw: &str) {
 /// Shows the server uptime, listening address, and testing mode status.
 ///
 /// # Arguments
-/// * `server_start` - The instant when the server started, used for uptime calculations.
+/// * `ctx` - The command context, used for the server start time.
 ///
 /// # Example
-/// ```rust
+/// ```rust,ignore
 /// status(server_start).await; // Displays the server status
 /// ```
-pub async fn status(server_start: Instant) {
-    let elapsed = server_start.elapsed();
+pub async fn status(ctx: CmdCtx) {
+    let elapsed = ctx.server_start.elapsed();
 
     let total_secs = elapsed.as_secs();
     let days = total_secs / 86400;
@@ -169,7 +163,10 @@ pub async fn status(server_start: Instant) {
 
     println!();
     println!("{}", "  Server Status".cyan().bold());
-    println!("{}", "  ─────────────────────────────────".dimmed());
+    println!(
+        "{}",
+        "  ──────────────────────────────────────────────────────────────".dimmed()
+    );
     println!("  {:<20} {}", "Uptime:".white(), uptime.green());
     println!(
         "  {:<20} {}",
@@ -193,14 +190,14 @@ pub async fn status(server_start: Instant) {
 /// Logs out the currently logged-in user, if any.
 ///
 /// # Arguments
-/// * `session` - A reference to the admin session, used to track login state.
+/// * `ctx` - The command context, used to access the admin session.
 ///
 /// # Example
-/// ```rust
+/// ```rust,ignore
 /// logout(&session); // Logs out the currently logged-in user
 /// ```
-pub fn logout(session: &Arc<Mutex<AdminSession>>) {
-    let mut sess = session.lock().unwrap();
+pub async fn logout(ctx: CmdCtx) {
+    let mut sess = ctx.session.lock().unwrap();
     if !sess.logged_in {
         println!("{}", "Not currently logged in.".yellow());
         return;
@@ -215,21 +212,19 @@ pub fn logout(session: &Arc<Mutex<AdminSession>>) {
 /// Logs the shutdown event to the database and signals the server to shut down gracefully.
 ///
 /// # Arguments
-/// * `db` - A reference to the database connection.
-/// * `server_start` - The instant when the server started, used for uptime calculations.
-/// * `shutdown_tx` - A watch channel sender to signal server shutdown.
+/// * `ctx` - The command context, providing the database, start time and shutdown channel.
 ///
 /// # Example
-/// ```rust
+/// ```rust,ignore
 /// shutdown(&db, server_start, &shutdown_tx).await; // Logs shutdown and signals server to shut down
 /// ```
-pub async fn shutdown(db: &DB, server_start: Instant, shutdown_tx: &watch::Sender<bool>) {
+pub async fn shutdown(ctx: CmdCtx) {
     println!("{}", "\nShutting down gracefully...".yellow().bold());
 
-    let uptime_ms = server_start.elapsed().as_millis() as i64;
-    let _ = crate::db::queries::server_logs::log_shutdown(db, uptime_ms).await;
+    let uptime_ms = ctx.server_start.elapsed().as_millis() as i64;
+    let _ = crate::db::queries::server_logs::log_shutdown(&ctx.db, uptime_ms).await;
 
-    let _ = shutdown_tx.send(true);
+    let _ = ctx.shutdown_tx.send(true);
     std::process::exit(0);
 }
 
@@ -238,10 +233,10 @@ pub async fn shutdown(db: &DB, server_start: Instant, shutdown_tx: &watch::Sende
 /// This reloads the server configuration from the configuration file and applies any changes.
 ///
 /// # Example
-/// ```rust
+/// ```rust,ignore
 /// reload(); // Reloads the server configuration
 /// ```
-pub fn reload() {
+pub async fn reload(_ctx: CmdCtx) {
     match crate::utility::config::Config::reload() {
         Ok(_) => println!("{}", "  Config reloaded successfully.".green()),
         Err(e) => println!("{}", format!("  Failed to reload config: {}", e).red()),

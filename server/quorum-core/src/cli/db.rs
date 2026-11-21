@@ -1,6 +1,6 @@
 //! This file includes direct server commands that interact or are about the surreal database/
 
-use crate::db::DB;
+use super::registry::CmdCtx;
 use colored::Colorize;
 
 /// Format bytes into a human-readable string
@@ -8,7 +8,7 @@ use colored::Colorize;
 /// # Arguments
 /// * `bytes` - The number of bytes to format.
 ///
-/// # Returns
+/// # Return
 /// * `String` - A human-readable string representing the size.
 fn format_size(bytes: usize) -> String {
     if bytes >= 1_048_576 {
@@ -25,24 +25,23 @@ fn format_size(bytes: usize) -> String {
 /// Fetches statistics about the database, including the number of rows and estimated size for each table, and prints them to the console.
 ///
 /// # Arguments
-/// * `db` - A reference to the database connection.
+/// * `ctx` - The command context, providing the database connection.
 ///
 /// # Example
-/// ```
-/// let db = DB::connect("database_url").await?;
+/// ```rust,ignore
 /// db::stats(&db).await;
 /// ```
-pub async fn stats(db: &DB) {
+pub async fn stats(ctx: CmdCtx) {
     println!("{}", "  Fetching database stats...".dimmed());
 
-    match crate::db::queries::stats::get_stats(db).await {
+    match crate::db::queries::stats::get_stats(&ctx.db).await {
         Err(e) => println!("{}", format!("  Failed to get stats: {}", e).red()),
         Ok(stats) => {
             println!();
             println!("{}", "  Database Stats".cyan().bold());
             println!(
                 "{}",
-                "  ─────────────────────────────────────────────────────".dimmed()
+                "  ──────────────────────────────────────────────────────────────".dimmed()
             );
             println!(
                 "  {:<38} {:>8}  {:>12}",
@@ -52,7 +51,7 @@ pub async fn stats(db: &DB) {
             );
             println!(
                 "{}",
-                "  ─────────────────────────────────────────────────────".dimmed()
+                "  ──────────────────────────────────────────────────────────────".dimmed()
             );
 
             for t in &stats.tables {
@@ -72,7 +71,7 @@ pub async fn stats(db: &DB) {
 
             println!(
                 "{}",
-                "  ─────────────────────────────────────────────────────".dimmed()
+                "  ──────────────────────────────────────────────────────────────".dimmed()
             );
             println!(
                 "  {:<38} {:>8}  {:>12}",
@@ -90,16 +89,14 @@ pub async fn stats(db: &DB) {
 /// Fetches data from a specific table in the database and prints it to the console.
 ///
 /// # Arguments
-/// * `db` - A reference to the database connection.
-/// * `raw` - The raw command input string.
+/// * `ctx` - The command context; `ctx.raw` contains the table name and optional page.
 ///
 /// # Example
-/// ```
-/// let db = DB::connect("database_url").await?;
+/// ```rust,ignore
 /// db::table(&db, "users").await;
 /// ```
-pub async fn table(db: &DB, raw: &str) {
-    let parts: Vec<&str> = raw.splitn(2, ", ").collect();
+pub async fn table(ctx: CmdCtx) {
+    let parts: Vec<&str> = ctx.raw.splitn(2, ", ").collect();
     let table_name = parts[0].trim();
     let page: usize = parts
         .get(1)
@@ -112,7 +109,7 @@ pub async fn table(db: &DB, raw: &str) {
         return;
     }
 
-    match crate::db::queries::stats::get_table(db, table_name, page).await {
+    match crate::db::queries::stats::get_table(&ctx.db, table_name, page).await {
         Err(e) => println!("{}", format!("  {}", e).red()),
         Ok(result) => {
             println!();
@@ -128,7 +125,7 @@ pub async fn table(db: &DB, raw: &str) {
             );
             println!(
                 "{}",
-                "  ─────────────────────────────────────────────────────".dimmed()
+                "  ──────────────────────────────────────────────────────────────".dimmed()
             );
 
             if result.records.is_empty() {
@@ -146,7 +143,7 @@ pub async fn table(db: &DB, raw: &str) {
 
             println!(
                 "{}",
-                "  ─────────────────────────────────────────────────────".dimmed()
+                "  ──────────────────────────────────────────────────────────────".dimmed()
             );
             if result.total_pages > 1 {
                 println!(

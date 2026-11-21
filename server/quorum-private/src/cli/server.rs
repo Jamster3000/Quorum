@@ -1,9 +1,8 @@
-use crate::cli::AdminSession;
 use colored::Colorize;
 use dialoguer::Input;
+use quorum_core::cli::registry::CmdCtx;
 use quorum_core::utility::secrets::prompt_passphrase;
 use quorum_core::utility::std::typewriter_println;
-use std::sync::{Arc, Mutex};
 use zeroize::Zeroizing;
 
 /// Authenticates an admin session using the server passphrase.
@@ -13,15 +12,15 @@ use zeroize::Zeroizing;
 /// The session expires after 20 minutes of inactivity as normal.
 ///
 /// # Arguments
-/// * `session` - A reference to the admin session, used to track login state.
+/// * `ctx` - The command context, providing the admin session.
 ///
 /// # Example
-/// ```rust
+/// ```rust,ignore
 /// login(&session);
 /// ```
-pub fn login(session: &Arc<Mutex<AdminSession>>) {
+pub async fn login(ctx: CmdCtx) {
     {
-        let sess = session.lock().unwrap();
+        let sess = ctx.session.lock().unwrap();
         if sess.is_valid() {
             println!("{}", "Already logged in. Run server:logout first.".yellow());
             return;
@@ -38,14 +37,14 @@ pub fn login(session: &Arc<Mutex<AdminSession>>) {
 
     match quorum_core::utility::secrets::load_encrypted_config(&passphrase) {
         Ok(_) => {
-            let mut sess = session.lock().unwrap();
+            let mut sess = ctx.session.lock().unwrap();
             sess.login("admin".to_string(), true);
             println!("{}", "  Authenticated.".green().bold());
             println!(
                 "{}",
                 format!(
                     "  Session will expire after {} minutes of inactivity.",
-                    crate::cli::SESSION_TIMEOUT_MINS
+                    quorum_core::cli::SESSION_TIMEOUT_MINS
                 )
                 .dimmed()
             );
@@ -156,4 +155,12 @@ async fn perform_reset(passphrase: &str) -> Result<(), Box<dyn std::error::Error
     .await?;
 
     Ok(())
+}
+
+/// Handler for `db:delete`.
+///
+/// # Arguments
+/// * `ctx` - The command context, providing the shutdown channel.
+pub async fn db_delete(ctx: CmdCtx) {
+    confirm_and_delete(&ctx.shutdown_tx).await;
 }

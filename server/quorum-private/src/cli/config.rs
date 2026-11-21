@@ -1,7 +1,33 @@
 //! This module contains the functions for the `config` command in the CLI.
 
+use super::registry::CmdCtx;
 use colored::Colorize;
 use quorum_core::utility::config::Config;
+
+/// Handler for the `config` command.
+///
+/// With `show`, prints the full configuration table. With a key and a value,
+/// updates that configuration setting.
+///
+/// # Arguments
+/// * `ctx` - The command context; `ctx.raw` contains the subcommand or key and value.
+///
+/// # Example
+/// ```rust,ignore
+/// config("").await;      // prints usage
+/// config("show").await;  // prints the configuration
+/// ```
+pub async fn config(ctx: CmdCtx) {
+    let mut parts = ctx.raw.split_whitespace();
+    match parts.next() {
+        Some("show") => print_all(),
+        Some(key) => {
+            let value = parts.collect::<Vec<_>>().join(" ");
+            change_config_value(key, &value);
+        }
+        None => println!("{}", "Usage: config OR config <key> <value>".red()),
+    }
+}
 
 /// Changes the value of a configuration setting in the config file.
 ///
