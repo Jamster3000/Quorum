@@ -18,8 +18,8 @@ static CACHED_TIER: LazyLock<Arc<Mutex<CachedPerformanceTier>>> = LazyLock::new(
 ///
 /// The function gets various system information (see below) and then calculates
 /// a score which returns "high", "medium" or "low".
-/// This function has many uses but is ideal for tweaking settings or interal things to
-/// operate on the user's device more effeciently.
+/// This function has many uses but is ideal for tweaking settings or internal things to
+/// operate on the user's device more efficiently.
 ///
 /// This is dynamic in a way that, if a "high" rated device has low system resources available (such that a heavy operation could
 /// cause the device to freeze or "lag"), this function will not return "high" even though the device is capable of it.
