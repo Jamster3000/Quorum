@@ -129,9 +129,19 @@ jobs:
         working-directory: client
         run: npm run test:storybook
 
-  # The job the ruleset requires. Passes if nothing failed.
+  dependency-review:
+    needs: changes
+    if: github.event_name == 'pull_request' && (needs.changes.outputs.server == 'true' || needs.changes.outputs.client == 'true')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/dependency-review-action@v4
+        with:
+          fail-on-severity: high
+
   ci:
-    needs: [changes, server, client-rust, client-ts]
+    needs: [changes, server, client-rust, client-ts, dependency-review]
     if: always()
     runs-on: ubuntu-latest
     steps:
@@ -140,7 +150,8 @@ jobs:
           needs.changes.result == 'failure' ||
           needs.server.result == 'failure' ||
           needs.client-rust.result == 'failure' ||
-          needs.client-ts.result == 'failure'
+          needs.client-ts.result == 'failure' ||
+          needs.dependency-review.result == 'failure'
         run: exit 1
 
       - run: echo "All required checks passed"
