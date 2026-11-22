@@ -1,142 +1,212 @@
 name: Rust CI
+
 on:
-  push:
-    paths:
-      - 'server/**'
-      - 'client/**'
-      - '.github/workflows/main.yml'
   pull_request:
-    paths:
-      - 'server/**'
-      - 'client/**'
-      - '.github/workflows/main.yml'
+    branches: [main]
+  push:
+    branches: [main]
+
 permissions:
-  contents: write
-  pages: write
+  contents: read
+
 jobs:
-  ci:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      server: ${{ steps.filter.outputs.server }}
+      client: ${{ steps.filter.outputs.client }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            server:
+              - 'server/**'
+              - '.github/workflows/main.yml'
+            client:
+              - 'client/**'
+              - '.github/workflows/main.yml'
+
+  server:
+    needs: changes
+    if: github.event_name == 'pull_request' && needs.changes.outputs.server == 'true'
     runs-on: ubuntu-latest
     env:
       RUSTC_WRAPPER: sccache
       SCCACHE_GHA_ENABLED: "true"
     steps:
-      - name: Check out code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt, clippy
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
+      - uses: mozilla/sccache-action@v0.0.9
+
+      - uses: Swatinem/rust-cache@v2
         with:
-          node-version: '20'
+          workspaces: server -> target
+          key: server
 
-      - name: Set up sccache
-        uses: mozilla/sccache-action@v0.0.9
+      - name: Check formatting
+        working-directory: server
+        run: cargo fmt --all -- --check
 
-      - name: Install system dependencies for Tauri
+      - name: Clippy
+        working-directory: server
+        run: cargo clippy --all-targets --all-features -- -W warnings
+
+      - name: Check
+        working-directory: server
+        run: cargo check --all-targets
+
+  client-rust:
+    needs: changes
+    if: github.event_name == 'pull_request' && needs.changes.outputs.client == 'true'
+    runs-on: ubuntu-latest
+    env:
+      RUSTC_WRAPPER: sccache
+      SCCACHE_GHA_ENABLED: "true"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - uses: mozilla/sccache-action@v0.0.9
+
+      - name: Install Tauri system dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libssl-dev
 
-      - name: Cache Rust dependencies
-        uses: Swatinem/rust-cache@v2
+      - uses: Swatinem/rust-cache@v2
         with:
-          workspaces: |
-            server -> target
-            client/src-tauri -> target
+          workspaces: client/src-tauri -> target
+          key: client-rust
 
-      # ===== SERVER CI =====
-      - name: Check server formatting
-        working-directory: server
-        run: cargo fmt --all -- --check
-
-      - name: Run server Clippy
-        working-directory: server
-        run: cargo clippy --all-targets --all-features -- -W warnings
-
-      - name: Run server cargo check
-        working-directory: server
-        run: cargo check --all-targets
-
-      # ===== CLIENT RUST CI =====
-      - name: Check client Rust formatting
+      - name: Check formatting
         working-directory: client/src-tauri
         run: cargo fmt --all -- --check
 
-      - name: Run client Rust Clippy
+      - name: Clippy
         working-directory: client/src-tauri
         run: cargo clippy --all-targets --all-features -- -W warnings
 
-      - name: Run client cargo check
+      - name: Check
         working-directory: client/src-tauri
         run: cargo check --all-targets
 
-      # ===== CLIENT TYPESCRIPT CI =====
-      - name: Install client dependencies
+  client-ts:
+    needs: changes
+    if: github.event_name == 'pull_request' && needs.changes.outputs.client == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
         working-directory: client
         run: npm ci
 
-      - name: Type check TypeScript
+      - name: Type check
         working-directory: client
         run: |
-            npx svelte-kit sync
-            npm run check
+          npx svelte-kit sync
+          npm run check
 
       - name: Install Playwright browsers
         working-directory: client
         run: npx playwright install --with-deps
 
-      - name: Run Storybook tests
+      - name: Storybook tests
         working-directory: client
         run: npm run test:storybook
 
-      # ===== BUILDS =====
+  # The job the ruleset requires. Passes if nothing failed.
+  ci:
+    needs: [changes, server, client-rust, client-ts]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fail if any check failed
+        if: >-
+          needs.changes.result == 'failure' ||
+          needs.server.result == 'failure' ||
+          needs.client-rust.result == 'failure' ||
+          needs.client-ts.result == 'failure'
+        run: exit 1
+
+      - run: echo "All required checks passed"
+
+  build-and-docs:
+    needs: ci
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      RUSTC_WRAPPER: sccache
+      SCCACHE_GHA_ENABLED: "true"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - uses: mozilla/sccache-action@v0.0.9
+
+      - name: Install Tauri system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libssl-dev
+
       - name: Build server
         working-directory: server
         run: cargo build --release
+
+      - name: Install client dependencies
+        working-directory: client
+        run: npm ci
 
       - name: Build client (Tauri)
         working-directory: client
         run: npm run tauri build
 
-      # ===== DOCUMENTATION =====
       - name: Generate server docs
         working-directory: server
         run: cargo doc --no-deps --document-private-items --workspace
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
       - name: Generate TypeScript docs
         working-directory: client
         run: npx typedoc --out ../docs-client --entryPointStrategy expand --tsconfig tsconfig.typedoc.json --skipErrorChecking src/lib
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
       - name: Generate client Rust docs
         working-directory: client/src-tauri
         run: cargo doc --no-deps --document-private-items --lib
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
       - name: Build Storybook
         working-directory: client
         run: npm run build-storybook
 
-      # ===== DOCUMENTATION DEPLOYMENT =====
       - name: Prepare docs directory
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
-          mkdir -p docs-out/server
-          mkdir -p docs-out/client
-          mkdir -p docs-out/client-ts
-          mkdir -p docs-out/storybook
+          mkdir -p docs-out/server docs-out/client docs-out/client-ts docs-out/storybook
           cp -r server/target/doc/* docs-out/server/ || true
           cp -r client/src-tauri/target/doc/* docs-out/client/ || true
           cp -r docs-client/* docs-out/client-ts/ || true
           cp -r client/storybook-static/* docs-out/storybook/ || true
 
       - name: Create root index page
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
           cat > docs-out/index.html << 'EOF'
           <!DOCTYPE html>
@@ -159,13 +229,13 @@ jobs:
                 --text-muted-colour: #b5bac1;
                 --font-primary: 'Outfit', sans-serif;
               }
-          
+
               * {
                 margin: 0;
                 padding: 0;
                 box-sizing: border-box;
               }
-          
+
               html, body {
                 background: var(--background-colour);
                 color: var(--text-colour);
@@ -174,12 +244,12 @@ jobs:
                 height: 100%;
                 overflow: hidden;
               }
-          
+
               body {
                 display: flex;
                 flex-direction: column;
               }
-          
+
               .titlebar {
                 height: 38px;
                 display: flex;
@@ -191,7 +261,7 @@ jobs:
                 padding: 0 8px;
                 flex-shrink: 0;
               }
-          
+
               .titlebar-title {
                 display: flex;
                 align-items: center;
@@ -199,35 +269,35 @@ jobs:
                 font-size: 18px;
                 font-weight: 700;
               }
-          
+
               main {
                 flex: 1;
                 padding: 1.5rem;
                 overflow-y: auto;
                 overflow-x: hidden;
               }
-          
+
               header {
                 text-align: center;
                 margin-bottom: 1.5rem;
               }
-          
+
               h1 {
                 font-size: 1.75rem;
                 font-weight: 700;
                 margin-bottom: 0.5rem;
                 color: var(--text-colour);
               }
-          
+
               header p {
                 font-size: 0.95rem;
                 color: var(--text-muted-colour);
               }
-          
+
               .section {
                 margin-bottom: 2rem;
               }
-          
+
               .section-title {
                 font-size: 0.75rem;
                 font-weight: 700;
@@ -236,14 +306,14 @@ jobs:
                 color: var(--secondary-colour);
                 margin-bottom: 1rem;
               }
-          
+
               .grid {
                 display: grid;
                 grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
                 gap: 1rem;
                 width: 100%;
               }
-          
+
               .card {
                 background: var(--card-colour);
                 border: 1px solid var(--border-colour);
@@ -256,26 +326,26 @@ jobs:
                 flex-direction: column;
                 gap: 0.5rem;
               }
-          
+
               .card:hover {
                 border-color: var(--secondary-colour);
                 transform: translateY(-2px);
                 box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2), 0 0 0 1px color-mix(in srgb, var(--secondary-colour) 20%, transparent);
               }
-          
+
               .card-title {
                 font-size: 1rem;
                 font-weight: 700;
                 color: var(--secondary-colour);
               }
-          
+
               .card p {
                 color: var(--text-muted-colour);
                 font-size: 0.85rem;
                 line-height: 1.5;
                 flex: 1;
               }
-          
+
               .card-link {
                 display: inline-flex;
                 align-items: center;
@@ -286,11 +356,11 @@ jobs:
                 transition: transform 0.2s ease;
                 width: fit-content;
               }
-          
+
               .card:hover .card-link {
                 transform: translateX(4px);
               }
-          
+
               footer {
                 text-align: center;
                 padding: 0.75rem;
@@ -299,27 +369,27 @@ jobs:
                 border-top: 1px solid color-mix(in srgb, var(--primary-colour) 30%, transparent);
                 flex-shrink: 0;
               }
-          
+
               footer a {
                 color: var(--secondary-colour);
                 text-decoration: none;
                 transition: color 0.2s ease;
               }
-          
+
               footer a:hover {
                 color: var(--text-colour);
                 text-decoration: underline;
               }
-          
+
               @media (max-width: 768px) {
                 h1 {
                   font-size: 1.5rem;
                 }
-          
+
                 .grid {
                   grid-template-columns: 1fr;
                 }
-          
+
                 main {
                   padding: 1rem;
                 }
@@ -330,13 +400,13 @@ jobs:
             <div class="titlebar">
               <div class="titlebar-title">Quorum</div>
             </div>
-          
+
             <main>
               <header>
                 <h1>Quorum Documentation</h1>
                 <p>Complete documentation for Quorum server and client</p>
               </header>
-          
+
               <section class="section">
                 <div class="section-title">Backend Server</div>
                 <div class="grid">
@@ -357,7 +427,7 @@ jobs:
                   </a>
                 </div>
               </section>
-          
+
               <section class="section">
                 <div class="section-title">Desktop Client</div>
                 <div class="grid">
@@ -379,7 +449,7 @@ jobs:
                 </div>
               </section>
             </main>
-          
+
             <footer>
               Quorum is open source. View the source on <a href="https://github.com/jamster3000/Quorum">GitHub</a>
             </footer>
@@ -389,7 +459,6 @@ jobs:
 
       - name: Deploy docs to gh-pages
         uses: peaceiris/actions-gh-pages@v4
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: docs-out
