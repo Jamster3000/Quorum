@@ -1,3 +1,9 @@
+-- PRIVATE SERVER SCHEMA
+-- Groups, channels, spaces, messages, files, and reactions.
+-- No credentials, sessions, or account moderation live here: those belong
+-- to the public server. Users here are minimal local records created lazily
+-- from a verified public-server JWT (keyed by public_user_id).
+--
 -- Global params
 -- ==============
 -- 64 bytes = 1/16 KiB
@@ -25,14 +31,11 @@ DEFINE PARAM IF NOT EXISTS $MAX_IP_BYTES VALUE 45;
 -- USERS / ACCOUNT
 -- =========================================================
 DEFINE PARAM IF NOT EXISTS $MAX_USERNAME_BYTES VALUE 18;
-DEFINE PARAM IF NOT EXISTS $MAX_EMAIL_BYTES VALUE 128;
+DEFINE PARAM IF NOT EXISTS $MAX_PUBLIC_USER_ID_BYTES VALUE 64;
 DEFINE PARAM IF NOT EXISTS $MAX_USER_STATUS_BYTES VALUE 15;
 DEFINE PARAM IF NOT EXISTS $MAX_EMOJI_CODE_BYTES VALUE 20;
 DEFINE PARAM IF NOT EXISTS $MIN_USERNAME_BYTES VALUE 4;
-DEFINE PARAM IF NOT EXISTS $MIN_PASSWORD_HASH_BYTES VALUE 80;
-DEFINE PARAM IF NOT EXISTS $MAX_PASSWORD_HASH_BYTES VALUE 256;
-DEFINE PARAM IF NOT EXISTS $MIN_PASSWORD_BYTES VALUE 8;
-DEFINE PARAM IF NOT EXISTS $MAX_PASSWORD_BYTES VALUE 128;
+DEFINE PARAM IF NOT EXISTS $MAX_BANNED_BYTES VALUE 512;
 
 
 -- =========================================================
@@ -130,7 +133,7 @@ INSERT IGNORE INTO server_config { first_admin_bootstrapped: false };
 -- User Status
 DEFINE TABLE IF NOT EXISTS user_status SCHEMAFULL;
 
-DEFINE FIELD IF NOT EXISTS status ON TABLE user_status TYPE string ASSERT fn::bytes_within($value, $MIN_TEXT_BYTES, $MAX_USER_STATUS_BYTES);
+DEFINE FIELD IF NOT EXISTS status ON TABLE user_status TYPE string ASSERT fn::bytes_within($value, $MIN_DEFAULT_BYTES, $MAX_USER_STATUS_BYTES);
 
 DEFINE INDEX IF NOT EXISTS idx_status ON TABLE user_status COLUMNS status UNIQUE;
 
@@ -144,37 +147,18 @@ DEFINE FIELD IF NOT EXISTS user_status_id ON TABLE custom_status TYPE option<rec
 DEFINE INDEX IF NOT EXISTS idx_status_text ON TABLE custom_status COLUMNS status_text UNIQUE;
 
 
--- Users
+-- Users (minimal local record, created on first verified connection)
 DEFINE TABLE IF NOT EXISTS users SCHEMAFULL;
 
+DEFINE FIELD IF NOT EXISTS public_user_id ON TABLE users TYPE string ASSERT fn::bytes_within($value, $MIN_DEFAULT_BYTES, $MAX_PUBLIC_USER_ID_BYTES);
 DEFINE FIELD IF NOT EXISTS username ON TABLE users TYPE string ASSERT fn::bytes_within($value, $MIN_USERNAME_BYTES, $MAX_USERNAME_BYTES);
-DEFINE FIELD IF NOT EXISTS email ON TABLE users TYPE option<string> ASSERT fn::bytes_within($value, $MIN_NOTHING_BYTES, $MAX_EMAIL_BYTES);
 DEFINE FIELD IF NOT EXISTS avatar_url ON TABLE users TYPE option<record<media>>;
+DEFINE FIELD IF NOT EXISTS joined_at ON TABLE users TYPE datetime DEFAULT time::now();
+DEFINE FIELD IF NOT EXISTS user_status_id ON TABLE users TYPE option<record<user_status>>;
+DEFINE FIELD IF NOT EXISTS custom_status_id ON TABLE users TYPE option<record<custom_status>>;
 
+DEFINE INDEX IF NOT EXISTS idx_public_user_id ON TABLE users COLUMNS public_user_id UNIQUE;
 DEFINE INDEX IF NOT EXISTS idx_username ON TABLE users COLUMNS username UNIQUE;
-DEFINE INDEX IF NOT EXISTS idx_email ON TABLE users COLUMNS email UNIQUE;
-
-
--- refresh tokens
-DEFINE TABLE IF NOT EXISTS refresh_tokens SCHEMAFULL;
-
-DEFINE FIELD IF NOT EXISTS user_id ON TABLE refresh_tokens TYPE record<users>;
-DEFINE FIELD IF NOT EXISTS token_hash ON TABLE refresh_tokens TYPE string;
-DEFINE FIELD IF NOT EXISTS expires_at ON TABLE refresh_tokens TYPE datetime;
-DEFINE FIELD IF NOT EXISTS created_at ON TABLE refresh_tokens TYPE datetime DEFAULT time::now();
-DEFINE FIELD IF NOT EXISTS is_revoked ON TABLE refresh_tokens TYPE bool DEFAULT false;
-
-DEFINE INDEX IF NOT EXISTS idx_refresh_token_user ON TABLE refresh_tokens COLUMNS user_id;
-DEFINE INDEX IF NOT EXISTS idx_refresh_token_hash ON TABLE refresh_tokens COLUMNS token_hash UNIQUE;
-
-
--- User settings
-DEFINE TABLE IF NOT EXISTS user_settings SCHEMAFULL;
-
-DEFINE FIELD IF NOT EXISTS user_id on TABLE user_settings TYPE record<users>;
-DEFINE FIELD IF NOT EXISTS settings ON TABLE user_settings TYPE number DEFAULT 0;
-
-DEFINE INDEX IF NOT EXISTS idx_user_id ON TABLE user_settings COLUMNS user_id UNIQUE;
 
 
 -- Users custom emojis
@@ -264,26 +248,6 @@ DEFINE INDEX IF NOT EXISTS idx_server_logs_timestamp ON TABLE server_logs COLUMN
 DEFINE INDEX IF NOT EXISTS idx_server_logs_event ON TABLE server_logs COLUMNS event_type_id;
 
 
--- Direct messages
-DEFINE TABLE IF NOT EXISTS direct_messages SCHEMAFULL;
-
-DEFINE FIELD IF NOT EXISTS sender_id ON TABLE direct_messages TYPE record<users>;
-DEFINE FIELD IF NOT EXISTS receiver_id ON TABLE direct_messages TYPE record<users>;
-DEFINE FIELD IF NOT EXISTS content ON TABLE direct_messages TYPE string ASSERT fn::bytes_within($value, $MIN_DEFAULT_BYTES, $MAX_TEXT_BYTES);
-DEFINE FIELD IF NOT EXISTS created_at ON TABLE direct_messages TYPE datetime;
-DEFINE FIELD IF NOT EXISTS is_read ON TABLE direct_messages TYPE bool DEFAULT false;
-DEFINE FIELD IF NOT EXISTS attatchments ON TABLE direct_messages TYPE option<array> DEFAULT NONE;
-DEFINE FIELD IF NOT EXISTS is_deleted ON TABLE direct_messages TYPE bool DEFAULT false;
-DEFINE FIELD OVERWRITE deleted_at ON TABLE direct_messages TYPE option<datetime>;
-
-DEFINE INDEX IF NOT EXISTS idx_sender_receiver ON TABLE direct_messages COLUMNS sender_id, receiver_id;
-DEFINE INDEX IF NOT EXISTS idx_receiver_sender ON TABLE direct_messages COLUMNS receiver_id, sender_id;
-DEFINE INDEX IF NOT EXISTS idx_created_at ON TABLE direct_messages COLUMNS created_at;
-DEFINE INDEX IF NOT EXISTS idx_is_read ON TABLE direct_messages COLUMNS is_read;
-DEFINE INDEX IF NOT EXISTS idx_is_deleted ON TABLE direct_messages COLUMNS is_deleted;
-DEFINE INDEX IF NOT EXISTS idx_deleted_at ON TABLE direct_messages COLUMNS deleted_at;
-
-
 -- emojis
 DEFINE TABLE IF NOT EXISTS emojis SCHEMAFULL;
 
@@ -293,7 +257,7 @@ DEFINE FIELD IF NOT EXISTS code ON TABLE emojis TYPE string ASSERT fn::bytes_wit
 -- message reactions
 DEFINE TABLE IF NOT EXISTS message_reactions SCHEMAFULL;
 
-DEFINE FIELD IF NOT EXISTS message_id ON TABLE message_reactions TYPE record<direct_messages | group_messages>;
+DEFINE FIELD IF NOT EXISTS message_id ON TABLE message_reactions TYPE record<group_messages>;
 DEFINE FIELD IF NOT EXISTS emoji_id ON TABLE message_reactions TYPE option<record<emojis>>;
 DEFINE FIELD IF NOT EXISTS custom_emoji_id ON TABLE message_reactions TYPE option<record<user_custom_emojis>>;
 DEFINE FIELD IF NOT EXISTS count ON TABLE message_reactions TYPE number;
@@ -323,8 +287,8 @@ DEFINE TABLE IF NOT EXISTS groups SCHEMAFULL;
 DEFINE FIELD IF NOT EXISTS name ON TABLE groups TYPE string ASSERT fn::bytes_within($value, $MIN_SPACE_NAME_BYTES, $MAX_SPACES_NAME_BYTES);
 DEFINE FIELD IF NOT EXISTS description ON TABLE groups TYPE string ASSERT fn::bytes_within($value, $MIN_NOTHING_BYTES, $MAX_SPACE_DESCRIPTION_BYTES);
 DEFINE FIELD IF NOT EXISTS user_id ON TABLE groups TYPE record<users>;
-DEFINE FIELD IF NOT EXISTS group_icon_url ON TABLE groups TYPE record<media>;
-DEFINE FIELD IF NOT EXISTS privacy ON TABLE groups TYPE bool DEFAULT 0;
+DEFINE FIELD IF NOT EXISTS group_icon_url ON TABLE groups TYPE option<record<media>>;
+DEFINE FIELD IF NOT EXISTS privacy ON TABLE groups TYPE number DEFAULT 0;
 DEFINE FIELD IF NOT EXISTS group_tags_id ON TABLE groups TYPE option<record<group_tags>>;
 
 DEFINE INDEX IF NOT EXISTS idx_group_name ON TABLE groups COLUMNS name UNIQUE;
@@ -420,7 +384,7 @@ DEFINE FIELD IF NOT EXISTS is_pinned ON TABLE group_messages TYPE bool DEFAULT f
 DEFINE FIELD IF NOT EXISTS message_id ON TABLE group_messages TYPE option<record<group_messages>>;
 DEFINE FIELD IF NOT EXISTS attatchments ON TABLE group_messages TYPE option<array> DEFAULT NONE;
 DEFINE FIELD IF NOT EXISTS is_deleted ON TABLE group_messages TYPE bool DEFAULT false;
-DEFINE FIELD IF NOT EXISTS deleted_at ON TABLE group_messages TYPE datetime;
+DEFINE FIELD IF NOT EXISTS deleted_at ON TABLE group_messages TYPE option<datetime>;
 
 DEFINE INDEX IF NOT EXISTS idx_group_messages_space_created ON TABLE group_messages COLUMNS space_id, created_at;
 DEFINE INDEX IF NOT EXISTS idx_group_messages_user ON TABLE group_messages COLUMNS user_id;
