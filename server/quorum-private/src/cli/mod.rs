@@ -5,9 +5,9 @@
 //! private (self-hosted) server has.
 
 pub mod config;
-pub mod server;
 
 use quorum_core::cli::registry::{self, CommandDef};
+use quorum_core::cli::server::{db_delete, login};
 
 //TODO: need to move stuff from here into a new file to keep mod.rs as it's own module
 
@@ -45,7 +45,7 @@ pub static PRIVATE_COMMANDS: &[CommandDef] = &[
         false,
         false,
         &[],
-        server::login
+        login
     ),
     quorum_core::cmd!(
         "db:delete",
@@ -55,6 +55,6 @@ pub static PRIVATE_COMMANDS: &[CommandDef] = &[
         true,
         true,
         &[],
-        server::db_delete
+        db_delete
     ),
 ];

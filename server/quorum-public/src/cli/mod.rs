@@ -10,6 +10,7 @@ pub mod test;
 pub mod user;
 
 use quorum_core::cli::registry::{self, CommandDef};
+use quorum_core::cli::server::{db_delete, login};
 
 //TODO: need to move stuff from here to a new file
 
@@ -47,7 +48,7 @@ pub static PUBLIC_COMMANDS: &[CommandDef] = &[
         false,
         false,
         &[],
-        server::login
+        login
     ),
     quorum_core::cmd!(
         "server:update-database",
@@ -67,7 +68,7 @@ pub static PUBLIC_COMMANDS: &[CommandDef] = &[
         true,
         true,
         &[],
-        server::db_delete
+        db_delete
     ),
     quorum_core::cmd!(
         "user:delete",
