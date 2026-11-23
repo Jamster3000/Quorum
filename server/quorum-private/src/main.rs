@@ -101,44 +101,6 @@ async fn main() {
             .await
     });
 
-    //this is needed to know when tests should Run
-    //until tests for prviate hostings are known and developed, this will remain commented out
-    /*let health_url = format!(
-        "http://{}:{}/health",
-        config.server_host, config.server_port
-    );
-    let client = Client::new();
-    let mut is_ready = false;
-    let max_retries = 20;
-    let retry_delay = Duration::from_millis(50);
-
-    for _ in 0..max_retries {
-        match client.get(&health_url).send().await {
-            Ok(response) if response.status().is_success() => {
-                is_ready = true;
-                break;
-            }
-            Ok(_) => {
-                tokio::time::sleep(retry_delay).await;
-                continue;
-            }
-            Err(_) => {
-                tokio::time::sleep(retry_delay).await;
-                continue;
-            }
-        }
-    }
-
-    if !is_ready {
-        eprintln!("{}", "Server failed to start in time.".red());
-        std::process::exit(1);
-    }
-
-    // Run the tests if enabled
-    if config.enable_testing {
-        tests::run_all_tests().await;
-    }*/
-
     // Start the CLI input loop in a background task
     cli::spawn_cli(_db.clone(), server_start, shutdown_tx).await;
 
