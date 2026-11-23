@@ -1,16 +1,15 @@
 <script lang="ts">
-  import { invoke } from '@tauri-apps/api/core';
-  import { page } from '$app/stores';
-  import { goto } from '$app/navigation';
-  import Alert from '$lib/components/ui/Alert.svelte';
-  import Card from '$lib/components/ui/Card.svelte';
-  import Input from '$lib/components/ui/Input.svelte';
-  import Checkbox from '$lib/components/ui/Checkbox.svelte';
-  import Button from '$lib/components/ui/Button.svelte';
-  import { IconHexagonFilled, IconArrowLeft } from '@tabler/icons-svelte-runes';
-  import { setAuthStoreValues } from '$lib/stores/authStore';
-  import { onMount } from 'svelte';
-  import Dialog from '$lib/components/ui/Popup.svelte';
+  import {invoke} from '@tauri-apps/api/core';
+  import {page} from '$app/stores';
+  import {goto} from '$app/navigation';
+  import Alert from '$components/ui/Alert.svelte';
+  import Card from '$components/ui/Card.svelte';
+  import Input from '$components/ui/Input.svelte';
+  import Button from '$components/ui/Button.svelte';
+  import {IconArrowLeft, IconHexagonFilled} from '@tabler/icons-svelte-runes';
+  import {setAuthStoreValues} from '$stores/authStore';
+  import {onMount} from 'svelte';
+  import Dialog from '$components/ui/Popup.svelte';
 
 
   interface AuthSuccess {

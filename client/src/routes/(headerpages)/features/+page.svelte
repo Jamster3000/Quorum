@@ -1,7 +1,7 @@
 <script lang="ts">
-  import Header from '$lib/components/app/Header.svelte';
-  import Footer from '$lib/components/app/Footer.svelte';
-  import Auth from '$lib/utils/Auth.svelte';
+	import Header from '$components/app/Header.svelte';
+	import Footer from '$components/app/Footer.svelte';
+	import Auth from '$utils/Auth.svelte';
 </script>
 
 <Auth redirectTo="/home" shouldBeLoggedIn={false} />
