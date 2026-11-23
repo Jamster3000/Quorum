@@ -1,14 +1,14 @@
  <script lang="ts">
-  import { invoke } from '@tauri-apps/api/core';
-  import { goto } from '$app/navigation';
-  import Alert from '$lib/components/ui/Alert.svelte';
-  import Card from '$lib/components/ui/Card.svelte';
-  import Input from '$lib/components/ui/Input.svelte';
-  import Checkbox from '$lib/components/ui/Checkbox.svelte';
-  import Button from '$lib/components/ui/Button.svelte';
-  import { IconHexagonFilled, IconArrowLeft } from '@tabler/icons-svelte-runes';
+   import {invoke} from '@tauri-apps/api/core';
+   import {goto} from '$app/navigation';
+   import Alert from '$components/ui/Alert.svelte';
+   import Card from '$components/ui/Card.svelte';
+   import Input from '$components/ui/Input.svelte';
+   import Checkbox from '$components/ui/Checkbox.svelte';
+   import Button from '$components/ui/Button.svelte';
+   import {IconArrowLeft, IconHexagonFilled} from '@tabler/icons-svelte-runes';
 
-  interface SignupSuccess {
+   interface SignupSuccess {
     message: string;
     accountHasEmail: boolean;
     backupCodes: string[] | null;
