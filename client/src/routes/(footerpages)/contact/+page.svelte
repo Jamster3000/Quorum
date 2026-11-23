@@ -1,14 +1,14 @@
 <script lang="ts">
-  import Header from '$lib/components/app/Header.svelte';
-  import Footer from '$lib/components/app/Footer.svelte';
-  import Auth from '$lib/utils/Auth.svelte';
-  import Card from '$lib/components/ui/Card.svelte';
-  import Input from '$lib/components/ui/Input.svelte';
-  import Button from '$lib/components/ui/Button.svelte';
-  import Alert from '$lib/components/ui/Alert.svelte';
-  import { IconHexagonFilled } from '@tabler/icons-svelte-runes';
+  import Header from '$components/app/Header.svelte';
+  import Footer from '$components/app/Footer.svelte';
+  import Auth from '$utils/Auth.svelte';
+  import Card from '$components/ui/Card.svelte';
+  import Input from '$components/ui/Input.svelte';
+  import Button from '$components/ui/Button.svelte';
+  import Alert from '$components/ui/Alert.svelte';
+  import {IconHexagonFilled} from '@tabler/icons-svelte-runes';
   import confetti from "@hiseb/confetti";
-  import { invoke } from '@tauri-apps/api/core';
+  import {invoke} from '@tauri-apps/api/core';
 
   let email = '';
   let message = '';

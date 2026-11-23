@@ -1,6 +1,6 @@
 <script module>
-    import { defineMeta } from '@storybook/addon-svelte-csf';
-    import { IconHexagonFilled } from '@tabler/icons-svelte-runes';
+    import {defineMeta} from '@storybook/addon-svelte-csf';
+    import {IconHexagonFilled} from '@tabler/icons-svelte-runes';
     import Button from '../Button.svelte';
     import Card from '../Card.svelte';
 

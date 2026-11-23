@@ -1,9 +1,8 @@
 <script lang="ts">
-  import Header from '$lib/components/app/Header.svelte';
-  import Footer from '$lib/components/app/Footer.svelte';
-  import Auth from '$lib/utils/Auth.svelte';
-  import Card from '$lib/components/ui/Card.svelte';
-  import { IconShield, IconMapPin, IconUsers, IconLock, IconAlertCircle, IconFileText, IconMail } from '@tabler/icons-svelte-runes';
+  import Header from '$components/app/Header.svelte';
+  import Footer from '$components/app/Footer.svelte';
+  import Auth from '$utils/Auth.svelte';
+  import Card from '$components/ui/Card.svelte';
 </script>
 
 <Auth redirectTo="/home" shouldBeLoggedIn={false} />

@@ -1,8 +1,15 @@
 <script lang="ts">
-  import { getCurrentWindow } from '@tauri-apps/api/window';
-  import { onMount } from 'svelte';
-  import { IconMinus, IconSquares, IconX, IconHexagonFilled, IconCircleArrowLeft, IconCircleArrowRight  } from '@tabler/icons-svelte-runes';
-  import Button from '$lib/components/ui/Button.svelte';
+  import {getCurrentWindow} from '@tauri-apps/api/window';
+  import {onMount} from 'svelte';
+  import {
+    IconCircleArrowLeft,
+    IconCircleArrowRight,
+    IconHexagonFilled,
+    IconMinus,
+    IconSquares,
+    IconX
+  } from '@tabler/icons-svelte-runes';
+  import Button from '$components/ui/Button.svelte';
 
   let appWindow: any;
 

@@ -1,7 +1,7 @@
 <script lang="ts">
-  import { IconEye, IconEyeOff } from '@tabler/icons-svelte-runes';
+    import {IconEye, IconEyeOff} from '@tabler/icons-svelte-runes';
 
-  export let label: string = '';
+    export let label: string = '';
   export let type: 'text' | 'password' | 'email' | 'hidden' | 'number' | 'search' | 'tel' | 'url' = 'text';
   export let placeholder: string = '';
   export let value: string = '';
