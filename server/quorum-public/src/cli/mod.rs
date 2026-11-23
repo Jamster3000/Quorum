@@ -10,9 +10,6 @@ pub mod test;
 pub mod user;
 
 use quorum_core::cli::registry::{self, CommandDef};
-use quorum_core::db::init::DB;
-use std::time::Instant;
-use tokio::sync::watch;
 
 //TODO: need to move stuff from here to a new file
 
@@ -93,18 +90,3 @@ pub static PUBLIC_COMMANDS: &[CommandDef] = &[
         test::run
     ),
 ];
-
-/// Spawns the CLI with the core commands plus `PUBLIC_COMMANDS`.
-///
-/// # Arguments
-/// * `db` - A reference to the database connection.
-/// * `server_start` - The instant when the server started, used for uptime calculations.
-/// * `shutdown_tx` - A watch channel sender to signal server shutdown.
-///
-/// # Example
-/// ```rust,ignore
-/// cli::spawn_cli(db, server_start, shutdown_tx).await;
-/// ```
-pub async fn spawn_cli(db: DB, server_start: Instant, shutdown_tx: watch::Sender<bool>) {
-    quorum_core::cli::spawn_cli(PUBLIC_COMMANDS, db, server_start, shutdown_tx).await;
-}
