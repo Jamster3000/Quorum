@@ -3,8 +3,8 @@
   import {openUrl} from '@tauri-apps/plugin-opener';
   import {goto} from '$app/navigation';
 
-  import Nav from '$lib/components/ui/Nav.svelte';
-  import Button from '$lib/components/ui/Button.svelte';
+  import Nav from '$components/ui/Nav.svelte';
+  import Button from '$components/ui/Button.svelte';
 
   const navLinks = [
     { label: 'Features', href: '/features' },

@@ -1,11 +1,11 @@
 <script lang="ts">
-    import {IconHexagonFilled} from '@tabler/icons-svelte-runes';
-    import {openUrl} from '@tauri-apps/plugin-opener';
-    import {goto} from '$app/navigation';
+  import {IconHexagonFilled} from '@tabler/icons-svelte-runes';
+  import {openUrl} from '@tauri-apps/plugin-opener';
+  import {goto} from '$app/navigation';
 
-    import Nav from '$lib/components/ui/Nav.svelte';
+  import Nav from '$components/ui/Nav.svelte';
 
-    const footerLinks = [
+  const footerLinks = [
     { label: 'Privacy', href:'/privacy' },
     { label: 'Terms', href:'/terms' },
     { label: 'Contact Us', href:'/contact' },
