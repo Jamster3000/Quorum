@@ -16,9 +16,9 @@ jobs:
       server: ${{ steps.filter.outputs.server }}
       client: ${{ steps.filter.outputs.client }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: dorny/paths-filter@v3
+      - uses: dorny/paths-filter@0e4a8c6effa4802afeda77dc8d303f8176d7dfad # version 3
         id: filter
         with:
           filters: |
@@ -37,7 +37,7 @@ jobs:
       RUSTC_WRAPPER: sccache
       SCCACHE_GHA_ENABLED: "true"
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - uses: dtolnay/rust-toolchain@stable
         with:
@@ -45,7 +45,7 @@ jobs:
 
       - uses: mozilla/sccache-action@v0.0.9
 
-      - uses: Swatinem/rust-cache@v2
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # version 2
         with:
           workspaces: server -> target
           key: server
@@ -70,7 +70,7 @@ jobs:
       RUSTC_WRAPPER: sccache
       SCCACHE_GHA_ENABLED: "true"
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - uses: dtolnay/rust-toolchain@stable
         with:
@@ -105,7 +105,7 @@ jobs:
     if: github.event_name == 'pull_request' && needs.changes.outputs.client == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - uses: actions/setup-node@v4
         with:
@@ -129,9 +129,19 @@ jobs:
         working-directory: client
         run: npm run test:storybook
 
-  # The job the ruleset requires. Passes if nothing failed.
+  dependency-review:
+    needs: changes
+    if: github.event_name == 'pull_request' && (needs.changes.outputs.server == 'true' || needs.changes.outputs.client == 'true')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/dependency-review-action@2031cfc080254a8a887f58cffee85186f0e49e48 #version 4
+        with:
+          fail-on-severity: high
+
   ci:
-    needs: [changes, server, client-rust, client-ts]
+    needs: [changes, server, client-rust, client-ts, dependency-review]
     if: always()
     runs-on: ubuntu-latest
     steps:
@@ -140,7 +150,8 @@ jobs:
           needs.changes.result == 'failure' ||
           needs.server.result == 'failure' ||
           needs.client-rust.result == 'failure' ||
-          needs.client-ts.result == 'failure'
+          needs.client-ts.result == 'failure' ||
+          needs.dependency-review.result == 'failure'
         run: exit 1
 
       - run: echo "All required checks passed"
@@ -155,15 +166,15 @@ jobs:
       RUSTC_WRAPPER: sccache
       SCCACHE_GHA_ENABLED: "true"
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # version 7.0.1
 
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@39008827e6b4319a349e9a42dfc90579dd25f1ca #@stable version
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # version 4
         with:
           node-version: '20'
 
-      - uses: mozilla/sccache-action@v0.0.9
+      - uses: mozilla/sccache-action@7d986dd989559c6ecdb630a3fd2557667be217ad # version 0.0.9
 
       - name: Install Tauri system dependencies
         run: |
@@ -458,7 +469,7 @@ jobs:
           EOF
 
       - name: Deploy docs to gh-pages
-        uses: peaceiris/actions-gh-pages@v4
+        uses: peaceiris/actions-gh-pages@84c30a85c19949d7eee79c4ff27748b70285e453 # version 4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: docs-out
