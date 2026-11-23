@@ -1,15 +1,15 @@
 <script lang="ts">
-  import '../app.css';
-  import { fade } from 'svelte/transition';
-  import { navigating } from '$app/stores';
-  import { listen } from '@tauri-apps/api/event';
-  import { refreshAccessToken, isTokenValid } from '$lib/utils/auth';
-  import { clearAuthStore } from '$lib/stores/authStore';
-  import { goto } from '$app/navigation';
-  import { onMount } from 'svelte';
-  import Titlebar from '$lib/components/app/Titlebar.svelte';
+    import '../app.css';
+    import {fade} from 'svelte/transition';
+    import {navigating} from '$app/stores';
+    import {listen} from '@tauri-apps/api/event';
+    import {refreshAccessToken} from '$lib/utils/auth';
+    import {clearAuthStore} from '$lib/stores/authStore';
+    import {goto} from '$app/navigation';
+    import {onMount} from 'svelte';
+    import Titlebar from '$components/app/Titlebar.svelte';
 
-  onMount(() => {
+    onMount(() => {
   listen('auth:token-expired', async () => {
     const refreshed = await refreshAccessToken();
     if (!refreshed) {

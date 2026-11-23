@@ -1,8 +1,8 @@
 <script lang="ts">
-  import { fade, fly } from 'svelte/transition';
-  import { quintOut } from 'svelte/easing';
+    import {fade, fly} from 'svelte/transition';
+    import {quintOut} from 'svelte/easing';
 
-  export let isOpen = false;
+    export let isOpen = false;
   export let fullscreen = false;
   export let onClose: (() => void) | undefined = undefined;
   export let closeOnBackdrop = false;
