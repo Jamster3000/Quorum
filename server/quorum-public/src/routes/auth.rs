@@ -1,23 +1,23 @@
 //! Authentication-related route handlers
 //! Handles user signup, login, account deletion, data retrieval, token refresh, and logout.
 
-use axum::{Json, extract::State, http::StatusCode};
-
 use crate::db::queries::auth;
 use crate::db::queries::tokens;
 use crate::models::user::User;
+use crate::models::user::record_id_to_string;
 use crate::models::user::{
     AuthTokenResponse, DeleteAccountRequest, GetUserDataRequest, LoginRequest, SignupRequest,
     TokenResponse, UpdateUserProfileRequest, UserDataResponse,
 };
 use crate::utility::auth_common::generate_backup_codes;
 use crate::utility::jwt;
+use axum::{Json, extract::State, http::StatusCode};
 use quorum_core::db::init::DB;
 use quorum_core::db::queries::audit_logs::log_audit_event;
 use quorum_core::models::server::AuditEvent;
 use quorum_core::utility::config::Config;
-
 use serde::{Deserialize, Serialize};
+
 //TODO: split this file into some untils or other files. It's quite large and not all of it needs to be within one file I don't think
 #[derive(Debug, Deserialize)]
 pub struct RefreshTokenRequest {
@@ -191,13 +191,8 @@ async fn verify_user_credentials(
 /// * `Ok(String)` - The user ID as a string if extraction is successful
 /// * `Err(String)` - An error message if the ID format is invalid
 fn extract_user_id(user: &User) -> Result<String, String> {
-    match &user.id.key {
-        surrealdb_types::RecordIdKey::String(s) => Ok(s.to_string()),
-        surrealdb_types::RecordIdKey::Number(n) => Ok(n.to_string()),
-        _ => Err("Invalid user ID format".to_string()),
-    }
+    record_id_to_string(&user.id).map_err(|_| "Invalid user ID format".to_string())
 }
-
 /// Handles user signup requests
 ///
 /// # Arguments
