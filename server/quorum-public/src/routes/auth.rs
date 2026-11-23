@@ -4,6 +4,7 @@
 use axum::{Json, extract::State, http::StatusCode};
 
 use crate::db::queries::auth;
+use crate::db::queries::tokens;
 use crate::models::user::User;
 use crate::models::user::{
     AuthTokenResponse, DeleteAccountRequest, GetUserDataRequest, LoginRequest, SignupRequest,
@@ -128,7 +129,7 @@ async fn issue_tokens(
     let config = Config::get();
     let expires_at = chrono::Utc::now().timestamp() + (config.jwt_refresh_days * 86400);
 
-    auth::store_refresh_token(db, user_id, &refresh_token, expires_at)
+    tokens::store_refresh_token(db, user_id, &refresh_token, expires_at)
         .await
         .map_err(|_| {
             (
@@ -598,7 +599,7 @@ pub async fn refresh_token(
 
     let user_id = claims.sub.clone();
 
-    if auth::validate_refresh_token(&db, &user_id, &payload.refresh_token)
+    if tokens::validate_refresh_token(&db, &user_id, &payload.refresh_token)
         .await
         .is_err()
     {
@@ -694,7 +695,7 @@ pub async fn logout(
         );
     }
 
-    if auth::revoke_refresh_token(&db, &payload.refresh_token)
+    if tokens::revoke_refresh_token(&db, &payload.refresh_token)
         .await
         .is_err()
     {

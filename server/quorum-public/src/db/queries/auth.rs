@@ -112,76 +112,6 @@ pub async fn delete_user_by_id(db: &DB, user_id: &str) -> Result<(), Box<dyn Err
     Ok(())
 }
 
-/// Stores a refresh token in the database for a specific user
-///
-/// # Arguments
-/// * `db` - A reference to the database connection
-/// * `user_id` - The ID of the user for whom the refresh token is being stored
-/// * `refresh_token` - The refresh token string to store
-/// * `expires_at` - The expiration time of the refresh token as a Unix timestamp
-///
-/// # Returns
-/// * `Ok(())` - If the refresh token was successfully stored
-/// * `Err(Box<dyn Error>)` - An error if the operation failed, such as if there was a database error
-///
-/// # Errors
-/// * "Failed to store refresh token" - If the database query did not execute successfully, indicating that the refresh token could not be stored
-///
-/// # Example
-/// ```rust
-/// use crate::db::DB;
-/// use crate::db::queries::auth;
-/// async fn example_store_refresh_token(db: &DB) {
-///     let user_id = "user_id";
-///     let refresh_token = "refresh_token_string";
-///     let expires_at = 1700000000; // Example expiration timestamp
-///     match auth::store_refresh_token(db, user_id, refresh_token, expires_at).await {
-///         Ok(()) => println!("Refresh token stored successfully"),
-///         Err(e) => eprintln!("Error storing refresh token: {}", e),
-///     }
-/// }
-///```
-pub async fn store_refresh_token(
-    db: &DB,
-    user_id: &str,
-    refresh_token: &str,
-    expires_at: i64,
-) -> Result<(), Box<dyn Error + Send + Sync>> {
-    tokens::store_refresh_token(db, user_id, refresh_token, expires_at).await
-}
-
-/// Revokes a refresh token, preventing it from being used for future authentication
-///
-/// # Arguments
-/// * `db` - A reference to the database connection
-/// * `refresh_token` - The refresh token string to revoke
-///
-/// # Returns
-/// * `Ok(())` - If the refresh token was successfully revoked
-/// * `Err(Box<dyn Error>)` - An error if the operation failed, such as if there was a database error
-///
-/// # Errors
-/// * "Failed to revoke refresh token" - If the database query did not execute successfully, indicating that the refresh token could not be revoked
-///
-/// # Example
-/// ```rust
-/// use crate::db::DB;
-/// use crate::db::queries::auth;
-/// async fn example_revoke_refresh_token(db: &DB) {
-///     let refresh_token = "refresh_token_string";
-///     match auth::revoke_refresh_token(db, refresh_token).await {
-///         Ok(()) => println!("Refresh token revoked successfully"),
-///         Err(e) => eprintln!("Error revoking refresh token: {}", e),
-///     }
-/// }
-///```
-pub async fn revoke_refresh_token(
-    db: &DB,
-    refresh_token: &str,
-) -> Result<(), Box<dyn Error + Send + Sync>> {
-    tokens::revoke_refresh_token(db, refresh_token).await
-}
-
 /// Get's user's data to allow them to be verified
 ///
 /// # Arguments
@@ -350,12 +280,4 @@ pub async fn make_admin(db: &DB, username: &str) -> Result<(), Box<dyn Error + S
         .await?;
 
     Ok(())
-}
-
-pub async fn validate_refresh_token(
-    db: &DB,
-    user_id: &str,
-    refresh_token: &str,
-) -> Result<(), Box<dyn Error + Send + Sync>> {
-    tokens::validate_refresh_token(db, user_id, refresh_token).await
 }
