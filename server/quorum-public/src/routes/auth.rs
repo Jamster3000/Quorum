@@ -10,13 +10,14 @@ use crate::models::user::{
     TokenResponse, UpdateUserProfileRequest, UserDataResponse,
 };
 use crate::utility::auth_common::generate_backup_codes;
+use crate::utility::jwt;
 use quorum_core::db::init::DB;
 use quorum_core::db::queries::audit_logs::log_audit_event;
 use quorum_core::models::server::AuditEvent;
 use quorum_core::utility::config::Config;
 
 use serde::{Deserialize, Serialize};
-
+//TODO: split this file into some untils or other files. It's quite large and not all of it needs to be within one file I don't think
 #[derive(Debug, Deserialize)]
 pub struct RefreshTokenRequest {
     pub user_id: String,
@@ -31,20 +32,52 @@ pub struct SignupResponse {
     pub backup_codes: Option<Vec<String>>,
 }
 
-/// Builds the standard failure response that is usually returned by most auth endpoints
-fn auth_error(
-    status: StatusCode,
-    message: impl Into<String>,
-) -> (StatusCode, Json<AuthTokenResponse>) {
-    (
-        status,
-        Json(AuthTokenResponse {
+/// Implemented by every JSON response body that can carry a failure message.
+///
+/// Lets the shared failure helpers (`failure` / `audited_failure`) build the
+/// right envelope for each endpoint without the endpoints hand-rolling it.
+trait FailureResponse {
+    fn failure(message: String) -> Self;
+}
+
+impl FailureResponse for AuthTokenResponse {
+    fn failure(message: String) -> Self {
+        Self {
             success: false,
             user: None,
             tokens: None,
-            message: message.into(),
-        }),
-    )
+            message,
+        }
+    }
+}
+
+impl FailureResponse for SignupResponse {
+    fn failure(message: String) -> Self {
+        Self {
+            auth: AuthTokenResponse::failure(message),
+            backup_codes: None,
+        }
+    }
+}
+
+impl FailureResponse for UserDataResponse {
+    fn failure(message: String) -> Self {
+        Self {
+            success: false,
+            data: None,
+            message,
+        }
+    }
+}
+
+/// Builds the standard failure response for the calling endpoint.
+///
+/// The concrete response type is inferred from the handler's return type.
+fn failure<T: FailureResponse>(
+    status: StatusCode,
+    message: impl Into<String>,
+) -> (StatusCode, Json<T>) {
+    (status, Json(T::failure(message.into())))
 }
 
 /// Writes an audit event in the background so the response isn't held up by the write.
@@ -56,15 +89,71 @@ fn audit(db: &DB, event: AuditEvent) {
     });
 }
 
-/// Logs a failure audit event and returns the standard failure response
-fn audited_failure(
+/// Logs a failure audit event and returns the standard failure response.
+fn audited_failure<T: FailureResponse>(
     db: &DB,
     event: AuditEvent,
     status: StatusCode,
     message: impl Into<String>,
-) -> (StatusCode, Json<AuthTokenResponse>) {
+) -> (StatusCode, Json<T>) {
     audit(db, event);
-    auth_error(status, message)
+    failure(status, message)
+}
+
+/// Generates the access/refresh token pair, stores the refresh token, and
+/// builds the response body. Shared by `signup` and `login`.
+///
+/// # Errors
+/// * `"Failed to generate access token"` / `"Failed to generate refresh token"` — JWT encoding failed
+/// * `"Failed to store refresh token"` — the token could not be persisted
+async fn issue_tokens(
+    db: &DB,
+    user_id: &str,
+    username: &str,
+) -> Result<TokenResponse, (StatusCode, String)> {
+    let access_token = jwt::generate_access_token(user_id, username).map_err(|_| {
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            "Failed to generate access token".to_string(),
+        )
+    })?;
+
+    let refresh_token = jwt::generate_refresh_token(user_id, username).map_err(|_| {
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            "Failed to generate refresh token".to_string(),
+        )
+    })?;
+
+    let config = Config::get();
+    let expires_at = chrono::Utc::now().timestamp() + (config.jwt_refresh_days * 86400);
+
+    auth::store_refresh_token(db, user_id, &refresh_token, expires_at)
+        .await
+        .map_err(|_| {
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "Failed to store refresh token".to_string(),
+            )
+        })?;
+
+    Ok(TokenResponse {
+        access_token,
+        refresh_token,
+        expires_in: config.jwt_access_minutes * 60,
+    })
+}
+
+/// Generates the plain and hashed backup-code lists.
+///
+/// Only used for signups without an email address: with no email to send the
+/// codes to, the codes are returned directly in the signup response instead.
+/// Returns `(plain, hashed)`.
+fn generate_backup_code_pair() -> (Vec<String>, Vec<String>) {
+    let codes = generate_backup_codes();
+    let plain = codes.iter().filter_map(|code| code.plain.clone()).collect();
+    let hashed = codes.iter().map(|code| code.hash.clone()).collect();
+    (plain, hashed)
 }
 
 /// Verifies user credentials (username/email and password) against the database
@@ -134,44 +223,27 @@ pub async fn signup(
     State(db): State<DB>,
     Json(payload): Json<SignupRequest>,
 ) -> (StatusCode, Json<SignupResponse>) {
-    let mut plain_backup_codes = None;
-    let mut hash_backup_codes = None;
+    let backup_codes = if payload.email.is_none() {
+        Some(generate_backup_code_pair())
+    } else {
+        None
+    };
 
-    if payload.email.is_none() {
-        let backup_codes = Some(generate_backup_codes());
+    let hash_backup_codes = backup_codes.as_ref().map(|(_, hashed)| hashed.clone());
+    let plain_backup_codes = backup_codes.map(|(plain, _)| plain);
 
-        plain_backup_codes = Some(
-            backup_codes
-                .as_ref()
-                .unwrap()
-                .iter()
-                .filter_map(|code| code.plain.clone())
-                .collect::<Vec<String>>(),
-        );
-        hash_backup_codes = Some(
-            backup_codes
-                .as_ref()
-                .unwrap()
-                .iter()
-                .map(|code| code.hash.clone())
-                .collect::<Vec<String>>(),
-        );
-    }
-
-    let signup_result = auth::signup_user(
+    let user = match auth::signup_user(
         &db,
         &payload.username,
         payload.email.as_deref(),
         &payload.password,
         hash_backup_codes,
     )
-    .await;
-
-    let user = match signup_result {
+    .await
+    {
         Ok(user) => user,
         Err(e) => {
             let message = e.to_string();
-            let formatted = format!("Failed to create user: {}", message);
 
             let status = if message.contains("Invalid password length")
                 || message.contains("idx_username")
@@ -184,103 +256,28 @@ pub async fn signup(
                 StatusCode::INTERNAL_SERVER_ERROR
             };
 
-            audit(
+            return audited_failure(
                 &db,
                 AuditEvent {
                     log_type: "signup_failed".to_string(),
-                    action: Some(message),
+                    action: Some(message.clone()),
                     ..Default::default()
                 },
-            );
-
-            let (status, Json(auth)) = auth_error(status, formatted);
-
-            return (
                 status,
-                Json(SignupResponse {
-                    auth,
-                    backup_codes: None,
-                }),
+                format!("Failed to create user: {message}"),
             );
         }
     };
-
-    let config = Config::get();
 
     let user_id = match extract_user_id(&user) {
         Ok(id) => id,
-        Err(e) => {
-            return (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                Json(SignupResponse {
-                    auth: AuthTokenResponse {
-                        success: false,
-                        user: None,
-                        tokens: None,
-                        message: e,
-                    },
-                    backup_codes: None,
-                }),
-            );
-        }
+        Err(e) => return failure(StatusCode::INTERNAL_SERVER_ERROR, e),
     };
 
-    let access_token = match crate::utility::jwt::generate_access_token(&user_id, &user.username) {
-        Ok(token) => token,
-        Err(_) => {
-            return (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                Json(SignupResponse {
-                    auth: AuthTokenResponse {
-                        success: false,
-                        user: None,
-                        tokens: None,
-                        message: "Failed to generate access token".to_string(),
-                    },
-                    backup_codes: None,
-                }),
-            );
-        }
+    let tokens = match issue_tokens(&db, &user_id, &user.username).await {
+        Ok(tokens) => tokens,
+        Err((status, message)) => return failure(status, message),
     };
-
-    let refresh_token = match crate::utility::jwt::generate_refresh_token(&user_id, &user.username)
-    {
-        Ok(token) => token,
-        Err(_) => {
-            return (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                Json(SignupResponse {
-                    auth: AuthTokenResponse {
-                        success: false,
-                        user: None,
-                        tokens: None,
-                        message: "Failed to generate refresh token".to_string(),
-                    },
-                    backup_codes: None,
-                }),
-            );
-        }
-    };
-
-    let expires_at = chrono::Utc::now().timestamp() + (config.jwt_refresh_days * 86400);
-
-    if auth::store_refresh_token(&db, &user_id, &refresh_token, expires_at)
-        .await
-        .is_err()
-    {
-        return (
-            StatusCode::INTERNAL_SERVER_ERROR,
-            Json(SignupResponse {
-                auth: AuthTokenResponse {
-                    success: false,
-                    user: None,
-                    tokens: None,
-                    message: "Failed to store refresh token".to_string(),
-                },
-                backup_codes: None,
-            }),
-        );
-    }
 
     audit(
         &db,
@@ -299,11 +296,7 @@ pub async fn signup(
             auth: AuthTokenResponse {
                 success: true,
                 user: Some(user.to_response()),
-                tokens: Some(TokenResponse {
-                    access_token,
-                    refresh_token,
-                    expires_in: config.jwt_access_minutes * 60,
-                }),
+                tokens: Some(tokens),
                 message: "User created successfully".to_string(),
             },
             backup_codes: plain_backup_codes,
@@ -338,7 +331,7 @@ pub async fn login(
     let user =
         match verify_user_credentials(&db, &payload.username_or_email, &payload.password).await {
             Ok(user) => user,
-            Err((status, message)) => return auth_error(status, message),
+            Err((status, message)) => return failure(status, message),
         };
 
     let user_id = match extract_user_id(&user) {
@@ -357,39 +350,10 @@ pub async fn login(
         }
     };
 
-    let config = Config::get();
-
-    let access_token = match crate::utility::jwt::generate_access_token(&user_id, &user.username) {
-        Ok(token) => token,
-        Err(_) => {
-            return auth_error(
-                StatusCode::INTERNAL_SERVER_ERROR,
-                "Failed to generate access token",
-            );
-        }
+    let tokens = match issue_tokens(&db, &user_id, &user.username).await {
+        Ok(tokens) => tokens,
+        Err((status, message)) => return failure(status, message),
     };
-
-    let refresh_token = match crate::utility::jwt::generate_refresh_token(&user_id, &user.username)
-    {
-        Ok(token) => token,
-        Err(_) => {
-            return auth_error(
-                StatusCode::INTERNAL_SERVER_ERROR,
-                "Failed to generate refresh token",
-            );
-        }
-    };
-
-    let expires_at = chrono::Utc::now().timestamp() + (config.jwt_refresh_days * 86400);
-    if auth::store_refresh_token(&db, &user_id, &refresh_token, expires_at)
-        .await
-        .is_err()
-    {
-        return auth_error(
-            StatusCode::INTERNAL_SERVER_ERROR,
-            "Failed to store refresh token",
-        );
-    }
 
     audit(
         &db,
@@ -407,11 +371,7 @@ pub async fn login(
         Json(AuthTokenResponse {
             success: true,
             user: Some(user.to_response()),
-            tokens: Some(TokenResponse {
-                access_token,
-                refresh_token,
-                expires_in: config.jwt_access_minutes * 60,
-            }),
+            tokens: Some(tokens),
             message: "Login successful".to_string(),
         }),
     )
@@ -463,7 +423,7 @@ pub async fn delete_account(
         .await
         .is_err()
     {
-        return auth_error(
+        return failure(
             StatusCode::INTERNAL_SERVER_ERROR,
             "Failed to delete account",
         );
@@ -514,7 +474,7 @@ pub async fn get_user_data(
         match verify_user_credentials(&db, &payload.username_or_email, &payload.password).await {
             Ok(user) => user,
             Err((status, message)) => {
-                audit(
+                return audited_failure(
                     &db,
                     AuditEvent {
                         log_type: "get_user_data_failed".to_string(),
@@ -524,15 +484,8 @@ pub async fn get_user_data(
                         user_id: Some(payload.user_id),
                         ..Default::default()
                     },
-                );
-
-                return (
                     status,
-                    Json(UserDataResponse {
-                        success: false,
-                        data: None,
-                        message,
-                    }),
+                    message,
                 );
             }
         };
@@ -592,6 +545,7 @@ pub async fn get_user_data(
 }
 
 /// Handles token refresh requests
+///
 /// This endpoint allows clients to obtain a new access token using a valid refresh token. It verifies the refresh token, checks its validity in the database, and generates a new access token if everything is valid. The refresh token is not rotated in this implementation, but it can be easily modified to do so if desired.
 ///
 /// # Arguments
@@ -617,10 +571,10 @@ pub async fn refresh_token(
     Json(payload): Json<RefreshTokenRequest>,
 ) -> (StatusCode, Json<AuthTokenResponse>) {
     // Verify token
-    let claims = match crate::utility::jwt::verify_token(&payload.refresh_token) {
+    let claims = match jwt::verify_token(&payload.refresh_token) {
         Ok(claims) => {
             if claims.token_type != "refresh" {
-                return auth_error(StatusCode::UNAUTHORIZED, "Invalid token type");
+                return failure(StatusCode::UNAUTHORIZED, "Invalid token type");
             }
             claims
         }
@@ -664,16 +618,15 @@ pub async fn refresh_token(
     }
 
     // Generate access token
-    let access_token =
-        match crate::utility::jwt::generate_access_token(&claims.sub, &claims.username) {
-            Ok(token) => token,
-            Err(_) => {
-                return auth_error(
-                    StatusCode::INTERNAL_SERVER_ERROR,
-                    "Failed to generate access token",
-                );
-            }
-        };
+    let access_token = match jwt::generate_access_token(&claims.sub, &claims.username) {
+        Ok(token) => token,
+        Err(_) => {
+            return failure(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "Failed to generate access token",
+            );
+        }
+    };
 
     audit(
         &db,
@@ -702,6 +655,7 @@ pub async fn refresh_token(
 }
 
 /// Handles user logout requests
+///
 /// This endpoint allows clients to log out by revoking the provided refresh token. It removes the refresh token from the database,
 /// effectively invalidating it and preventing any further use for obtaining new access tokens.
 ///
@@ -726,7 +680,7 @@ pub async fn logout(
     State(db): State<DB>,
     Json(payload): Json<RefreshTokenRequest>,
 ) -> (StatusCode, Json<AuthTokenResponse>) {
-    if crate::utility::jwt::verify_token(&payload.refresh_token).is_err() {
+    if jwt::verify_token(&payload.refresh_token).is_err() {
         return audited_failure(
             &db,
             AuditEvent {
@@ -778,6 +732,7 @@ pub async fn logout(
 }
 
 /// Handles user profile update requests
+///
 /// This endpoint allows clients to update their user profile information,
 /// such as username and email. It verifies the provided data, updates the user profile in the database, and logs the operation.
 ///
@@ -801,7 +756,7 @@ pub async fn update_user_profile(
     Json(payload): Json<UpdateUserProfileRequest>,
 ) -> (StatusCode, Json<AuthTokenResponse>) {
     if payload.username.trim().is_empty() {
-        return auth_error(StatusCode::BAD_REQUEST, "Username cannot be empty");
+        return failure(StatusCode::BAD_REQUEST, "Username cannot be empty");
     }
 
     let user = match auth::update_user_profile(&db, &payload).await {
