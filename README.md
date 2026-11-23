@@ -3,8 +3,10 @@
 Quorum is a chat platform inspired by Discord, built around three primary goals:
 
 - **Privacy:** collect only what's needed, and let users control their data.
-- **Security:** make unauthorised access and data theft as hard as pratically possible.
-- **Performance:** stay fast without comprimising security and keep memory usage low.
+- **Security:** make unauthorised access and data theft as hard as practically possible.
+- **Performance:** stay fast without compromising security and keep memory usage low.
+
+Quorum is designed so that anyone can run a private server for their own group/community, and users can move between that server and a public server. This is known as Federation. The foundations exist but still in development and design.
 
 The server is designed to run as a single binary with no external dependencies.
 
