@@ -1,6 +1,6 @@
 <script module>
-    import { defineMeta } from '@storybook/addon-svelte-csf';
-    import { userEvent, within, expect } from 'storybook/test';
+    import {defineMeta} from '@storybook/addon-svelte-csf';
+    import {expect, userEvent, within} from 'storybook/test';
     import Checkbox from '../Checkbox.svelte';
     import Card from '../Card.svelte'
 

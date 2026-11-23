@@ -1,7 +1,7 @@
 <script lang="ts">
-  import { IconCheck } from '@tabler/icons-svelte-runes';
+    import {IconCheck} from '@tabler/icons-svelte-runes';
 
-  export let label: string = '';
+    export let label: string = '';
   export let ariaLabel: string = '';
   export let checked: boolean = false;
   export let disabled: boolean = false;

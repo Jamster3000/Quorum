@@ -7,5 +7,5 @@ This directory contains all **reusable Svelte components** for the Quorum client
 ## Structure
    Folder      | Purpose                                                                 |
  |-------------|-------------------------------------------------------------------------|
- | `app/`      | **parent components** - for components that use other components        |
- | `ui/`       | **General UI components** (e.g., buttons, modals, inputs, cards).       |
+ | `app`      | **parent components** - for components that use other components        |
+ | `ui`       | **General UI components** (e.g., buttons, modals, inputs, cards).       |

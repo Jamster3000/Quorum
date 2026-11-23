@@ -1,8 +1,8 @@
 <script lang="ts">
-  import { IconAlertCircle, IconCheck, IconInfoCircle } from '@tabler/icons-svelte-runes';
-  import { fade, slide } from 'svelte/transition';
+    import {IconAlertCircle, IconCheck, IconInfoCircle} from '@tabler/icons-svelte-runes';
+    import {fade, slide} from 'svelte/transition';
 
-  export let type: 'error' | 'success' | 'info' | 'warning' = 'error';
+    export let type: 'error' | 'success' | 'info' | 'warning' = 'error';
   export let message: string = '';
   export let show: boolean = false;
 
