@@ -1,7 +1,5 @@
 use super::registry::CmdCtx;
 use colored::Colorize;
-
-use crate::db::schema;
 use quorum_core::db::{self as core_db, init::DB};
 use quorum_core::startup;
 
@@ -18,26 +16,20 @@ use quorum_core::startup;
 pub async fn reinitialize_schema(db: &DB) -> Result<(), String> {
     let timer = startup::create_timer();
 
-    // The schema error is converted to a string immediately: it arrives boxed as
-    // `Box<dyn std::error::Error>`, which is not `Send`, so it must not be held
-    // across any await inside this future (the command handlers below require
-    // `Send` futures). Only the `String` message crosses the awaits.
-    let result = schema::init(db).await.err().map(|error| error.to_string());
+    let result = quorum_core::server::init_schema(db, include_str!("../../initial.surql"))
+        .await
+        .err()
+        .map(|error| error.to_string());
 
     match result {
         Some(message) => {
             startup::print_step("Re-initializing schema", false, startup::elapsed(timer));
-
             eprintln!("{}", format!("  Error: {}", message).red());
-
             let _ = core_db::queries::server_logs::log_error(db, message.clone(), 0).await;
-
             Err(message)
         }
-
         None => {
             startup::print_step("Re-initializing schema", true, startup::elapsed(timer));
-
             Ok(())
         }
     }
