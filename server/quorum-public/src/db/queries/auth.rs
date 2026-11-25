@@ -57,6 +57,7 @@ pub async fn signup_user(
     }
 
     let password_hash = crate::utility::auth_common::hash(password)
+        .await
         .map_err(|e| format!("Failed to hash password: {}", e))?;
 
     let mut response = db
@@ -157,7 +158,10 @@ pub async fn verify_user_credentials(
     match user {
         Some(u) => {
             if let Some(ref hash) = u.password_hash {
-                if crate::utility::auth_common::verify(password, hash).unwrap_or(false) {
+                if crate::utility::auth_common::verify(password, hash)
+                    .await
+                    .unwrap_or(false)
+                {
                     Ok(u)
                 } else {
                     Err((
