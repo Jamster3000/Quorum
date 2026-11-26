@@ -150,8 +150,8 @@ async fn issue_tokens(
 /// Only used for signups without an email address: with no email to send the
 /// codes to, the codes are returned directly in the signup response instead.
 /// Returns `(plain, hashed)`.
-async fn generate_backup_code_pair() -> (Vec<String>, Vec<String>) {
-    let codes = generate_backup_codes().await;
+fn generate_backup_code_pair() -> (Vec<String>, Vec<String>) {
+    let codes = generate_backup_codes();
     let plain = codes.iter().filter_map(|code| code.plain.clone()).collect();
     let hashed = codes.iter().map(|code| code.hash.clone()).collect();
     (plain, hashed)
@@ -220,7 +220,7 @@ pub async fn signup(
     Json(payload): Json<SignupRequest>,
 ) -> (StatusCode, Json<SignupResponse>) {
     let backup_codes = if payload.email.is_none() {
-        Some(generate_backup_code_pair().await)
+        Some(generate_backup_code_pair())
     } else {
         None
     };
