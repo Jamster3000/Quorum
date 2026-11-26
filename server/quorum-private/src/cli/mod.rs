@@ -6,8 +6,8 @@
 
 pub mod config;
 
+use quorum_core::cli::commands::server::{db_delete, login};
 use quorum_core::cli::registry::{self, CommandDef};
-use quorum_core::cli::server::{db_delete, login};
 
 //TODO: need to move stuff from here into a new file to keep mod.rs as it's own module
 

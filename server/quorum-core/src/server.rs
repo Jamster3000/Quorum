@@ -1,6 +1,7 @@
 //! This module is a shared module for both the public and private server binaries
 
-use crate::cli::{self, registry::CommandDef};
+use crate::cli::registry::CommandDef;
+use crate::cli::run::spawn_cli;
 use crate::db::init::{self, DB};
 use crate::startup;
 use crate::utility::config::Config;
@@ -92,7 +93,7 @@ pub async fn run_server(options: ServerOptions) {
         suite().await;
     }
 
-    cli::spawn_cli(
+    spawn_cli(
         options.extra_commands,
         db.clone(),
         server_start,

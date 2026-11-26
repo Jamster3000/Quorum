@@ -10,8 +10,9 @@
 //! function into that shape. All handler state arrives in an owned
 //! [`CmdCtx`], so handlers carry no lifetimes.
 
-use super::AdminSession;
+use super::run::require_admin;
 use crate::db::init::DB;
+use crate::models::admin::AdminSession;
 use colored::Colorize;
 use std::future::Future;
 use std::pin::Pin;
@@ -114,7 +115,7 @@ pub async fn dispatch(
         return;
     };
 
-    if def.requires_admin && !super::require_admin(session) {
+    if def.requires_admin && !require_admin(session) {
         return;
     }
 

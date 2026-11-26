@@ -1,6 +1,7 @@
 //! Main file for server related commands
 
-use super::registry::CmdCtx;
+use crate::cli::registry::CmdCtx;
+use crate::models::admin::SESSION_TIMEOUT_MINS;
 use crate::utility::secrets::prompt_passphrase;
 use crate::utility::std::typewriter_println;
 use colored::Colorize;
@@ -269,7 +270,7 @@ pub async fn login(ctx: CmdCtx) {
         }
     }
 
-    let passphrase = match crate::utility::secrets::prompt_passphrase() {
+    let passphrase = match prompt_passphrase() {
         Ok(p) => p,
         Err(e) => {
             println!("{}", format!("  Failed to read passphrase: {}", e).red());
@@ -286,7 +287,7 @@ pub async fn login(ctx: CmdCtx) {
                 "{}",
                 format!(
                     "  Session will expire after {} minutes of inactivity.",
-                    crate::cli::SESSION_TIMEOUT_MINS
+                    SESSION_TIMEOUT_MINS
                 )
                 .dimmed()
             );
