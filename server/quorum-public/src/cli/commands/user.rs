@@ -1,5 +1,5 @@
-use super::registry::CmdCtx;
 use colored::Colorize;
+use quorum_core::cli::registry::CmdCtx;
 
 /// Deletes a user by ID from the database.
 ///

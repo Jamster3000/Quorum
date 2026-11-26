@@ -1,5 +1,5 @@
-use super::registry::CmdCtx;
 use colored::Colorize;
+use quorum_core::cli::registry::CmdCtx;
 use quorum_core::db::{self as core_db, init::DB};
 use quorum_core::startup;
 
@@ -16,7 +16,7 @@ use quorum_core::startup;
 pub async fn reinitialize_schema(db: &DB) -> Result<(), String> {
     let timer = startup::create_timer();
 
-    let result = quorum_core::server::init_schema(db, include_str!("../../initial.surql"))
+    let result = quorum_core::server::init_schema(db, include_str!("../../../initial.surql"))
         .await
         .err()
         .map(|error| error.to_string());

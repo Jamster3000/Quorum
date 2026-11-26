@@ -10,7 +10,7 @@ mod routes;
 mod tests;
 mod utility;
 
-use cli::PUBLIC_COMMANDS;
+use cli::commands_list::PUBLIC_COMMANDS;
 use quorum_core::server::{ServerOptions, run_server};
 use routes::route::create_router;
 use std::future::Future;
