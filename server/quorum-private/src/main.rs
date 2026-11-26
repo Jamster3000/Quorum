@@ -6,7 +6,7 @@
 mod cli;
 mod routes;
 
-use cli::PRIVATE_COMMANDS;
+use cli::commands_list::PRIVATE_COMMANDS;
 use quorum_core::server::{ServerOptions, run_server};
 use routes::route::create_router;
 
