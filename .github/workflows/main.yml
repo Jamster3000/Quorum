@@ -136,7 +136,7 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/dependency-review-action@2031cfc080254a8a887f58cffee85186f0e49e48 #version 4
+      - uses: actions/dependency-review-action@bbc44d14a204704ccc493733616cd1e93a0321ec #version 4
         with:
           fail-on-severity: high
 
