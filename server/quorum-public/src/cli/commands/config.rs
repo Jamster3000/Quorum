@@ -4,7 +4,7 @@
 //! `config <key> <value>` updates a single setting through the config schema.
 
 use colored::Colorize;
-use quorum_core::cli::help::RULE;
+use quorum_core::cli::commands::help::RULE;
 use quorum_core::cli::registry::CmdCtx;
 use quorum_core::utility::config::Config;
 

@@ -1,6 +1,14 @@
 use serde::{Deserialize, Serialize};
 use surrealdb_types::{Datetime, RecordId, SurrealValue};
 
+pub fn record_id_to_string(id: &RecordId) -> Result<String, String> {
+    match &id.key {
+        surrealdb_types::RecordIdKey::String(s) => Ok(s.to_string()),
+        surrealdb_types::RecordIdKey::Number(n) => Ok(n.to_string()),
+        _ => Err("Invalid ID format".to_string()),
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, SurrealValue)]
 pub struct User {
     pub id: RecordId,
@@ -88,11 +96,7 @@ pub struct EmailBackupCode {
 impl User {
     pub fn to_response(&self) -> UserResponse {
         UserResponse {
-            id: match &self.id.key {
-                surrealdb_types::RecordIdKey::String(s) => s.to_string(),
-                surrealdb_types::RecordIdKey::Number(n) => n.to_string(),
-                _ => format!("{:?}", self.id.key),
-            },
+            id: record_id_to_string(&self.id).unwrap_or_else(|_| format!("{:?}", self.id.key)),
             username: self.username.clone(),
             email: self.email.clone(),
             created_at: self.created_at,

@@ -1,4 +1,4 @@
-use super::registry::CmdCtx;
+use quorum_core::cli::registry::CmdCtx;
 
 /// Runs all tests in the `tests` module.
 ///

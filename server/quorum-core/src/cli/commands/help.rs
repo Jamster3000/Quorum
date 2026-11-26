@@ -1,6 +1,6 @@
 //! Main cli file used for getting help with server commands
 
-use super::registry::CommandDef;
+use crate::cli::registry::{CmdCtx, CommandDef, find};
 use colored::Colorize;
 
 pub const RULE: &str = "  ──────────────────────────────────────────────────────────────";
@@ -12,7 +12,7 @@ pub const RULE: &str = "  ──────────────────
 ///
 /// # Arguments
 /// * `ctx` - The command context; `ctx.raw` holds an optional command name.
-pub async fn help(ctx: super::registry::CmdCtx) {
+pub async fn help(ctx: CmdCtx) {
     match ctx.raw.trim().is_empty() {
         true => print_all(ctx.commands),
         false => print_command(ctx.commands, ctx.raw.trim()),
@@ -82,7 +82,7 @@ pub fn print_all(commands: &[&CommandDef]) {
 /// * `commands` - The active command table.
 /// * `command` - The command name to look up, e.g. `server:status`.
 pub fn print_command(commands: &[&CommandDef], command: &str) {
-    match super::registry::find(commands, command) {
+    match find(commands, command) {
         None => {
             println!("{} {}", "No help entry found for:".red(), command.white());
             println!("{}", "Run `help` to see all available commands.".dimmed());

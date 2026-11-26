@@ -1,6 +1,6 @@
-use crate::startup;
 use crate::tests::TestResult;
 use crate::tests::common::{cleanup_user, create_test_user, get_test_username, make_auth_request};
+use quorum_core::startup;
 use serde_json::json;
 
 pub async fn test_signup_email() -> Result<TestResult, String> {

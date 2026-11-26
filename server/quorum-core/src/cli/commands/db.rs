@@ -1,6 +1,6 @@
 //! This file includes direct server commands that interact or are about the surreal database/
 
-use super::registry::CmdCtx;
+use crate::cli::registry::CmdCtx;
 use colored::Colorize;
 
 /// Format bytes into a human-readable string

@@ -1,7 +1,7 @@
 //! This module contains the functions for the `config` command in the CLI.
 
-use super::registry::CmdCtx;
 use colored::Colorize;
+use quorum_core::cli::registry::CmdCtx;
 use quorum_core::utility::config::Config;
 
 /// Handler for the `config` command.

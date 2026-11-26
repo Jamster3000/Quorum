@@ -1,24 +1,17 @@
 //! File to handle logging audit events
 //!
-//! This module provides functionality to log audit events into the database. It includes caching mechanisms
-//! for log types and action types to optimize performance and reduce database queries.
+//! This module provides functionality to log audit events into the database.
+//! Lookups for `log_type` and `audit_action_type` go through the shared
+//! get-or-create cache in `super::type_records`, so each distinct log type and
+//! action string is normalised into its lookup table and only queried once.
 //!
 //! `log_audit_event` is the only required public function here that is importable to other files.
 
+use super::type_records::get_or_create_type;
 use crate::db::init::DB;
-use crate::models::server::AuditEvent;
-use std::collections::HashMap;
+use crate::models::audit_logs::AuditEvent;
 use std::error::Error;
-use std::sync::{Mutex, OnceLock};
-use surrealdb_types::{RecordId, RecordIdKey, SurrealValue};
-
-static LOG_TYPE_CACHE: OnceLock<Mutex<HashMap<String, RecordId>>> = OnceLock::new();
-static ACTION_TYPE_CACHE: OnceLock<Mutex<HashMap<String, RecordId>>> = OnceLock::new();
-
-#[derive(Debug, SurrealValue)]
-struct TypeRecord {
-    id: RecordId,
-}
+use surrealdb_types::{RecordId, RecordIdKey};
 
 /// Logs an audit event.
 ///
@@ -77,10 +70,10 @@ pub async fn log_audit_event(
     db: &DB,
     event: AuditEvent,
 ) -> Result<(), Box<dyn Error + Send + Sync>> {
-    let log_type_id = get_cached_log_type(db, &event.log_type).await?;
+    let log_type_id = get_or_create_type(db, "log_type", &event.log_type).await?;
 
     let action_type_id = match &event.action {
-        Some(a) => Some(get_cached_action_type(db, a).await?),
+        Some(a) => Some(get_or_create_type(db, "audit_action_type", a).await?),
         None => None,
     };
 
@@ -117,101 +110,4 @@ pub async fn log_audit_event(
         .check()?;
 
     Ok(())
-}
-
-/// Retrieves the cached log type ID for a given log name, or creates it if it doesn't exist.
-///
-/// This function checks the `LOG_TYPE_CACHE` for the specified `log_name`.
-/// If it exists, it returns the cached `RecordId`. If not, it queries the database to find or create the log type and updates the cache accordingly.
-///
-/// # Arguments
-/// * `db` - A reference to the database connection.
-/// * `log_name` - The name of the log type to retrieve or create.
-///
-/// # Returns
-/// A `RecordId` representing the log type ID associated with the given `log_name`.
-async fn get_cached_log_type(
-    db: &DB,
-    log_name: &str,
-) -> Result<RecordId, Box<dyn Error + Send + Sync>> {
-    let cache = LOG_TYPE_CACHE.get_or_init(|| Mutex::new(HashMap::new()));
-
-    if let Some(id) = cache.lock().unwrap().get(log_name).cloned() {
-        return Ok(id);
-    }
-
-    let id = get_or_create_type(db, "log_type", log_name).await?;
-    cache
-        .lock()
-        .unwrap()
-        .insert(log_name.to_string(), id.clone());
-    Ok(id)
-}
-
-/// Retrieves the cached action type ID for a given log name, or creates it if it doesn't exist.
-///
-/// This function checks the `ACTION_TYPE_CACHE` for the specified `action_name`.
-/// If it exists, it returns the cached `RecordId`. If not, it queries the database to find or create the action type and updates the cache accordingly.
-///
-/// # Arguments
-/// * `db` - A reference to the database connection.
-/// * `action_name` - The name of the action type to retrieve or create.
-///
-/// # Returns
-/// A `RecordId` representing the action type ID associated with the given `action_name`.
-async fn get_cached_action_type(
-    db: &DB,
-    action_name: &str,
-) -> Result<RecordId, Box<dyn Error + Send + Sync>> {
-    let cache = ACTION_TYPE_CACHE.get_or_init(|| Mutex::new(HashMap::new()));
-
-    if let Some(id) = cache.lock().unwrap().get(action_name).cloned() {
-        return Ok(id);
-    }
-
-    let id = get_or_create_type(db, "audit_action_type", action_name).await?;
-    cache
-        .lock()
-        .unwrap()
-        .insert(action_name.to_string(), id.clone());
-    Ok(id)
-}
-
-/// Retrieves or creates a type record in the specified table based on the given name.
-///
-/// This function checks if a record with the specified name exists in the given table.
-/// If it exists, it returns the `RecordId`. If not, it creates a new record with that name and returns the new `RecordId`.
-///
-/// # Arguments
-/// * `db` - A reference to the database connection.
-/// * `table` - The name of the table to query or insert into (e.g., "log_type" or "audit_action_type").
-/// * `name` - The name of the type to retrieve or create.
-///
-/// # Returns
-/// A `RecordId` representing the ID of the existing or newly created type record.
-async fn get_or_create_type(
-    db: &DB,
-    table: &str,
-    name: &str,
-) -> Result<RecordId, Box<dyn Error + Send + Sync>> {
-    let query = format!("SELECT id FROM {} WHERE name = $name LIMIT 1", table);
-    let response = db.query(&query).bind(("name", name)).await?.check()?;
-
-    let mut response = response;
-    let result: Option<TypeRecord> = response.take(0)?;
-
-    if let Some(record) = result {
-        return Ok(record.id);
-    }
-
-    let create_query = format!("CREATE {} SET name = $name RETURN id", table);
-    let create_response = db
-        .query(&create_query)
-        .bind(("name", name))
-        .await?
-        .check()?;
-
-    let mut create_response = create_response;
-    let created: Option<TypeRecord> = create_response.take(0)?;
-    Ok(created.ok_or("Failed to create type record")?.id)
 }

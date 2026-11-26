@@ -10,9 +10,6 @@ serde_json.workspace = true
 tokio.workspace = true
 surrealdb.workspace = true
 surrealdb-types.workspace = true
-chrono.workspace = true
-jsonwebtoken.workspace = true
-http.workspace = true
 colored.workspace = true
 arc-swap.workspace = true
 rand_core.workspace = true
@@ -24,7 +21,3 @@ aes-gcm.workspace = true
 rand.workspace = true
 zxcvbn.workspace = true
 sha2.workspace = true
-
-[features]
-public-only = []
-private-only = []

@@ -4,20 +4,12 @@ version = "0.1.0"
 edition.workspace = true
 
 [dependencies]
-quorum-core = { path = "../quorum-core", features = ["private-only"] }
+quorum-core = { path = "../quorum-core" }
 axum.workspace = true
-serde.workspace = true
-serde_json.workspace = true
 tokio.workspace = true
-surrealdb.workspace = true
-surrealdb-types.workspace = true
-chrono.workspace = true
 http.workspace = true
 colored.workspace = true
-arc-swap.workspace = true
 tower.workspace = true
 tower-http.workspace = true
-tower_governor.workspace = true
-rpassword.workspace = true
 dialoguer.workspace = true
 zeroize.workspace = true
