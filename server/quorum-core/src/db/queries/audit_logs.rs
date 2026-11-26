@@ -9,7 +9,7 @@
 
 use super::type_records::get_or_create_type;
 use crate::db::init::DB;
-use crate::models::server::AuditEvent;
+use crate::models::audit_logs::AuditEvent;
 use std::error::Error;
 use surrealdb_types::{RecordId, RecordIdKey};
 

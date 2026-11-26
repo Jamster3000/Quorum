@@ -14,7 +14,7 @@ use crate::utility::jwt;
 use axum::{Json, extract::State, http::StatusCode};
 use quorum_core::db::init::DB;
 use quorum_core::db::queries::audit_logs::log_audit_event;
-use quorum_core::models::server::AuditEvent;
+use quorum_core::models::audit_logs::AuditEvent;
 use quorum_core::utility::config::Config;
 use serde::{Deserialize, Serialize};
 
