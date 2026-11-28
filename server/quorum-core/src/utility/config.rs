@@ -147,7 +147,23 @@ impl Config {
         match parse_config_field(&mut new_fields, config_key, config_value) {
             Ok(true) => {
                 // Field was recognised and parsed successfully
-                save_encrypted_config(&new_fields, "correct horse battery staple")?;
+                if cfg!(debug_assertions) {
+                    save_encrypted_config(&new_fields, "correct horse battery staple")?;
+                } else {
+                    typewriter_println(&format!(
+                        "{}",
+                        "Enter passphrase to save config...".cyan().bold()
+                    ))
+                    .map_err(|e| e.to_string())?;
+
+                    let passphrase = Zeroizing::new(prompt_passphrase()?);
+
+                    // Verify the passphrase decrypts the current file before
+                    // re-encrypting, so a typo can't lock the operator out.
+                    load_encrypted_config(&passphrase)?;
+
+                    save_encrypted_config(&new_fields, &passphrase)?;
+                }
                 existing.store(Arc::new(new_fields));
                 Ok(())
             }
