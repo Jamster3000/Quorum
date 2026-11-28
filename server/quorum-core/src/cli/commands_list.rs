@@ -41,6 +41,16 @@ pub static CORE_COMMANDS: &[CommandDef] = &[
         config::reload
     ),
     crate::cmd!(
+        "config:reset",
+        "Resets a configuration key to its default value.",
+        "Looks up the key's default in the config schema, applies it, and persists it to secrets.enc. Run `config keys` to see all valid keys and their defaults.",
+        "config:reset <key>",
+        false,
+        true,
+        &[("key", "The config key to reset, e.g. server_port")],
+        config::reset
+    ),
+    crate::cmd!(
         "server:status",
         "Shows uptime and basic server info.",
         "Prints how long the server has been running, what address it is listening on, and whether testing mode is active.",

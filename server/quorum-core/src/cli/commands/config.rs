@@ -8,7 +8,7 @@
 use super::help::RULE;
 use crate::cli::registry::CmdCtx;
 use crate::utility::config::Config;
-use crate::utility::config_schema::{CONFIG_SCHEMA, config_sections};
+use crate::utility::config_schema::{CONFIG_SCHEMA, config_sections, default_config_fields};
 use colored::Colorize;
 
 /// Handler for the `config` command.
@@ -187,6 +187,34 @@ pub async fn reload(_ctx: CmdCtx) {
     match Config::reload() {
         Ok(()) => println!("{}", "Configuration reloaded successfully.".green()),
         Err(e) => println!("{}", format!("Failed to reload config: {}", e).red()),
+    }
+}
+
+/// Handler for the `config:reset` command.
+///
+/// Resets a single configuration key back to its schema default and
+/// persists the change to `secrets.enc`.
+///
+/// # Arguments
+/// * `ctx` - The command context; `ctx.raw` contains the key to reset.
+pub async fn reset(ctx: CmdCtx) {
+    let key = ctx.raw.trim();
+
+    if key.is_empty() {
+        println!("{}", "Usage: config:reset <key>".red());
+        return;
+    }
+
+    match default_config_fields().field_str(key) {
+        Some(default_value) => change_config_value(key, &default_value),
+        None => println!(
+            "{}",
+            format!(
+                "Unknown config key: {}. Run `config keys` to see all valid keys.",
+                key
+            )
+            .red()
+        ),
     }
 }
 
