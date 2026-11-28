@@ -172,7 +172,7 @@ pub async fn get_table(
     }
 
     let total = count_table(db, table).await?;
-    let total_pages = (total + PAGE_SIZE - 1).max(1) / PAGE_SIZE;
+    let total_pages = total.div_ceil(PAGE_SIZE).max(1);
     let page = page.clamp(1, total_pages);
     let start = (page - 1) * PAGE_SIZE;
 
