@@ -5,7 +5,8 @@
 //! public server has.
 
 use super::commands::{server, test, user};
-use quorum_core::cli::commands::server::{db_delete, login};
+use quorum_core::cli::commands::db;
+use quorum_core::cli::commands::server::login;
 use quorum_core::cli::registry::CommandDef;
 
 /// Source of truth for commands
@@ -69,7 +70,7 @@ pub static PUBLIC_COMMANDS: &[CommandDef] = &[
         true,
         true,
         &[],
-        db_delete
+        db::db_delete
     ),
     quorum_core::cmd!(
         "user:list",

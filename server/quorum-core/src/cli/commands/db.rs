@@ -1,5 +1,6 @@
 //! This file includes direct server commands that interact or are about the surreal database/
 
+use crate::cli::commands::server::confirm_and_delete;
 use crate::cli::registry::CmdCtx;
 use colored::Colorize;
 
@@ -154,4 +155,12 @@ pub async fn table(ctx: CmdCtx) {
             println!();
         }
     }
+}
+
+/// Handler for `db:delete`.
+///
+/// # Arguments
+/// * `ctx` - The command context, providing the shutdown channel.
+pub async fn db_delete(ctx: CmdCtx) {
+    confirm_and_delete(&ctx.shutdown_tx).await;
 }

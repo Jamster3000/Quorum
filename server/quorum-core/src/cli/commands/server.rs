@@ -400,14 +400,6 @@ async fn perform_reset(passphrase: &str) -> Result<(), Box<dyn std::error::Error
     Ok(())
 }
 
-/// Handler for `db:delete`.
-///
-/// # Arguments
-/// * `ctx` - The command context, providing the shutdown channel.
-pub async fn db_delete(ctx: CmdCtx) {
-    confirm_and_delete(&ctx.shutdown_tx).await;
-}
-
 /// Shows the server version
 ///
 /// Prints the Quorum server version from the crate metadata, captured at
