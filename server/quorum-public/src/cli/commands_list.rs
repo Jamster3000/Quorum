@@ -23,14 +23,21 @@ pub static PUBLIC_COMMANDS: &[CommandDef] = &[
     quorum_core::cmd!(
         "config:config",
         "Views or updates the server configuration.",
-        "With `show`, prints the full configuration. With a key and a value, updates that setting and persists it to secrets.enc.",
-        "config [show | <key> <value>]",
+        "With no arguments or `show`, prints the full configuration. With `keys`, lists every configuration key with its description and default. With a key, prints that key's current value and details. With a key and a value, updates that setting and persists it to secrets.enc.",
+        "config [show | keys | <key> [<value>]]",
         false,
         true,
         &[
             ("show", "Prints the full configuration"),
-            ("key", "The config key to update, e.g. server_host"),
-            ("value", "The new value for the key"),
+            (
+                "keys",
+                "Lists all configuration keys with descriptions and defaults"
+            ),
+            ("key", "The config key to view or update, e.g. server_host"),
+            (
+                "value",
+                "The new value for the key; omit it to just view the key"
+            ),
         ],
         quorum_core::cli::commands::config::config
     ),
