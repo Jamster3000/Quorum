@@ -51,6 +51,16 @@ pub static CORE_COMMANDS: &[CommandDef] = &[
         config::reset
     ),
     crate::cmd!(
+        "server:version",
+        "Shows the server version.",
+        "Prints the Quorum server version, taken from the crate metadata at build time.",
+        "server:version",
+        false,
+        false,
+        &[],
+        server::version
+    ),
+    crate::cmd!(
         "server:status",
         "Shows uptime and basic server info.",
         "Prints how long the server has been running, what address it is listening on, and whether testing mode is active.",

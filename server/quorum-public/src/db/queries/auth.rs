@@ -285,3 +285,69 @@ pub async fn make_admin(db: &DB, username: &str) -> Result<(), Box<dyn Error + S
 
     Ok(())
 }
+
+/// A lightweight summary of a user account for CLI listings.
+pub struct UserSummary {
+    pub id: String,
+    pub username: String,
+    pub email: Option<String>,
+    pub created_at: Option<String>,
+    pub is_banned: bool,
+    pub is_deleted: bool,
+}
+
+/// Lists user accounts with lightweight fields (no credentials or secrets),
+/// ordered by username.
+///
+/// # Arguments
+/// * `db` - A reference to the database connection
+/// * `search` - An optional search term; when given, only users whose ID,
+///   username, or email contains it (case-insensitive) are returned.
+///
+/// # Returns
+/// * `Ok(Vec<UserSummary>)` - The matching users.
+/// * `Err(Box<dyn Error + Send + Sync>)` - If the database query fails.
+///
+/// # Example
+/// ```rust,ignore
+/// let users = auth::list_users(&db, Some("alice")).await.unwrap();
+/// ```
+pub async fn list_users(
+    db: &DB,
+    search: Option<&str>,
+) -> Result<Vec<UserSummary>, Box<dyn Error + Send + Sync>> {
+    let mut response = db
+        .query(
+            "SELECT id, username, email, created_at, is_banned, is_deleted \
+             FROM users ORDER BY username",
+        )
+        .await?;
+
+    let rows: Vec<serde_json::Value> = response.take(0)?;
+
+    let search = search.map(|s| s.to_lowercase());
+
+    Ok(rows
+        .into_iter()
+        .filter(|row| match &search {
+            None => true,
+            Some(term) => {
+                let id = row["id"].to_string().to_lowercase();
+                let username = row["username"].as_str().unwrap_or("").to_lowercase();
+                let email = row["email"].as_str().unwrap_or("").to_lowercase();
+                id.contains(term) || username.contains(term) || email.contains(term)
+            }
+        })
+        .map(|row| UserSummary {
+            id: row["id"]
+                .as_str()
+                .map(|s| s.to_string())
+                .unwrap_or_default(),
+            username: row["username"].as_str().unwrap_or_default().to_string(),
+            email: row["email"].as_str().map(|s| s.to_string()),
+            created_at: row["created_at"].as_str().map(|s| s.to_string()),
+            is_banned: row["is_banned"].as_bool().unwrap_or(false),
+            is_deleted: row["is_deleted"].as_bool().unwrap_or(false),
+        })
+        .collect())
+}

@@ -72,6 +72,19 @@ pub static PUBLIC_COMMANDS: &[CommandDef] = &[
         db_delete
     ),
     quorum_core::cmd!(
+        "user:list",
+        "Lists user accounts.",
+        "Prints all user accounts with their ID, username, email, creation date, and status. An optional search term filters by ID, username, or email, matched as a case-insensitive substring.",
+        "user:list [search]",
+        true,
+        true,
+        &[(
+            "search",
+            "Optional term matched against ID, username, or email"
+        )],
+        user::list
+    ),
+    quorum_core::cmd!(
         "user:delete",
         "Deletes a user account.",
         "Removes a user account from the database. This action is irreversible.",

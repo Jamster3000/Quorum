@@ -407,3 +407,31 @@ async fn perform_reset(passphrase: &str) -> Result<(), Box<dyn std::error::Error
 pub async fn db_delete(ctx: CmdCtx) {
     confirm_and_delete(&ctx.shutdown_tx).await;
 }
+
+/// Shows the server version
+///
+/// Prints the Quorum server version from the crate metadata, captured at
+/// build time.
+///
+/// # Arguments
+/// * `_ctx` - The command context (unused).
+///
+/// # Example
+/// ```rust,ignore
+/// version(_ctx).await;
+/// ```
+pub async fn version(_ctx: CmdCtx) {
+    println!();
+    println!("{}", "  Server Version".cyan().bold());
+    println!(
+        "{}",
+        "  ──────────────────────────────────────────────────────────────".dimmed()
+    );
+    println!("  {:<12} {}", "Server:".white(), "Quorum".green());
+    println!(
+        "  {:<12} {}",
+        "Version:".white(),
+        env!("CARGO_PKG_VERSION").green()
+    );
+    println!();
+}
