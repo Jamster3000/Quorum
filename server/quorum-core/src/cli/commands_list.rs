@@ -4,7 +4,7 @@
 //! Commands themselves are defined in `registry.rs` and implemented in
 //! `server.rs`, `db.rs` and `help.rs`.
 
-use super::commands::{db, help, server};
+use super::commands::{config, db, help, server};
 use crate::cli::registry::CommandDef;
 
 /// Source of truth for commands
@@ -29,6 +29,16 @@ pub static CORE_COMMANDS: &[CommandDef] = &[
         false,
         &[("command", "Optional command to look up, e.g. server:status")],
         help::help
+    ),
+    crate::cmd!(
+        "config:reload",
+        "Reloads the configuration from secrets.enc without a restart.",
+        "Prompts for the server passphrase, re-reads secrets.enc, and applies the loaded values immediately. Changes made through `config <key> <value>` are already live, so this is mainly for edits made to the file outside the running server.",
+        "config:reload",
+        false,
+        true,
+        &[],
+        config::reload
     ),
     crate::cmd!(
         "server:status",

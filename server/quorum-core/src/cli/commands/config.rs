@@ -176,6 +176,20 @@ fn print_field(key: &str) {
     }
 }
 
+/// Handler for the `config:reload` command.
+///
+/// Prompts for the server passphrase, re-reads `secrets.enc`, and applies
+/// the loaded values immediately without restarting the server.
+///
+/// # Arguments
+/// * `_ctx` - The command context (unused).
+pub async fn reload(_ctx: CmdCtx) {
+    match Config::reload() {
+        Ok(()) => println!("{}", "Configuration reloaded successfully.".green()),
+        Err(e) => println!("{}", format!("Failed to reload config: {}", e).red()),
+    }
+}
+
 /// Masks a sensitive value, keeping only a short prefix for identification.
 ///
 /// # Arguments
