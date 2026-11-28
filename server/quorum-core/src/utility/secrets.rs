@@ -271,20 +271,8 @@ pub fn run_setup() -> Result<SerializableConfig, String> {
     }
 
     Ok(SerializableConfig {
-        server_port: 3000,
-        server_host: "127.0.0.1".to_string(),
-        server_url: "http://127.0.0.1:3000".to_string(),
-        surreal_data_path: "./data/db".to_string(),
-        surreal_ns: "quorum".to_string(),
-        surreal_db: "quorum".to_string(),
         jwt_secret: hex::encode(generate_random_bytes()),
-        jwt_access_minutes: 15,
-        jwt_refresh_days: 7,
-        enable_testing: false,
-        default_per_second: 100,
-        default_burst_size: 200,
-        testing_per_second: 1000,
-        testing_burst_size: 2000,
+        ..Default::default()
     })
 }
 

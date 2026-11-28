@@ -98,22 +98,20 @@ pub fn print_final_step(step: &str, success: bool, duration: Duration) {
 
 /// Display the final "Server ready" message with the server URL
 ///
-/// Prints a formatted message indicating that the server is ready, including the URL and port number.
+/// Prints a formatted message indicating that the server is ready, including the URL from config.
 /// The URL is displayed in green and bold for emphasis, and a note about stopping the server is shown in dimmed text.
 ///
 /// # Arguments
-/// * `port` - The port number on which the server is running.
+/// * `server_url` - The full URL the server is reachable on, from config.
 ///
 /// # Example
 /// ```rust
-/// print_ready(8080);
+/// print_ready("http://127.0.0.1:3000");
 /// ```
-pub fn print_ready(port: u16) {
+pub fn print_ready(server_url: &str) {
     println!(
         "\n{}",
-        format!("Server ready at http://127.0.0.1:{}", port)
-            .green()
-            .bold()
+        format!("Server ready at {}", server_url).green().bold()
     );
     println!(
         "{}",

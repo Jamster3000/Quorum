@@ -54,7 +54,7 @@ pub async fn run_server(options: ServerOptions) {
 
     let config = Config::get();
 
-    startup::print_ready(config.server_port);
+    startup::print_ready(&config.server_url);
 
     // Tracks true server uptime from this point forward, used by server:status and
     // server:shutdown. Intentionally created after all startup steps have completed.

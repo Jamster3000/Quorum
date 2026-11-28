@@ -153,7 +153,12 @@ impl Config {
             }
             Ok(false) => {
                 // Field name not recognised
-                Err(format!("Unknown config key: {}", config_key).into())
+                Err(format!(
+                    "Unknown config key: {}. Valid keys: {}",
+                    config_key,
+                    field_names().join(", ")
+                )
+                .into())
             }
             Err(e) => {
                 // Parse failed
@@ -163,4 +168,6 @@ impl Config {
     }
 }
 
-pub use crate::utility::config_schema::{CONFIG_SCHEMA, field_names};
+pub use crate::utility::config_schema::{
+    CONFIG_SCHEMA, ConfigFieldMeta, config_sections, default_config_fields, field_names,
+};

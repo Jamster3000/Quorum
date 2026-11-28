@@ -4,7 +4,7 @@
 //! command registry; the table below registers the commands that only the
 //! public server has.
 
-use super::commands::{config, server, test, user};
+use super::commands::{server, test, user};
 use quorum_core::cli::commands::server::{db_delete, login};
 use quorum_core::cli::registry::CommandDef;
 
@@ -32,7 +32,7 @@ pub static PUBLIC_COMMANDS: &[CommandDef] = &[
             ("key", "The config key to update, e.g. server_host"),
             ("value", "The new value for the key"),
         ],
-        config::config
+        quorum_core::cli::commands::config::config
     ),
     quorum_core::cmd!(
         "server:login",

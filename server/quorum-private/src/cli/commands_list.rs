@@ -4,7 +4,6 @@
 //! command registry; the table below registers the commands that only the
 //! private (self-hosted) server has.
 
-use crate::cli::commands::config;
 use quorum_core::cli::commands::server::{db_delete, login};
 use quorum_core::cli::registry::CommandDef;
 
@@ -32,7 +31,7 @@ pub static PRIVATE_COMMANDS: &[CommandDef] = &[
             ("key", "The config key to update, e.g. server_host"),
             ("value", "The new value for the key"),
         ],
-        config::config
+        quorum_core::cli::commands::config::config
     ),
     quorum_core::cmd!(
         "server:login",
