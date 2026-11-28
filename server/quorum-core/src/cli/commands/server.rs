@@ -421,17 +421,8 @@ pub async fn db_delete(ctx: CmdCtx) {
 /// version(_ctx).await;
 /// ```
 pub async fn version(_ctx: CmdCtx) {
-    println!();
-    println!("{}", "  Server Version".cyan().bold());
     println!(
         "{}",
-        "  ──────────────────────────────────────────────────────────────".dimmed()
+        format!("Quorum server v{}", env!("CARGO_PKG_VERSION")).green()
     );
-    println!("  {:<12} {}", "Server:".white(), "Quorum".green());
-    println!(
-        "  {:<12} {}",
-        "Version:".white(),
-        env!("CARGO_PKG_VERSION").green()
-    );
-    println!();
 }
