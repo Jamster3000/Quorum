@@ -351,3 +351,35 @@ pub async fn list_users(
         })
         .collect())
 }
+
+/// Fetches the complete user record by ID (e.g. `users:0uu7j7h9w6xthsniws2t`).
+///
+/// Callers are responsible for not displaying sensitive fields
+/// (password hash, 2FA secret, backup codes).
+///
+/// # Arguments
+/// * `db` - A reference to the database connection
+/// * `user_id` - The full record ID of the user.
+///
+/// # Returns
+/// * `Ok(Some(record))` - The full user record if found.
+/// * `Ok(None)` - If the ID is malformed or the user does not exist.
+/// * `Err(Box<dyn Error + Send + Sync>)` - If the database query fails.
+///
+/// # Example
+/// ```rust,ignore
+/// let user = auth::get_user_full(&db, "users:0uu7j7h9w6xthsniws2t").await.unwrap();
+/// ```
+pub async fn get_user_full(
+    db: &DB,
+    user_id: &str,
+) -> Result<Option<serde_json::Value>, Box<dyn Error + Send + Sync>> {
+    if !user_id.starts_with("users:") {
+        return Ok(None);
+    }
+
+    let query = format!("SELECT * FROM {}", user_id);
+    let mut response = db.query(&query).await?;
+    let rows: Vec<serde_json::Value> = response.take(0)?;
+    Ok(rows.into_iter().next())
+}

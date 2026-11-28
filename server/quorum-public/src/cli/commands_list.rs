@@ -85,6 +85,16 @@ pub static PUBLIC_COMMANDS: &[CommandDef] = &[
         user::list
     ),
     quorum_core::cmd!(
+        "user:show",
+        "Shows the full details of one user account.",
+        "Resolves the search term against IDs, usernames, and emails, then prints every non-sensitive field of the matching user. If several users match, they are listed so you can narrow the search. Sensitive fields (password hash, 2FA secret, backup codes) are never displayed.",
+        "user:show <id | username | email>",
+        true,
+        true,
+        &[("search", "The ID, username, or email of the user to show")],
+        user::show
+    ),
+    quorum_core::cmd!(
         "user:delete",
         "Deletes a user account.",
         "Removes a user account from the database. This action is irreversible.",
